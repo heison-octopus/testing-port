@@ -1,0 +1,4 @@
+activity_form_assignment_id,activity_id,form_version_id,assigned_by_user_id,assigned_at,opens_at,due_at,assignment_status,eligibility_check,notes
+AFA-001,ACT-COMM-001,FV-CORE-001,USR-T-001,2026-09-10T10:05:00+08:00,2026-09-18T10:00:00+08:00,2026-09-25T17:00:00+08:00,scheduled,passed,Approved and published default form
+AFA-002,ACT-SPORT-001,FV-CORE-001,USR-T-002,2026-10-01T12:05:00+08:00,2026-10-16T14:00:00+08:00,2026-10-23T17:00:00+08:00,scheduled,passed,Approved and published default form
+AFA-003,ACT-SELF-001,FV-SELF-001,USR-T-002,2026-09-15T09:05:00+08:00,,,blocked,failed_form_not_published,Example blocked assignment; form is still in review and unpublished

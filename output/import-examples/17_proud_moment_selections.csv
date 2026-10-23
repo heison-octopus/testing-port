@@ -1,0 +1,3 @@
+selection_id,student_id,academic_year,period_id,source_type,source_id,selection_reason,selected_vask_item_codes,submission_status,publication_status,reviewer_user_id,reviewed_at,include_in_portfolio,internal_review_note
+PM-001,USR-S-001,2026/27,P1,activity,ACT-SELF-001,This activity helped me understand how I respond to unfamiliar situations.,V-SELF-AWARENESS|A-OPENNESS,submitted,unpublished,USR-T-002,,false,Selection is student expression; separate from framework-step calculation
+PM-002,USR-S-002,2026/27,P1,external_achievement,EA-002,I finished even though I was tired.,V-PERSEVERANCE|A-POSITIVE,approved,published,USR-TA-001,2026-10-25T15:00:00+08:00,true,Published as a meaningful moment without an official skill mapping

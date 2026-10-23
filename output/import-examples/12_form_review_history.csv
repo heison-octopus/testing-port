@@ -1,0 +1,6 @@
+review_event_id,form_version_id,event_type,from_review_status,to_review_status,from_publication_status,to_publication_status,actor_user_id,decision_comment,event_at
+FRE-001,FV-CORE-001,submitted,draft,in_review,unpublished,unpublished,USR-T-001,Submitted the core form for school review,2026-08-20T09:00:00+08:00
+FRE-002,FV-CORE-001,approved,in_review,approved,unpublished,unpublished,USR-ST-001,Question wording and respondent roles approved,2026-08-24T15:00:00+08:00
+FRE-003,FV-CORE-001,published,approved,approved,unpublished,published,USR-ADM-001,Published to the internal school catalogue,2026-08-25T10:00:00+08:00
+FRE-004,FV-SELF-001,submitted,draft,in_review,unpublished,unpublished,USR-T-002,Custom reflection form submitted for review,2026-09-15T09:00:00+08:00
+FRE-005,FV-CORE-002,created_revision,approved,draft,published,unpublished,USR-T-001,Created a new draft without changing published version 1,2026-10-20T11:00:00+08:00

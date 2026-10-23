@@ -1,0 +1,73 @@
+Input for teachers
+1. Activities (classes, extracirriculum, school picnic, standalone Teacher feedback)
+    activityId
+    activityVASK
+    activityType
+    date (by School year)
+    uploadDate
+    upload/updateBy
+    updateDate
+ActivityData
+    Activity.activityId
+    mediaList (formId, mediaId)
+    teacherId (single or array)
+    studentId (single or array)
+    
+
+2. Media
+    mediaId
+    Activities.activityId
+    mediaType
+    path
+    uploadDate
+    uploadedBy
+3. MediaInfo
+    Media.mediaId
+    modifyDate
+    updatedDate
+    uploadedBy
+    accessBy(teacher, class, teacher group)
+4. MediaExtract
+    mediaId
+    mediaText
+    extractType
+    extract
+    createdDate
+    updatedDate
+    createdBy
+(SharedMediaFolder)
+(please insert the info here)
+
+5. Form 
+    (associated)activityId
+    formId
+    formQuestionId(array)
+    uploaded/updatedBy
+    teacherId(array for access)
+    formType: isPeerReview, isTeacherReview, activityRewind
+    respondantId (have access and can update, shown on their page or as one of the result)
+    peerId (viewOnky)
+6.FormQuestions
+    questionId
+    questionIndex
+    questionText
+    questionType (radio, spectrum, text, dropdown, openEnd - for 5 radio, two types  同意程度,頻率／效果)
+    skill (ch/en)
+    negativeQuestion
+    (any specilized form on the "Teacher observation and comments")
+
+7. User
+userId
+userType(stud, teacher, Admin)
+enabled
+classId
+classNo
+(based on how the incoming data is from, waiting for Time Inifiny system's intput)
+
+User Data handled through media, associated by activity (even one to one, casual is still a type or enum)
+if uploaded by Student and is related to activity, the teacher should be able to approve insert to the mediafolder as public, default private
+    
+
+
+
+

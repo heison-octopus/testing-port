@@ -1,0 +1,84 @@
+enum_name,enum_value,meaning_zh,assignable_or_effect
+user_role,student,學生,May view own assigned and published records
+user_role,teacher,教師,May create drafts and assess assigned students
+user_role,super_teacher,高級教師或獲授權教職員,May review and approve within assigned scope
+user_role,school_admin,學校管理員,May publish configure policies and manage users
+form_review_status,draft,草稿,Not assignable
+form_review_status,in_review,審閱中,Not assignable
+form_review_status,changes_requested,要求修改,Not assignable
+form_review_status,approved,已批核,Requires published status before assignment
+form_review_status,rejected,已拒絕,Not assignable
+form_review_status,retired,已退役,No new assignments
+form_publication_status,unpublished,未發布,Not assignable
+form_publication_status,published,已發布,Assignable only when review_status is approved
+form_publication_status,withdrawn,已撤回,No new assignments
+form_visibility_scope,private_draft,私人草稿,Creator and authorized reviewers only
+form_visibility_scope,reviewers_only,只限審閱者,Review queue only
+form_visibility_scope,school_catalogue,校內目錄,Discoverable by authorized school staff
+form_visibility_scope,assigned_activities_only,只限已分派活動,Visible only through an assignment
+form_visibility_scope,public_external,校外公開,Outside MVP and requires separate approval policy
+form_review_event_type,submitted,提交審閱,Creates review work item
+form_review_event_type,changes_requested,要求修改,Returns version to author
+form_review_event_type,approved,批核,Marks content valid
+form_review_event_type,rejected,拒絕,Closes review without validity
+form_review_event_type,published,發布,Makes approved version available within its visibility scope
+form_review_event_type,withdrawn,撤回發布,Prevents new assignments
+form_review_event_type,retired,退役,Preserves history but prevents reuse
+form_review_event_type,created_revision,建立修訂版本,Creates a new draft and preserves the old version
+form_review_assignment_status,assigned,已分派,Reviewer has not accepted the work item
+form_review_assignment_status,accepted,已接受,Reviewer accepted responsibility
+form_review_assignment_status,in_review,審閱中,Reviewer is assessing the form version
+form_review_assignment_status,changes_requested,要求修改,Author must create or update the draft before resubmission
+form_review_assignment_status,approved,已批核,Review assignment completed with approval
+form_review_assignment_status,rejected,已拒絕,Review assignment completed without approval
+form_review_assignment_status,cancelled,已取消,Assigner cancelled the work item
+form_review_assignment_status,expired,已逾期,Due date passed without completion
+activity_form_assignment_status,scheduled,已排程,Assignment exists but is not open
+activity_form_assignment_status,open,開放填寫,Recipients may submit
+activity_form_assignment_status,closed,已截止,No new submissions except authorized return
+activity_form_assignment_status,cancelled,已取消,Assignment will not be used
+activity_form_assignment_status,blocked,被阻擋,Referenced form version failed eligibility check
+assignment_eligibility_check,passed,通過,Form is approved published and within validity dates
+assignment_eligibility_check,failed_form_not_approved,表格未批核,Block assignment
+assignment_eligibility_check,failed_form_not_published,表格未發布,Block assignment
+assignment_eligibility_check,failed_outside_validity,不在有效期,Block assignment
+assignment_eligibility_check,failed_form_retired,表格已退役,Block assignment
+activity_approval_status,draft,活動草稿,Not active
+activity_approval_status,pending_review,活動待審,Not active
+activity_approval_status,approved,活動已批核,May become active when other requirements pass
+activity_approval_status,changes_requested,活動要求修改,Return to owner
+activity_approval_status,rejected,活動已拒絕,Cannot activate
+activity_status,planned,已計劃,Future activity
+activity_status,scheduled,已排程,Dates and participants scheduled
+activity_status,active,進行中,Current activity
+activity_status,completed,已完成,Assessment and evidence may still be finalized
+activity_status,cancelled,已取消,Activity will not occur
+activity_status,archived,已封存,Read-only historical record
+submission_status,not_submitted,未提交,Recipient exists but no draft has been saved
+submission_status,draft,草稿,Respondent may continue editing
+submission_status,submitted,已提交,Awaiting assigned human review when required
+submission_status,in_review,審閱中,Assigned teacher or TA is reviewing
+submission_status,changes_requested,要求修改,Returned to respondent for revision
+submission_status,approved,已確認,Human reviewer confirmed the submission
+submission_status,rejected,不獲確認,Submission is retained but cannot be published or contribute to steps
+publication_status,unpublished,未發布,Not visible in published activity history or portfolio
+publication_status,published,已發布,Visible within the permitted student or school scope
+publication_status,withdrawn,已撤回,Previously published content is no longer shown but history remains
+external_achievement_result,attendance,出席證書,Participation evidence only; no automatic skill step
+external_achievement_result,participation,參與,Participation evidence only; no automatic skill step
+external_achievement_result,merit,優異,Descriptive result; still requires context and review
+external_achievement_result,second_runner_up,季軍,Descriptive result; still requires level and category
+external_achievement_result,first_runner_up,亞軍,Descriptive result; still requires level and category
+external_achievement_result,champion,冠軍,Descriptive result; still requires level and category
+external_achievement_result,other,其他,Requires a free-text description
+skill_mapping_authority,none,沒有官方技能映射,External achievement remains VASK-tagged evidence only
+skill_mapping_authority,activity_form,活動表格映射,Questions may generate candidate evidence for mapped skills
+skill_mapping_authority,hkeaa,考評局部分評估,Uses an approved HKEAA-related instrument or validation rule
+skill_mapping_authority,teacher_observation,教師或教學助理觀察,Human reviewer confirms the observed skill and step
+skill_mapping_authority,combined,綜合來源,Requires a documented school-approved combination rule
+reviewer_role,teacher,教師,May perform human review when assigned to the student or activity
+reviewer_role,teaching_assistant,教學助理,May perform human review only within assigned scope
+peer_assignment_status,not_assigned,未分派,No peer reviewer has been selected
+peer_assignment_status,assigned,已分派,Named peer reviewer may open the task
+peer_assignment_status,submitted,已提交,Peer response awaits moderation if required
+peer_assignment_status,closed,已關閉,No additional peer response is accepted

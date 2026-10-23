@@ -1,0 +1,4 @@
+media_id,activity_id,student_id,uploader_user_id,media_type,original_filename,captured_at,consent_status,access_scope,storage_key,checksum_sha256,processing_status,transcript_id,teacher_verified,retention_review_date,notes
+MED-001,ACT-SELF-001,USR-S-001,USR-T-002,image,group_reflection_01.jpg,2026-10-09T14:10:00+08:00,granted,school_internal,media/2026-27/ACT-SELF-001/MED-001,,ready,,true,2027-08-31,Example metadata only; no real student image included
+MED-002,ACT-SELF-001,,USR-T-002,audio,group_discussion_01.m4a,2026-10-09T14:30:00+08:00,partial,staff_review_only,media/2026-27/ACT-SELF-001/MED-002,,identity_review_required,TR-001,false,2027-08-31,Speaker separation may run; identity must be confirmed by staff
+MED-003,ACT-SPORT-001,USR-S-002,USR-T-002,video,teamwork_drill_02.mp4,2026-10-16T15:05:00+08:00,granted,no_publication,media/2026-27/ACT-SPORT-001/MED-003,,ready,,false,2027-08-31,Student may appear in internal review but not public portfolio

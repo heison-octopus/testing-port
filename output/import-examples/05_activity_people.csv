@@ -1,0 +1,14 @@
+activity_id,user_id,relationship,group_code,attendance_status,can_view_activity,can_view_raw_media,can_submit_assessment,assigned_at
+ACT-COMM-001,USR-T-001,owner_teacher,,confirmed,true,true,true,2026-09-10T10:00:00+08:00
+ACT-COMM-001,USR-S-001,student,G1,registered,true,false,true,2026-09-10T10:00:00+08:00
+ACT-COMM-001,USR-S-002,student,G1,registered,true,false,true,2026-09-10T10:00:00+08:00
+ACT-SELF-001,USR-T-002,owner_teacher,,confirmed,true,true,true,2026-09-15T09:00:00+08:00
+ACT-SELF-001,USR-T-001,support_teacher,,confirmed,true,true,true,2026-09-15T09:00:00+08:00
+ACT-SELF-001,USR-S-001,student,G1,registered,true,false,true,2026-09-15T09:00:00+08:00
+ACT-SELF-001,USR-S-003,student,G1,registered,true,false,true,2026-09-15T09:00:00+08:00
+ACT-SPORT-001,USR-T-002,owner_teacher,,confirmed,true,true,true,2026-10-01T12:00:00+08:00
+ACT-SPORT-001,USR-S-001,student,BLUE,registered,true,false,true,2026-10-01T12:00:00+08:00
+ACT-SPORT-001,USR-S-002,student,BLUE,registered,true,false,true,2026-10-01T12:00:00+08:00
+ACT-PRESS-001,USR-T-001,owner_teacher,,confirmed,true,true,true,2027-01-20T09:00:00+08:00
+ACT-PRESS-001,USR-S-001,student,P1,registered,true,false,true,2027-01-20T09:00:00+08:00
+ACT-PRESS-001,USR-S-002,student,P1,registered,true,false,true,2027-01-20T09:00:00+08:00
