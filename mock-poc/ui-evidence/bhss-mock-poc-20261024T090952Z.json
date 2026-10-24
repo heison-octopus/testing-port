@@ -1,0 +1,99 @@
+{
+  "round": "bhss-mock-poc-20261024T090952Z",
+  "loop": "fix",
+  "tier": "T2",
+  "state": "IMPLEMENTED",
+  "reference": {
+    "kind": "canvas",
+    "value": "/Users/useroctopus-tech.com/.agents/ui-fix-canvas/bhss-mvp/mock-poc-ant-design.html"
+  },
+  "walkthrough": {
+    "steps": [
+      "Sign in independently as Student1 and Student2; verify Chinese and English surfaces.",
+      "As Student1, upload PNG evidence through the UI and confirm the generated preview.",
+      "As Student1, preview the exact AI input payload before generating a draft.",
+      "As Class Teacher, inspect the authorized student list.",
+      "As Activity Teacher, open ACT-001 and inspect feedback and step-observation controls.",
+      "As Staff, inspect STU-001 history, question mappings and a generated year-transition comparison.",
+      "As SchoolAdmin, inspect account and server-side session records."
+    ],
+    "script": "/Users/useroctopus-tech.com/Documents/GitHub/BHSS-MVP/mock-poc/ui-evidence/walkthrough.mjs",
+    "driver": "playwright",
+    "profileOrAccount": "isolated context per Student1, Student2, Class Teacher, Activity Teacher, Staff and SchoolAdmin",
+    "role": "multi-role"
+  },
+  "dispatch": {
+    "agent": "root",
+    "runId": "bhss-mock-poc-20261024T090952Z",
+    "executionMode": "direct-codex"
+  },
+  "pr": {
+    "requested": false,
+    "url": "not requested",
+    "base": "local working tree",
+    "head": "local working tree",
+    "mergeSha": "not requested"
+  },
+  "issues": [
+    {
+      "id": 1,
+      "expected": "True-white surfaces, pastel-orange accents and a functional Chinese/English toggle.",
+      "local": {"result": "pass", "buildSha": "working-tree:d91c91e9baadd003a1b45095299dcbeac0275227", "artifact": "ui-evidence/screenshots/1-student1-dashboard.png and 1-student2-english-toggle.png"},
+      "deployed": {"result": null, "buildSha": null, "artifact": null, "env": "not requested"}
+    },
+    {
+      "id": 2,
+      "expected": "Lists and working sections use separators and padding instead of repeated nested rounded containers.",
+      "local": {"result": "pass", "buildSha": "working-tree:d91c91e9baadd003a1b45095299dcbeac0275227", "artifact": "ui-evidence/screenshots/2-staff-questions.png"},
+      "deployed": {"result": null, "buildSha": null, "artifact": null, "env": "not requested"}
+    },
+    {
+      "id": 3,
+      "expected": "Every unconfirmed requirement is visibly marked with a pale-pink affected section or state.",
+      "local": {"result": "pass", "buildSha": "working-tree:d91c91e9baadd003a1b45095299dcbeac0275227", "artifact": "ui-evidence/screenshots/2-staff-questions.png and 1-student1-dashboard.png"},
+      "deployed": {"result": null, "buildSha": null, "artifact": null, "env": "not requested"}
+    },
+    {
+      "id": 4,
+      "expected": "AI-assisted areas use warm brown and disclose the exact input, source, time, prompt/model and human state.",
+      "local": {"result": "pass", "buildSha": "working-tree:d91c91e9baadd003a1b45095299dcbeac0275227", "artifact": "ui-evidence/screenshots/4-student1-ai-disclosure.png"},
+      "deployed": {"result": null, "buildSha": null, "artifact": null, "env": "not requested"}
+    },
+    {
+      "id": 5,
+      "expected": "Recoverable upload validation appears beside the triggering control in the active language.",
+      "local": {"result": "pass", "buildSha": "working-tree:d91c91e9baadd003a1b45095299dcbeac0275227", "artifact": "ui-evidence/screenshots/3-student2-inline-validation.png"},
+      "deployed": {"result": null, "buildSha": null, "artifact": null, "env": "not requested"}
+    },
+    {
+      "id": 6,
+      "expected": "Student, Class Teacher, Activity Teacher, Staff and SchoolAdmin surfaces enforce session and record scope.",
+      "local": {"result": "pass", "buildSha": "working-tree:d91c91e9baadd003a1b45095299dcbeac0275227", "artifact": "ui-evidence/screenshots/6-student1-activities.png, 6-teacher-class-teacher-students.png, 6-activityteacher-activity-teacher-detail.png and 8-admin-admin-sessions.png"},
+      "deployed": {"result": null, "buildSha": null, "artifact": null, "env": "not requested"}
+    },
+    {
+      "id": 7,
+      "expected": "React views, reusable fetch functions, API controllers/services, repositories and SQLite persistence are separated.",
+      "local": {"result": "pass", "buildSha": "working-tree:d91c91e9baadd003a1b45095299dcbeac0275227", "artifact": "README.md, server/controllers, server/services, server/models and src/api/client.ts"},
+      "deployed": {"result": null, "buildSha": null, "artifact": null, "env": "not requested"}
+    },
+    {
+      "id": 8,
+      "expected": "JPG/JPEG and PNG are content-validated and receive a server-generated preview derivative.",
+      "local": {"result": "pass", "buildSha": "working-tree:d91c91e9baadd003a1b45095299dcbeac0275227", "artifact": "ui-evidence/screenshots/7-student1-evidence.png and server/app.test.js"},
+      "deployed": {"result": null, "buildSha": null, "artifact": null, "env": "not requested"}
+    },
+    {
+      "id": 9,
+      "expected": "Stable student identity uses effective-dated class and school-status histories without rewriting activity records.",
+      "local": {"result": "pass", "buildSha": "working-tree:d91c91e9baadd003a1b45095299dcbeac0275227", "artifact": "ui-evidence/screenshots/9-staff-student-history.png and server/app.test.js"},
+      "deployed": {"result": null, "buildSha": null, "artifact": null, "env": "not requested"}
+    },
+    {
+      "id": 10,
+      "expected": "Year transition compares unchanged/moved/retained/returning/new/outgoing cases and requires identity confirmation before apply.",
+      "local": {"result": "pass", "buildSha": "working-tree:d91c91e9baadd003a1b45095299dcbeac0275227", "artifact": "ui-evidence/screenshots/10-staff-year-transition.png"},
+      "deployed": {"result": null, "buildSha": null, "artifact": null, "env": "not requested"}
+    }
+  ]
+}

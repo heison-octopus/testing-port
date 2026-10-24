@@ -57,6 +57,7 @@ Start with the English or Chinese `README.md`, then read the architecture, roles
 - `output/D2 vask-skill-map/` — VASK-to-eight-skills visualization and workbook.
 - `output/portfolioDummyData.html` — student portfolio mock-up.
 - `D3 bhss-portfolio-ppt/` — bilingual presentation HTML, outline, script, and the current interactive POC; it remains at the repository root because the same artifact supports both languages.
+- `mock-poc/` — runnable Vite + React + Ant Design POC with Express/SQLite MVC-style API, opaque server sessions plus request keys, role-aware screens, activity/class/student/year-transition generators, effective-dated student history, staged XLSX/CSV participant import, teacher questionnaire XLSX submission and student release gating, separate certificate/activity media libraries, JPG/PNG preview processing, a staff-controlled memorable-activity window, and explicit AI input disclosure. Start with `mock-poc/README.md`.
 - `output/import-examples/` — example CSV contracts, manifest, enums, assignments, review history, external achievements, ratings, and peer review.
 
 The simulator is illustrative and uses `localStorage`; it is not the production security or persistence architecture.
@@ -104,3 +105,17 @@ The simulator is illustrative and uses `localStorage`; it is not the production 
 - Keep VASK, questionnaire constructs, eight skills, and 16 steps as separate concepts unless an explicit mapping joins them.
 - Do not expose internal scope-cutting rationale in stakeholder slides unless requested; keep it in architecture notes.
 - Prefer extending the existing CSV contracts and architecture documents over creating competing schemas.
+
+## Application architecture and isolation rules
+
+- Use Vite + React as the default web application stack unless a documented requirement approves another stack.
+- React pages and visual components must not contain SQL, database calls, filesystem persistence, or direct server-side data access.
+- UI code calls a shared typed API client. Group reusable queries and mutations by domain service so pages do not duplicate `fetch` logic or construct raw request details repeatedly.
+- The server follows explicit layers: `route -> controller -> service/use-case -> repository -> database`. Route files define transport and authorization middleware; controllers translate HTTP input/output; services enforce workflows and policy; repositories contain SQL and persistence details.
+- SQL must live only in the repository/data-access layer. Do not expose table structure, raw queries, database credentials, or internal storage paths to browser bundles or API responses.
+- Prefer a clear set of narrowly scoped APIs over bypassing the API boundary. Every protected endpoint must enforce server-side role, assignment scope, lifecycle state, and media/consent rules as applicable.
+- Share request/response types, validation schemas, error envelopes, enum definitions, and policy limits where practical. Frontend validation improves usability but never replaces server validation.
+- Build reusable components around one responsibility. Pages compose domain components; data fetching, presentation, form state, and persistence concerns should not be collapsed into one large component.
+- Use Tailwind utility classes and `@apply`-based semantic component classes for the default styling infrastructure. Keep repeated layout, typography, form, table, feedback, and status styles in shared layers rather than copying long utility strings across pages.
+- Preserve the established visual rules: white page background, low-contrast separators, restrained pastel orange accent, pink/red background for unresolved requirements, brown-toned background for AI-generated material, and no unnecessary nested rounded containers.
+- API calls must use authenticated sessions and the required request-protection token/key. Never place secrets, SQL, privileged filtering logic, or authorization decisions in client-side JavaScript.

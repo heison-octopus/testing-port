@@ -12,6 +12,7 @@
 | `內部系統檢視及人日估算.md` | 內部範圍分析及開發估算 | `../English/Internal system review and manday estimate.md` |
 | `對外精簡MVP方案.md` | 對外使用的建議 MVP 範圍 | `../English/External lean MVP proposal.md` |
 | `BHSS探索結果及客戶確認問題.docx` | 客戶探索及確認問題文件 | `../English/BHSS discovery findings and client clarification questions.docx` |
+| [`SRS/`](SRS/) | 模組化及可驗收的軟件需求，包括存取控制、欄位限制、基礎設施及頁面可見範圍 | [`../English/SRS/`](../English/SRS/) |
 
 ## 共用來源及示範
 

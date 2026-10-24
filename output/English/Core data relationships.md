@@ -659,6 +659,32 @@ erDiagram
 | Users to groups | Many-to-many | A student can join different classes or project groups over time. `group_memberships` preserves this history. |
 | Academic period to groups | One-to-many | One school year or term can contain many groups. |
 
+### Recommended temporal student model — school confirmation still required (H-08)
+
+The student's identity is stable; placement and school status are time-bounded histories. The POC implements this as a recommended interpretation while the school's full rollover policy remains open.
+
+```mermaid
+erDiagram
+    STUDENTS ||--o{ STUDENT_CLASS_MEMBERSHIPS : has_over_time
+    STUDENTS ||--o{ STUDENT_SCHOOL_STATUS_HISTORY : has_over_time
+    ACADEMIC_YEARS ||--o{ STUDENT_CLASS_MEMBERSHIPS : scopes
+    SCHOOL_PERIODS ||--o{ STUDENT_CLASS_MEMBERSHIPS : optionally_scopes
+    CLASSES ||--o{ STUDENT_CLASS_MEMBERSHIPS : places
+    STUDENTS ||--o{ ACTIVITY_PARTICIPANTS : joins
+    ACTIVITIES ||--o{ ACTIVITY_PARTICIPANTS : includes
+    ROLLOVER_BATCHES ||--o{ ROLLOVER_COMPARISON_ITEMS : contains
+    STUDENTS o|--o{ ROLLOVER_COMPARISON_ITEMS : may_match
+```
+
+- `students.student_id` remains the core identity through class moves, retention, regrading, leave, withdrawal and return.
+- `student_class_memberships` records `class_id`, grade, academic year or period, `valid_from`, `valid_to`, change type, reason, actor and an optional superseded membership.
+- `student_school_status_history` separately records active, leave, withdrawn, returned and graduated states. A student may therefore leave for two years and return without creating a new identity.
+- Activities store the participant's `student_id`, not a copied current class. To show the historical class, resolve the membership whose effective dates contain the activity date.
+- A year-transition batch compares the old and proposed rosters as unchanged, class move, retained/regraded, returning, new candidate, or outgoing/missing. A `new_candidate` must be explicitly confirmed before the system creates a student and assigns a class.
+- Imports and corrections retain before/after values, actor, reason and time in the audit trail. They do not rewrite earlier activity records.
+
+This design prevents current class changes from contaminating historical activity evidence. The school must still confirm rollover cut-off dates, overlapping-membership rules, late transfers, duplicate-identity resolution and who may apply a reviewed batch; those decisions remain under H-08.
+
 ---
 
 ## 2 Activities, participants, VASK, and framework targets
