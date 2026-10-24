@@ -21,6 +21,21 @@ This approach minimizes access-control development while preserving traceability
 7. Authorized staff review exceptions and publish the reporting-period portfolio.
 8. The system generates the student portfolio and official exports.
 
+```mermaid
+flowchart LR
+    Setup[School setup and imports]
+    Activity[Approved activity<br/>students, VASK and form]
+    Evidence[Student, peer and teacher evidence]
+    Review[Teacher or TA confirmation]
+    Portfolio[Staff-approved period portfolio]
+    Delivery[Student view and PDF or XLSX delivery]
+
+    Setup --> Activity --> Evidence --> Review --> Portfolio --> Delivery
+    Review -->|changes required| Evidence
+```
+
+The activity form organizes collection. It does not automatically determine a student's 1–16 skill step. Published conclusions retain their source activity, evidence, submitter, and reviewer.
+
 ## User pages
 
 ### Students

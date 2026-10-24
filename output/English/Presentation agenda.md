@@ -21,16 +21,16 @@ The platform is not intended to turn every activity into a score. It connects ac
 | `Assessment/UF2.0 Cantonese Framework.pdf` | Eight Skills Builder skills and 16 steps for each skill | Explain the developmental framework and radar axes |
 | `Assessment/VASK清單.docx` | Values, attitudes, skills, and knowledge reference | Explain intended activity-development areas |
 | `Assessment/10份技能問卷整理總表.xlsx` | Ten source assessment constructs and 166 questions | Explain the source questionnaire and why it differs from the eight framework skills |
-| `Aspects updated.md` | Updated entities, terminology, versioning, and bilingual comparison | Main data-model and terminology reference |
-| `output/bhss-skills-navigator/index.html` | Interactive view of the eight skills and framework steps | Demonstration of the skills framework |
+| `output/English/Aspects updated.md` | Updated entities, terminology, and versioning | Main data-model and terminology reference |
+| `output/D1 bhss-skills-navigator/index.html` | Interactive view of the eight skills and framework steps | Demonstration of the skills framework |
 
 ### B. System relationships and governance
 
 | Artifact | Purpose | Presentation use |
 |---|---|---|
-| `Core data relationships.md` | Cardinalities and end-to-end entity relationships | Explain how users, activities, forms, evidence, feedback, and framework observations connect |
-| `Roles and permissions.md` | Student, Teacher, SuperTeacher, and SchoolAdmin responsibilities | Explain visibility, approvals, media access, and security boundaries |
-| `output/evidence-growth-system-map.html` | Interactive upload-to-portfolio system and decision map | Main interactive presentation companion |
+| `output/English/Core data relationships.md` | Cardinalities and end-to-end entity relationships | Explain how users, activities, forms, evidence, feedback, and framework observations connect |
+| `output/English/Roles and permissions.md` | Student, Teacher, SuperTeacher, and SchoolAdmin responsibilities | Explain visibility, approvals, media access, and security boundaries |
+| `output/D2 evidence-growth-system-map.html` | Interactive upload-to-portfolio system and decision map | Main interactive presentation companion |
 
 ### C. Import and integration examples
 
@@ -269,6 +269,21 @@ This is a working system name for authorized senior teaching or programme staff.
 
 ## 5. What we think the process is
 
+```mermaid
+flowchart LR
+    Inputs[Inputs<br/>users, periods, activities, VASK, forms, responses and media]
+    Validate[Validate<br/>identity, source, consent, scope and version]
+    Collect[Collect<br/>student, peer and teacher evidence]
+    Review[Human review<br/>teacher or TA confirms relevant observations]
+    Publish[Publish<br/>authorized staff freezes a period snapshot]
+    Outputs[Outputs<br/>portfolio, feedback, eight-skill view, PDF or SLP and XLSX]
+
+    Inputs --> Validate --> Collect --> Review --> Publish --> Outputs
+    Review -->|missing or insufficient evidence| Collect
+```
+
+The platform visualizes how reviewed activity evidence contributes to a student's growth record. It does not convert activity completion or one questionnaire score directly into a framework step.
+
 ```text
 1. Receive or upload data
 2. Identify the source and record type
@@ -292,6 +307,27 @@ This is a working system name for authorized senior teaching or programme staff.
 ```
 
 The recommended progression model is evidence-gated rather than a single weighted average. Questionnaire scores can organize and summarize responses, but they should not automatically promote or demote a student within the 16 framework steps.
+
+### Activity lifecycle for the presentation
+
+```mermaid
+flowchart LR
+    Setup[School setup<br/>users and reporting period]
+    Form[Approved and published form version]
+    Activity[Activity<br/>owner, students, VASK and dates]
+    Submit[Responses and evidence<br/>student, peer and teacher]
+    Confirm[Teacher or TA<br/>confirms skill observations]
+    Include[Class teacher<br/>reviews portfolio items]
+    Release[Staff publishes<br/>period snapshot]
+    Deliver[Student view<br/>and official exports]
+
+    Setup --> Form --> Activity --> Submit --> Confirm --> Include --> Release --> Deliver
+    Include -->|return for editing| Submit
+    Release -->|dependent item returned| Withdrawn[Snapshot withdrawn]
+    Withdrawn --> Include
+```
+
+The detailed actor, state, evidence, and publication diagrams are maintained in `output/English/Core data relationships.md`.
 
 ---
 
@@ -370,6 +406,8 @@ A living student-growth portfolio that can answer:
 ---
 
 ## 8. What we do not know yet
+
+The authoritative checklist is `output/English/Discussion questions.md`. The items below are presentation groupings only; use the stable `H-xx`, `M-xx`, and `L-xx` identifiers in slides and speaker notes rather than creating a second decision register.
 
 ### Purpose and output decisions
 
@@ -566,11 +604,11 @@ Use the full original sentence in speaker notes or the traceability appendix. Pa
 
 | Interpretation ID | Current proposal | Evidence basis | Status |
 |---|---|---|---|
-| PI-01 | Show activity context, teacher feedback, and evidence-linked skill state on the same student surface, with the activity as the primary timeline and marks/step summaries as a secondary layer. | DI-02, DI-07, DI-17; `output/evidence-growth-system-map.html` | Proposed; school must confirm the preferred landing view. |
-| PI-02 | Preserve every academic year and reporting period as an immutable historical context; create new memberships, activity assignments, and snapshots when the year changes. | DI-03, DI-07, DI-17; `Core data relationships.md` | Proposed; reporting calendar and rollover owner are unresolved. |
-| PI-03 | Use VASK to state an activity's intended development areas; use the eight Skills Builder skills and their 16 steps to describe evidenced development. | DI-08, DI-11, DI-15, DI-16, DI-20; `Aspects updated.md` | Working interpretation, not an explicit source rule. |
-| PI-04 | Treat activity participation as an opportunity to observe; do not automatically convert completion or a questionnaire score into a skill step. | DI-16, DI-17; `output/evidence-growth-system-map.html` | Proposed assessment safeguard. |
-| PI-05 | The portfolio-only scope contains the student timeline, selected evidence, reflection, published teacher/peer feedback, current evidence-backed skill state, meaningful moments, and next steps. It excludes administration queues, raw security logs, and unrestricted original media. | DI-02, DI-03, DI-07, DI-09, DI-17; `Roles and permissions.md` | Proposed product boundary. |
+| PI-01 | Show activity context, teacher feedback, and evidence-linked skill state on the same student surface, with the activity as the primary timeline and marks/step summaries as a secondary layer. | DI-02, DI-07, DI-17; `output/D2 evidence-growth-system-map.html` | Proposed; school must confirm the preferred landing view. |
+| PI-02 | Preserve every academic year and reporting period as an immutable historical context; create new memberships, activity assignments, and snapshots when the year changes. | DI-03, DI-07, DI-17; `output/English/Core data relationships.md` | Proposed; reporting calendar and rollover owner are unresolved. |
+| PI-03 | Use VASK to state an activity's intended development areas; use the eight Skills Builder skills and their 16 steps to describe evidenced development. | DI-08, DI-11, DI-15, DI-16, DI-20; `output/English/Aspects updated.md` | Working interpretation, not an explicit source rule. |
+| PI-04 | Treat activity participation as an opportunity to observe; do not automatically convert completion or a questionnaire score into a skill step. | DI-16, DI-17; `output/D2 evidence-growth-system-map.html` | Proposed assessment safeguard. |
+| PI-05 | The portfolio-only scope contains the student timeline, selected evidence, reflection, published teacher/peer feedback, current evidence-backed skill state, meaningful moments, and next steps. It excludes administration queues, raw security logs, and unrestricted original media. | DI-02, DI-03, DI-07, DI-09, DI-17; `output/English/Roles and permissions.md` | Proposed product boundary. |
 
 ## 12. Revisions from the RC360 discussion image
 

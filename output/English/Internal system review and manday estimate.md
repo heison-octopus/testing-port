@@ -47,7 +47,7 @@ The lowest-risk interpretation is to build a school-operated evidence and portfo
 
 These are discovery inputs. They should remain configurable or open until confirmed.
 
-The `DI-xx` identifiers and Microsoft Word page numbers follow the source register in `Presentation agenda.md`. `Questions.docx` currently presents these additions on its single continuous note page without stable section numbering; they are therefore cited by topic rather than assigned false source-page precision.
+The `DI-xx` identifiers and Microsoft Word page numbers follow the source register in `output/English/Presentation agenda.md`. `Questions.docx` currently presents these additions on its single continuous note page without stable section numbering; they are therefore cited by topic rather than assigned false source-page precision.
 
 ## 2 Why the current question flow feels uneven
 
@@ -233,6 +233,39 @@ Staff imports users periods and Time Infinity activities
 
 The default form is used for all pilot activities. Creating a new form builder, complex question bank, external portal, and automatic scoring engine at the same time would materially increase cost and risk.
 
+### MVP system boundary
+
+```mermaid
+flowchart TB
+    subgraph MVP[Included in the lean MVP]
+        Identity[Users, roles, classes and periods]
+        Activity[Activities, participants, VASK and approved form version]
+        Evidence[Responses, feedback, media links and review]
+        Skill[Teacher or TA confirmed skill observations]
+        Portfolio[Versioned portfolio snapshot and exports]
+        Identity --> Activity --> Evidence --> Skill --> Portfolio
+    end
+
+    Imports[CSV or XLSX and simulated Time Infinity data] --> Activity
+    Portfolio --> External[External recipient receives PDF or SLP and controlled XLSX]
+
+    subgraph Later[Later or separately estimated]
+        Live[Live Time Infinity integration]
+        Audio[Large-scale transcription and speaker separation]
+        Formula[Automated multi-source scoring]
+        Portal[External authority portal]
+        Sharing[Fine-grained public or guardian sharing]
+    end
+
+    Activity -.-> Live
+    Evidence -.-> Audio
+    Skill -.-> Formula
+    Portfolio -.-> Portal
+    Portfolio -.-> Sharing
+```
+
+Dashed connections identify later capabilities, not dependencies required for the pilot. This boundary keeps the estimate based on a school-operated, human-reviewed workflow.
+
 ## 6 Manday estimate
 
 ### Estimating assumptions
@@ -278,6 +311,34 @@ The 95–130 mandays already includes basic role and assignment checks. Access c
 
 The low-mandays solution is therefore assignment-based internal access plus generated exports for external recipients.
 
+### AI-assisted extension estimate
+
+The original design identifies OCR, transcription, classification, mapping, summaries, and report drafting as possible AI-assisted functions. The figures below are engineering assumptions for planning; they do not turn those possibilities into confirmed requirements. They assume human review, no model training, and reuse of the MVP's authentication, activity, upload, evidence, and audit components.
+
+| AI-assisted capability | Incremental mandays |
+|---|---:|
+| OCR for images/PDFs, extraction status, correction and approval UI | 7–12 |
+| Audio transcription and transcript correction | 8–14 |
+| Speaker separation and manual speaker-identity confirmation | 10–18 |
+| Classification and evidence/VASK tagging | 7–11 |
+| Three selectable summary profiles, preview and teacher editing | 10–16 |
+| Suggested rubric/eight-skill matching with evidence citations | 12–20 |
+| Portfolio/report drafting and revision history | 10–16 |
+| Shared job queue, retry, audit, prompt/model version and monitoring | 14–22 |
+| Evaluation with BHSS samples and prompt calibration | 12–20 |
+
+These rows share infrastructure and must not be added mechanically. Reasonable combined ranges are:
+
+| AI scope | Combined incremental estimate |
+|---|---:|
+| Human-reviewed AI POC without speaker separation | 70–105 |
+| Add speaker separation and stronger production controls | 90–135 |
+| Local deployment, 400–600-record batch processing, and media-heavy multimodal analysis | 120–180+ |
+
+The POC should offer three controlled drafting profiles: academic learning and reasoning; non-academic participation and personal growth; and interpersonal collaboration and intrapersonal development. Teachers may adjust controlled emphasis, class or age, tone, length, and exclusions. Supporting arbitrary teacher-written production prompts would require additional prompt security, evaluation, version review, and rollback work.
+
+Every run must retain the prompt/profile version and separate `generated_text`, `teacher_edited_text`, and `final_published_text`. AI suggestions remain drafts; identity matching, evidence acceptance, and official 1–16 step publication remain human decisions.
+
 ### Larger interpretations
 
 | Scope | Mandays | Meaning |
@@ -288,7 +349,7 @@ The low-mandays solution is therefore assignment-based internal access plus gene
 
 ## 7 Architecture reconciliation completed
 
-`Core data relationships.md` has been updated to include:
+`output/English/Core data relationships.md` has been updated to include:
 
 - provenance for later source-system/import records;
 - activity student-access and due dates;

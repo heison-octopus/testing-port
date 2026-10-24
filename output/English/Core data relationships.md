@@ -6,6 +6,8 @@ This document describes the core operational data model before analytics, aggreg
 
 `Design ideas.docx` remains the original design source. `output/Questions.docx` is a later discovery document containing proposed workflows, implementation questions, and unconfirmed values. Items from the latter are labelled below rather than treated automatically as approved requirements.
 
+Open and mid-level decisions are maintained in `output/English/Discussion questions.md`. This Core document records confirmed working rules and recommended architecture only; a question listed there does not become a system requirement until its decision is recorded here.
+
 The model preserves the original source of proof:
 
 - what activity took place;
@@ -37,6 +39,8 @@ Each external achievement must preserve:
 
 The default `official_skill_mapping_status` is `none`. A piano Grade 1 first runner-up, a piano Grade 8 first runner-up, and an attendance certificate are not equivalent. The result label must never be used alone to infer a framework step.
 
+Where the teacher or teaching assistant did not observe the external activity, the certificate, student reflection, and student-selected VASK remain valid student-owned evidence, but no teacher rating is invented. This VA/self-reflection evidence is not averaged with a missing teacher score and does not change a published 1–16 step by default.
+
 ### Proud Moments and meaningful events
 
 `proud_moment_selections` records a student's choice of an activity, external achievement, or evidence item that best represents the student. This selection is a presentation and reflection decision. It is not a skill-step award.
@@ -55,19 +59,60 @@ Every school-owned activity must be packaged with one immutable form version. Th
 
 An activity does not receive a framework step merely because its form has a mapping. The mapping identifies candidate evidence. A teacher or assigned teaching assistant remains the human reviewer.
 
-### Shared submission and publication workflow
+### Question-to-skill weighting and evidence range
+
+The current working decision is to normalize every question to a total weight of `1.0`. When a question maps to several framework skills, that total is divided equally across the mapped skills:
+
+```text
+normalized_skill_share = question_total_weight / mapped_skill_count
+```
+
+One mapped skill therefore receives `1.0`; two receive `0.5` each; four receive `0.25` each. A broad question does not gain extra total influence merely because it has more mappings.
+
+Question difficulty is a separate property. A future mapping may record `evidence_band_min` and `evidence_band_max` to describe the range of behaviour that an answer could support. This range is a limit on candidate evidence, not an automatic step award. The response, activity context, behavioural evidence, and teacher/TA confirmation remain necessary.
+
+The original documents do not assign authority for question-to-VASK, question-to-skill, or evidence-range mappings. The recommended but unconfirmed workflow is:
+
+```text
+teacher or staff author proposes a versioned mapping
+  -> assigned SuperTeacher or staff member reviews it
+  -> authorized staff member or SchoolAdmin approves and publishes it
+```
+
+Whether the author may also approve the mapping remains open under `H-05` in the discussion question register.
+
+### Shared submission review workflow
 
 Questionnaire submissions, student reflection, and term `回顧與展望` use the same lifecycle:
 
 ```text
 not_submitted -> draft -> submitted -> in_review
     -> changes_requested -> submitted
-    -> approved -> published
+    -> approved
     -> rejected
-published -> withdrawn
 ```
 
-The content version lifecycle remains separate from the response lifecycle. A published form template can still have an individual student submission that is not submitted, under review, or unpublished.
+The content version lifecycle remains separate from the response lifecycle. A published form template can still have an individual student submission that is not submitted or under review. Student-facing publication uses the separate visibility lifecycle below.
+
+### Imported-response processing and visibility
+
+An imported response is processed separately from whether the result is visible to the student:
+
+```text
+received -> identity_matched -> validated -> included_in_assessment
+received -> needs_identity_resolution -> corrected -> validated
+validated -> excluded
+```
+
+`included_in_assessment` means that the record may be counted by the assessment process. It does not publish teacher answers, feedback, or a portfolio item. Expected responses that have not arrived are recorded as `missing_response`, never zero, and are shown to the responsible teacher.
+
+Student-facing visibility uses a separate lifecycle:
+
+```text
+unpublished -> published_to_portfolio -> withdrawn
+```
+
+When staff resolve an incorrect student ID, the imported payload remains immutable. The system records the original and resolved student IDs, before and after values, correction reason, correcting user, and timestamp. Published or counted records use the resolved identity without erasing the source error.
 
 ### HKEAA input and the human review gate
 
@@ -106,6 +151,305 @@ The following additions are needed because `output/Questions.docx` goes beyond t
 - Insufficient evidence must produce `not_enough_evidence`, not a low or zero skill result. The school must decide whether the first portfolio is published only after the first term.
 - An external or professional assessment can be recorded as another rated source. It cannot silently override the school decision until the authority, scope, and appeal policy are confirmed.
 - Automated reminders and an exact student-unlock schedule are workflow enhancements, not prerequisites for storing valid evidence.
+
+### Selectable AI-assisted drafting
+
+The POC may provide three controlled drafting profiles:
+
+1. academic learning and reasoning;
+2. non-academic participation and personal growth; and
+3. interpersonal collaboration and intrapersonal development.
+
+Teachers may adjust controlled inputs such as emphasis, student age or class, tone, length, and information to omit. The first release should not expose an unrestricted production system prompt to every teacher.
+
+Every generated result records the model and prompt-profile version. The system preserves `generated_text`, `teacher_edited_text`, and `final_published_text` separately, together with the editor, edit time, and revision history. A teacher edit improves the final wording without erasing what the system generated. AI output remains a draft and never becomes an identity decision, accepted evidence, or published framework step without the relevant human review.
+
+Original media is hidden from the Portfolio by default. A published Portfolio may show an evidence reference or attachment count; access to the actual image, audio, or document remains a separate permission decision.
+
+## Operational visual guide
+
+The entity diagrams later in this document define storage and cardinality. The following diagrams show how people use those records and where human decisions occur.
+
+### Platform actors and boundaries
+
+```mermaid
+flowchart LR
+    Student[Student] -->|reflection, evidence, certificate| Platform[BHSS portfolio platform]
+    Peer[Assigned peer reviewer] -->|peer response| Platform
+    ActivityTeacher[Activity teacher or TA] -->|activity setup, observation, rating| Platform
+    ClassTeacher[Class teacher] -->|portfolio review and return| Platform
+    Staff[SuperTeacher or authorized staff] -->|exception review and publication| Platform
+    Admin[SchoolAdmin] -->|users, periods, policy and access| Platform
+    TimeInfinity[Time Infinity or school files] -->|controlled import| Platform
+    Platform -->|published portfolio and feedback| Student
+    Platform -->|assigned student summaries| ClassTeacher
+    Platform -->|PDF or SLP and controlled XLSX| External[External report recipient]
+    Platform -.->|no MVP login| External
+```
+
+An external report recipient is outside the authenticated MVP boundary. One staff member may hold several roles, but each action is recorded under the role and scope used for that action.
+
+### People and records around one activity
+
+```mermaid
+flowchart TB
+    Activity[Activity instance]
+    Owner[Owner teacher]
+    Support[Supporting teacher or TA]
+    Students[Participating students]
+    Peers[Named peer reviewers]
+    ClassTeacher[Class teacher]
+    Staff[Authorized staff]
+    Package[Immutable activity package]
+    VASK[VASK intentions]
+    Form[Approved published form version]
+    Evidence[Responses, observations and media]
+    Review[Reviewed framework observations]
+    Portfolio[Period portfolio snapshot]
+
+    Owner -->|owns| Activity
+    Support -->|supports or assesses| Activity
+    Students -->|participate| Activity
+    Peers -.->|only when assigned| Activity
+    ClassTeacher -->|reviews portfolio items| Activity
+    Staff -->|handles approval and exceptions| Activity
+    Activity --> Package
+    Package --> VASK
+    Package --> Form
+    Students --> Evidence
+    Peers -.-> Evidence
+    Owner --> Evidence
+    Support --> Evidence
+    Evidence --> Review
+    ClassTeacher --> Review
+    Staff --> Portfolio
+    Review --> Portfolio
+```
+
+Activity membership does not grant unrestricted media or portfolio access. Media consent, reviewer assignment, class scope, and publication state remain separate controls.
+
+### End-to-end activity swimlane
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Admin as SchoolAdmin
+    participant Staff as SuperTeacher or staff
+    participant Teacher as Activity teacher or TA
+    participant System
+    participant Student
+    participant Peer as Assigned peer
+    participant Class as Class teacher
+
+    Admin->>System: Configure users, groups and reporting period
+    Staff->>System: Approve and publish an eligible form version
+    Teacher->>System: Create activity with VASK, dates and staff
+    Teacher->>System: Confirm participants and assign exact form version
+    opt Activity requires approval
+        Staff->>System: Approve activity and its collection conditions
+    end
+    System->>Student: Open assigned reflection and evidence task
+    Student->>System: Submit responses and permitted evidence
+    System->>System: Match identity and validate submitted or imported responses
+    alt Student ID cannot be matched
+        System-->>Staff: Place record in identity-resolution queue
+        Staff->>System: Record corrected student ID, reason and before/after values
+    end
+    System-->>Teacher: Flag expected responses that are still missing
+    Staff->>System: Confirm validated responses for assessment inclusion
+    opt Peer review is required
+        Teacher->>System: Assign a named peer reviewer
+        Peer->>System: Submit peer response
+    end
+    Teacher->>System: Submit observation, feedback and initial skill rating
+    System->>Teacher: Flag missing evidence, consent or ratings
+    Teacher->>System: Confirm evidence-backed skill observations
+    Class->>System: Review portfolio inclusion rows
+    Staff->>System: Resolve exceptions and publish period snapshot
+    System-->>Student: Show activity, feedback and published skill evidence
+    System-->>Staff: Generate versioned PDF or SLP and XLSX export
+```
+
+This is the recommended operating flow. The school must still confirm which staff role owns each approval and whether routine activities can be approved automatically.
+
+### Activity data package
+
+```mermaid
+flowchart LR
+    Template[Activity template] --> Instance[Activity instance]
+    Period[Academic period] --> Instance
+    Staff[Assigned staff] --> Instance
+    Roster[Participants and attendance] --> Instance
+    VASK[VASK intentions] --> Instance
+    Form[Exact approved form version] --> Assignment[Assessment assignment]
+    Instance --> Assignment
+    Assignment --> Submission[Self, peer and teacher submissions]
+    Instance --> Media[Activity and student media]
+    Submission --> Evidence[Feedback evidence]
+    Media -.->|when cited and permitted| Evidence
+    Evidence --> Observation[Human-confirmed framework observation]
+    Observation --> Item[Portfolio item]
+    Instance --> Item
+    Item --> Snapshot[Versioned period snapshot]
+```
+
+The activity is the shared context, but the form version, respondent, evidence, reviewer, and publication record remain individually traceable.
+
+### Evidence decision flow
+
+```mermaid
+flowchart TD
+    Source{Evidence source}
+    School[School-owned activity]
+    External[Student external achievement]
+    Candidate[Candidate VASK and skill evidence]
+    Consent{Identity, consent and access valid?}
+    Rating{Assigned teacher or TA rating present?}
+    Confirm{Human reviewer confirms the observation?}
+    Unconfirmed[Keep as unconfirmed supporting evidence]
+    NoEvidence[Record not enough evidence]
+    Observation[Approved framework observation]
+    Portfolio[Eligible for a published portfolio snapshot]
+    Proud[Proud Moment selection]
+
+    Source --> School
+    Source --> External
+    School --> Candidate
+    External -->|VASK allowed; no official skill mapping by default| Candidate
+    Candidate --> Consent
+    Consent -->|No| Unconfirmed
+    Consent -->|Yes| Rating
+    Rating -->|No| NoEvidence
+    Rating -->|Yes| Confirm
+    Confirm -->|No or changes requested| Unconfirmed
+    Confirm -->|Yes| Observation
+    Observation --> Portfolio
+    Candidate -.->|student may select| Proud
+    Proud -.->|does not award a step| Portfolio
+```
+
+Self-review, peer review, questionnaire scores, grades, media extraction, and AI suggestions can support a decision. They cannot independently set the published 1–16 step.
+
+### Independent lifecycle states
+
+```mermaid
+stateDiagram-v2
+    state "Activity" as Activity {
+        [*] --> activity_draft
+        activity_draft --> pending_review
+        pending_review --> activity_approved
+        pending_review --> activity_draft: changes requested
+        activity_approved --> active
+        active --> completed
+        completed --> archived
+    }
+    state "Form version" as Form {
+        [*] --> form_draft
+        form_draft --> in_review
+        in_review --> changes_requested
+        changes_requested --> form_draft
+        in_review --> form_approved
+        form_approved --> form_published
+        form_published --> withdrawn
+        form_published --> retired
+    }
+    state "Submission content" as Response {
+        [*] --> not_submitted
+        not_submitted --> response_draft
+        response_draft --> submitted
+        submitted --> response_in_review
+        response_in_review --> response_changes_requested
+        response_changes_requested --> response_draft
+        response_in_review --> response_approved
+        response_in_review --> rejected
+    }
+    state "Imported response processing" as Processing {
+        [*] --> received
+        received --> identity_matched
+        received --> needs_identity_resolution
+        needs_identity_resolution --> corrected
+        corrected --> identity_matched
+        identity_matched --> validated
+        validated --> included_in_assessment
+        validated --> excluded
+    }
+    state "Student-facing visibility" as Visibility {
+        [*] --> unpublished
+        unpublished --> published_to_portfolio
+        published_to_portfolio --> withdrawn
+    }
+```
+
+Approval, assessment inclusion, and publication are separate. Publishing a form does not publish a student's response; including an imported record in assessment does not make it student-visible; and approving a portfolio item does not automatically publish a period snapshot.
+
+### Return after publication
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Class as Class teacher
+    participant System
+    participant Student
+    participant Staff as Authorized staff
+
+    Class->>System: Return a published dependent item for editing
+    System->>System: Mark item changes_requested
+    System->>System: Withdraw affected portfolio snapshot
+    System-->>Student: Hide the withdrawn result and show editing state
+    System-->>Staff: Show zero active publication for the withdrawn snapshot
+    Student->>System: Correct and resubmit the item
+    Class->>System: Review and approve the corrected item
+    Note over System,Staff: Reapproval does not republish automatically
+    Staff->>System: Explicitly publish a new snapshot version
+    System-->>Student: Show the republished result
+```
+
+The withdrawal preserves the earlier audit record. It does not delete the previous snapshot or silently reuse its approval.
+
+### Reporting period and official output
+
+```mermaid
+flowchart LR
+    Live[Live activity history] --> Review[Period inclusion review]
+    Observations[Approved framework observations] --> Review
+    Reflections[Approved reflections and Proud Moments] --> Review
+    Review --> Gate{All required items approved?}
+    Gate -->|No| Queue[Return or exception queue]
+    Queue --> Review
+    Gate -->|Yes| Snapshot[Immutable portfolio snapshot]
+    Snapshot --> Student[Student portfolio view]
+    Snapshot --> PDF[Printable PDF or SLP]
+    Snapshot --> XLSX[Controlled evidence register]
+    PDF --> External[External recipient]
+    XLSX -.->|only when detailed checking is required| External
+```
+
+The live timeline may continue to change after a reporting period closes. A published snapshot and its exports remain reproducible until an authorized withdrawal creates a new publication event.
+
+### Documentation traceability
+
+```mermaid
+flowchart TB
+    Original[Original evidence<br/>Design ideas, framework PDFs, VASK and workbook]
+    Discovery[Discovery evidence<br/>Questions docx and client discussion images]
+    Architecture[Current architecture<br/>Core, Aspects and Roles]
+    Planning[Planning interpretation<br/>Agenda, internal review and external proposal]
+    Prototype[Demonstrations<br/>system map, simulators and bilingual presentation]
+    Decision[Confirmed school decision]
+    Open[Open or configurable rule]
+
+    Original --> Architecture
+    Discovery --> Architecture
+    Architecture --> Planning
+    Architecture --> Prototype
+    Planning --> Decision
+    Prototype --> Decision
+    Decision -->|update authoritative documents| Architecture
+    Discovery --> Open
+    Open -.->|must not be presented as confirmed| Planning
+```
+
+Original evidence is not silently rewritten. A prototype demonstrates an interpretation; it becomes an authoritative rule only after the decision is recorded in the architecture documents.
 
 ## Cardinality legend
 
@@ -504,9 +848,14 @@ erDiagram
     QUESTIONS ||--o{ QUESTION_CONSTRUCT_MAPPINGS : classified_by
     QUESTIONNAIRE_CONSTRUCTS ||--o{ QUESTION_CONSTRUCT_MAPPINGS : classifies
 
+    QUESTIONS ||--o{ QUESTION_VASK_MAPPINGS : indicates
+    VASK_ITEMS ||--o{ QUESTION_VASK_MAPPINGS : indicated_by
+
     QUESTIONS ||--o{ QUESTION_FRAMEWORK_MAPPINGS : indicates
     FRAMEWORK_SKILLS ||--o{ QUESTION_FRAMEWORK_MAPPINGS : indicated_by
     FRAMEWORK_STEPS ||--o{ QUESTION_FRAMEWORK_MAPPINGS : anchors
+    QUESTIONS ||--o{ QUESTION_MAPPING_REVIEW_ASSIGNMENTS : reviewed_through
+    USERS ||--o{ QUESTION_MAPPING_REVIEW_ASSIGNMENTS : assigned_to
 
     ASSESSMENT_INSTRUMENTS {
         uuid assessment_instrument_id PK
@@ -527,6 +876,7 @@ erDiagram
         int display_order
         boolean is_required
         string section_name
+        decimal item_total_weight
         json configuration_json
     }
 
@@ -558,6 +908,18 @@ erDiagram
         string rationale
     }
 
+    QUESTION_VASK_MAPPINGS {
+        uuid question_vask_mapping_id PK
+        uuid question_id FK
+        uuid vask_item_id FK
+        string mapping_role
+        string mapping_rationale
+        int mapping_version
+        string approval_status
+        uuid approved_by_user_id FK
+        datetime approved_at
+    }
+
     RESPONSE_SCALES {
         uuid response_scale_id PK
         string code UK
@@ -580,10 +942,27 @@ erDiagram
         uuid framework_skill_id FK
         uuid framework_step_id FK
         string mapping_role
-        decimal weight
+        decimal normalized_weight_share
+        int evidence_band_min
+        int evidence_band_max
         string mapping_rationale
+        int mapping_version
+        string approval_status
         uuid approved_by_user_id FK
         datetime approved_at
+    }
+
+    QUESTION_MAPPING_REVIEW_ASSIGNMENTS {
+        uuid mapping_review_assignment_id PK
+        uuid question_id FK
+        string mapping_scope
+        int mapping_version
+        uuid assigned_by_user_id FK
+        uuid reviewer_user_id FK
+        string status
+        datetime due_at
+        string decision_comment
+        datetime decided_at
     }
 ```
 
@@ -596,15 +975,18 @@ erDiagram
 | `instrument_items` | The placement and order of a question in an instrument. |
 | `questionnaire_constructs` | General qualities measured by groups of questions, such as communication confidence. |
 | `response_scales` | How a question is answered, such as 1–6 frequency or agreement. |
+| `question_vask_mappings` | Which VASK items a question is intended to explore; this mapping requires its own approval record. |
 | `question_framework_mappings` | Which framework abilities or optional exact steps a question may provide evidence about. |
 
 ### Many-to-many relationships
 
 - One assessment instrument contains many questions, and one question may be reused in many instruments. `instrument_items` resolves this relationship.
 - One question may relate to several constructs, and one construct contains many questions. `question_construct_mappings` resolves it.
+- One question may indicate several VASK items. `question_vask_mappings` records the proposed relationship and its approval state.
 - One question may indicate several framework skills, and one framework skill may be indicated by many questions. `question_framework_mappings` resolves it.
+- `question_mapping_review_assignments` allocates review of a particular VASK, framework-skill, or evidence-range mapping version to an actual reviewer. Role membership alone does not prove that this review was assigned or completed.
 
-A question-to-framework mapping does not by itself award a framework step. It states where the answer may provide evidence. An exact `framework_step_id` is used only for a deliberately step-anchored question.
+A question-to-framework mapping does not by itself award a framework step. It states where the answer may provide evidence. An exact `framework_step_id` is used only for a deliberately step-anchored question. Unless an approved form version explicitly overrides the working default, `instrument_items.item_total_weight` is `1.0`, and the normalized share is divided equally across its mapped framework skills.
 
 ### Form version authority and publication
 
@@ -714,7 +1096,9 @@ erDiagram
         uuid assessment_submission_id PK
         uuid assignment_recipient_id FK
         string perspective
-        string status
+        string content_status
+        string processing_status
+        string visibility_status
         datetime submitted_at
         datetime created_at
         datetime updated_at
@@ -743,6 +1127,8 @@ erDiagram
 - `guardian_observation`
 
 Student and teacher submissions remain separate records even when they use the same instrument and concern the same student.
+
+`content_status` tracks drafting and review. `processing_status` tracks identity matching, validation, and assessment inclusion. `visibility_status` tracks whether approved content is unpublished, visible in the Portfolio, or withdrawn. These fields must not be collapsed into one generic `status`.
 
 ### Key relationships
 
@@ -988,7 +1374,9 @@ sequenceDiagram
 erDiagram
     SOURCE_SYSTEMS ||--o{ IMPORT_BATCHES : supplies
     IMPORT_BATCHES ||--o{ IMPORT_RECORDS : contains
+    IMPORT_RECORDS ||--o{ IMPORT_RECORD_CORRECTIONS : corrected_by
     USERS ||--o{ IMPORT_BATCHES : uploads
+    USERS ||--o{ IMPORT_RECORD_CORRECTIONS : records
 
     USERS ||--o{ PORTFOLIO_SNAPSHOTS : owns
     ACADEMIC_PERIODS ||--o{ PORTFOLIO_SNAPSHOTS : closes
@@ -1023,6 +1411,19 @@ erDiagram
         json original_payload
     }
 
+    IMPORT_RECORD_CORRECTIONS {
+        uuid import_record_correction_id PK
+        uuid import_record_id FK
+        string field_name
+        string before_value
+        string after_value
+        string original_student_id
+        string resolved_student_id
+        string correction_reason
+        uuid corrected_by_user_id FK
+        datetime corrected_at
+    }
+
     PORTFOLIO_SNAPSHOTS {
         uuid portfolio_snapshot_id PK
         uuid student_user_id FK
@@ -1054,7 +1455,7 @@ erDiagram
     }
 ```
 
-`source_systems` and import records preserve provenance and validation failures. An imported record must not overwrite reviewed platform data without an explicit reconciliation decision.
+`source_systems` and import records preserve provenance and validation failures. An imported record must not overwrite reviewed platform data without an explicit reconciliation decision. Identity corrections append an `import_record_corrections` row; they never rewrite `original_payload`. The resolved identity may be used by later processing while the original student ID and every before/after value remain auditable.
 
 `portfolio_snapshots` freeze the approved content for a reporting period. The live student timeline may continue to change, while an issued SLP or period report remains reproducible.
 

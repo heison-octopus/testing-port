@@ -70,6 +70,76 @@ A SchoolAdmin manages the school tenant, users, policies, periods, imports, and 
 
 An external authority or report recipient is not a platform role in the recommended MVP. Authorized staff generate a versioned printable SLP/PDF and, when detailed evidence checking is required, a protected XLSX evidence register. This avoids maintaining external identities, expiry, delegated access, consent propagation, and raw-media permissions before there is a confirmed requirement. A later external portal requires a separate access-control design.
 
+## Responsibility flow
+
+```mermaid
+flowchart LR
+    subgraph StudentLane[Student]
+        S1[Join assigned activity]
+        S2[Submit reflection and permitted evidence]
+        S3[Correct returned work]
+        S4[View published result]
+    end
+    subgraph TeacherLane[Activity teacher or TA]
+        T1[Create activity draft]
+        T2[Confirm roster, VASK and form version]
+        T3[Observe and submit initial skill rating]
+        T4[Respond to clarification request]
+    end
+    subgraph ClassLane[Class teacher]
+        C1[Review portfolio inclusion rows]
+        C2[Approve or return an item]
+    end
+    subgraph StaffLane[SuperTeacher or authorized staff]
+        ST1[Approve exceptions and custom forms]
+        ST2[Resolve evidence or identity issues]
+        ST3[Publish or withdraw snapshot]
+    end
+    subgraph AdminLane[SchoolAdmin]
+        A1[Manage users, periods and policies]
+        A2[Assign review authority]
+        A3[Audit access and exports]
+    end
+
+    A1 --> A2 --> T1
+    T1 --> T2 --> S1 --> S2 --> T3 --> C1 --> C2
+    C2 -->|changes requested| S3 --> T4 --> C1
+    C2 -->|approved| ST2 --> ST3 --> S4
+    ST1 -.-> T2
+    A3 -.-> ST3
+```
+
+The same person may act as activity teacher and class teacher, but the system records which responsibility authorized each action. An activity owner cannot gain school-wide access merely because they created the activity.
+
+## Visibility and media-access flow
+
+```mermaid
+flowchart TD
+    Request[User requests a record]
+    Role{Role permits this record type?}
+    Scope{Assigned activity, class or programme scope?}
+    Publication{Draft, reviewed or published?}
+    Media{Original media requested?}
+    Consent{Consent and media access grant valid?}
+    Summary[Show permitted activity or portfolio summary]
+    Original[Show permitted original media]
+    Deny[Do not disclose; record the decision where required]
+
+    Request --> Role
+    Role -->|No| Deny
+    Role -->|Yes| Scope
+    Scope -->|No| Deny
+    Scope -->|Yes| Publication
+    Publication -->|Not visible to this role| Deny
+    Publication -->|Visible| Media
+    Media -->|No| Summary
+    Media -->|Yes| Consent
+    Consent -->|No| Summary
+    Consent -->|Yes| Original
+```
+
+Access to a published summary does not imply access to its original photograph, audio, transcript, or internal moderation notes.
+
 ## Permission matrix
 
 | Capability | Student | Teacher | SuperTeacher (staff) | SchoolAdmin |

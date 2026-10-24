@@ -7,8 +7,8 @@ Build a traceable student-growth portfolio that connects activities and evidence
 ## Source-of-truth order
 
 1. Original supplied documents are evidence, not to be silently rewritten.
-2. Root Markdown files record the current interpretation and proposed architecture.
-3. `output/` contains demonstrations, presentation material, and import examples; these are prototypes unless a root specification confirms the rule.
+2. `output/English/` and `output/Chinese/` contain the current interpretation and proposed architecture in separate language sets.
+3. Other files under `output/` contain demonstrations and import examples; these are prototypes unless the architecture documents confirm the rule.
 4. When a rule is uncertain, keep it configurable and record the question instead of inventing a requirement.
 
 ## Original sources
@@ -26,14 +26,15 @@ Temporary Office lock files beginning with `~$` are not sources.
 
 ## Current architecture references
 
-- `Core data relationships.md` — primary entity, cardinality, lifecycle, evidence, review, and human-in-the-loop model.
-- `Aspects updated.md` — before/after data-model revision, naming conventions, and a separate Chinese version.
-- `Roles and permissions.md` — Student, Teacher, SuperTeacher/staff, and SchoolAdmin permissions.
-- `Presentation agenda.md` — concise IPO, scope, known/unknown register, traceability convention, and proposed discussion sequence.
-- `Internal system review and manday estimate.md` — comparison of the two Word documents, component/page inventory, lean workflow, and internal effort ranges.
-- `output/External lean MVP proposal.md` — stakeholder-facing recommended scope optimized for fewer mandays.
+- `output/English/Core data relationships.md` / `output/Chinese/核心資料關係.md` — primary entity, cardinality, lifecycle, evidence, review, and human-in-the-loop model.
+- `output/English/Discussion questions.md` / `output/Chinese/討論問題.md` — single decision checklist for open high-, mid-, and low-level questions, with status and answer records.
+- `output/English/Aspects updated.md` / `output/Chinese/資料欄位修訂.md` — before/after data-model revision and naming conventions.
+- `output/English/Roles and permissions.md` / `output/Chinese/角色及權限.md` — Student, Teacher, SuperTeacher/staff, and SchoolAdmin permissions.
+- `output/English/Presentation agenda.md` / `output/Chinese/簡報議程.md` — IPO, scope, known/unknown register, traceability convention, and proposed discussion sequence.
+- `output/English/Internal system review and manday estimate.md` / `output/Chinese/內部系統檢視及人日估算.md` — source comparison, component/page inventory, lean workflow, and internal effort ranges.
+- `output/English/External lean MVP proposal.md` / `output/Chinese/對外精簡MVP方案.md` — stakeholder-facing recommended scope optimized for fewer mandays.
 
-Read these four files before changing the domain model. Update them when a confirmed decision changes their assumptions.
+Start with the English or Chinese `README.md`, then read the architecture, roles, agenda, and data-field documents before changing the domain model. Keep both language sets aligned when a confirmed decision changes their assumptions.
 
 ## Key working model
 
@@ -55,7 +56,7 @@ Read these four files before changing the domain model. Update them when a confi
 - `output/D1 bhss-skills-navigator/index.html` — eight-skill/step navigator.
 - `output/D2 vask-skill-map/` — VASK-to-eight-skills visualization and workbook.
 - `output/portfolioDummyData.html` — student portfolio mock-up.
-- `output/D2 bhss-portfolio-ppt/` — presentation HTML, outline, and script.
+- `D3 bhss-portfolio-ppt/` — bilingual presentation HTML, outline, script, and the current interactive POC; it remains at the repository root because the same artifact supports both languages.
 - `output/import-examples/` — example CSV contracts, manifest, enums, assignments, review history, external achievements, ratings, and peer review.
 
 The simulator is illustrative and uses `localStorage`; it is not the production security or persistence architecture.
@@ -84,10 +85,22 @@ The simulator is illustrative and uses `localStorage`; it is not the production 
 - What AI use is allowed beyond transcription/speaker separation, and which outputs always require human confirmation?
 - Should Proud Moments affect progression, remain portfolio curation only, or be deferred from the MVP?
 
+## Chinese language and translation standard
+
+- Write Chinese deliverables in natural Traditional Chinese localized for Hong Kong readers. Prefer established Hong Kong education and administrative terminology over Taiwan- or Mainland-specific wording when a common Hong Kong term exists.
+- Do not translate sentence by sentence or preserve awkward English syntax. Rebuild long sentences around natural Chinese logic and reading rhythm while preserving the original meaning, status, uncertainty, and level of formality.
+- Use a professional, clear, discussion-oriented tone. Avoid machine-translated phrasing, inflated claims, unnecessary passive constructions, and decorative wording.
+- Keep project terms consistent across files. Retain established English names or abbreviations where they are clearer or already used by the project, including VASK, Skills Builder, HKEAA, Portfolio, SuperTeacher, SchoolAdmin, and Time Infinity; explain them in Chinese on first use when useful.
+- Treat the Chinese and English document sets as aligned standalone editions, not line-by-line translations. A Chinese document should read as if it was originally written in Chinese and should not include translation commentary unless explicitly requested.
+- When English idioms, metaphors, or wordplay appear, use culturally appropriate meaning-based translation. Preserve brand names, proper nouns, and industry terms using their established forms.
+- Keep tables, question IDs, decision statuses, source references, and architectural meanings synchronized between the two language sets even when the sentence structure differs.
+- For user-interface wording, prefer concise Hong Kong usage such as `上載`, `下載`, `提交`, `退回修改`, `覆核`, `批核`, `同儕互評`, `班主任`, and `學年`. Use the terminology already established in the source document when it is authoritative.
+
 ## Change discipline
 
 - For claims from an original source, record file, page, section, and a short quotation/paraphrase where possible.
 - Label interpretations as `confirmed`, `recommended`, `assumption`, or `open`.
+- Keep unresolved questions in the bilingual discussion registers and reference their stable IDs elsewhere. Update Core documents only when an answer becomes an architectural rule.
 - Keep VASK, questionnaire constructs, eight skills, and 16 steps as separate concepts unless an explicit mapping joins them.
 - Do not expose internal scope-cutting rationale in stakeholder slides unless requested; keep it in architecture notes.
 - Prefer extending the existing CSV contracts and architecture documents over creating competing schemas.

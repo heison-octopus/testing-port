@@ -464,6 +464,7 @@ Orders reusable questions within a form.
 | `display_order` | integer | Required |
 | `is_required` | boolean | Required |
 | `section_name` | text, nullable | Optional grouping |
+| `item_total_weight` | decimal | Defaults to `1.0`; divided across mapped framework skills |
 | `configuration_json` | json, nullable | UI-only settings, not core scoring data |
 
 #### `activity_form_assignments`
@@ -501,9 +502,13 @@ Approval, publication, visibility, and assignment are separate decisions. Approv
 | `form_assignment_recipient_id` | UUID | References recipient record |
 | `feedback_id` | UUID, nullable | Connects assessment responses to feedback |
 | `submitted_at` | timestamp, nullable | Null until submitted |
-| `status` | enum | `draft`, `submitted`, `locked`, `returned` |
+| `content_status` | enum | `draft`, `submitted`, `in_review`, `changes_requested`, `approved`, `rejected` |
+| `processing_status` | enum | `received`, `needs_identity_resolution`, `identity_matched`, `corrected`, `validated`, `included_in_assessment`, `excluded` |
+| `visibility_status` | enum | `unpublished`, `published_to_portfolio`, `withdrawn` |
 | `created_at` | timestamp | Required |
 | `updated_at` | timestamp | Required |
+
+Content review, assessment inclusion, and student visibility are separate decisions. A validated response may count without being visible in the Portfolio.
 
 ---
 
@@ -609,10 +614,24 @@ Maps a question to zero, one, or several framework axes without pretending the t
 | `question_id` | UUID | References `questions` |
 | `framework_skill_id` | UUID | References `framework_skills` |
 | `mapping_role` | enum | `primary`, `supporting` |
-| `weight` | decimal, nullable | Optional; avoid unless validated |
+| `normalized_weight_share` | decimal | Equal share of the form item's total weight across mapped skills |
+| `evidence_band_min` | integer, nullable | Lowest step range the question may help evidence |
+| `evidence_band_max` | integer, nullable | Highest step range the question may help evidence; never an automatic award |
 | `mapping_rationale` | text | Explains why the mapping exists |
+| `mapping_version` | integer | Incremented when the interpretation changes |
+| `approval_status` | enum | `draft`, `in_review`, `changes_requested`, `approved`, `rejected`, `retired` |
 | `approved_by_user_id` | UUID, nullable | Governance record |
 | `approved_at` | timestamp, nullable | Governance record |
+
+The current working rule keeps every form item's total weight at `1.0` and divides it equally across all mapped framework skills. Mapping breadth therefore does not increase the question's total influence.
+
+#### `question_vask_mappings`
+
+Records a question's proposed relationship to one or more VASK items, including mapping role, rationale, mapping version, approval status, approver, and approval time. VASK mappings and framework-skill mappings remain separate.
+
+#### `question_mapping_review_assignments`
+
+Assigns a particular VASK, framework-skill, or evidence-range mapping version to a named reviewer. Store the question, mapping scope, version, assigning user, reviewer, due date, decision, comment, and decision time. The school still needs to confirm which role may approve each scope and whether an author may self-approve.
 
 #### `question_responses`
 
@@ -944,6 +963,23 @@ Not defined in the original file, but identified as a requirement.
 
 Login events and audit events should not be used as the primary source for ordinary product analytics. If detailed behavioural analytics are required, define a separate event model and retention policy.
 
+#### `import_record_corrections`
+
+When staff resolve an imported response with an incorrect student ID, keep the original import immutable and append a correction record.
+
+| Field | Type | Notes |
+|---|---|---|
+| `import_record_correction_id` | UUID | Primary key |
+| `import_record_id` | UUID | References the untouched imported row |
+| `field_name` | text | Usually the student identifier field |
+| `before_value` | text | Original imported value |
+| `after_value` | text | Resolved value used by later processing |
+| `original_student_id` | text, nullable | Identifier supplied by the source |
+| `resolved_student_id` | text, nullable | Confirmed platform identifier |
+| `correction_reason` | text | Required |
+| `corrected_by_user_id` | UUID | Staff member who made the decision |
+| `corrected_at` | timestamp | Required |
+
 ---
 
 ## 14 Radar chart and reporting
@@ -986,32 +1022,33 @@ Treat the snapshot as derived data. Source feedback and evidence remain authorit
 
 ## 15 Recommended core relationship flow
 
-```text
-activity_templates
-    -> activity_instances
-        -> activity_participants
-        -> activity_instance_vask_items
-        -> activity_framework_targets
-        -> activity_media
-        -> activity_form_assignments
-        -> feedback
+```mermaid
+flowchart LR
+    AT[activity_templates] --> AI[activity_instances]
+    AI --> AP[activity_participants]
+    AI --> AV[activity_instance_vask_items]
+    AI --> AFT[activity_framework_targets]
+    AI --> AM[activity_media]
+    AI --> AFA[activity_form_assignments]
+    AI --> FB[feedback]
 
-forms
-    -> form_questions
-        -> questions
-            -> questionnaire_constructs
-            -> question_framework_mappings
+    F[forms] --> FQ[form_questions]
+    FQ --> Q[questions]
+    Q --> QC[questionnaire_constructs]
+    Q --> QFM[question_framework_mappings]
 
-feedback
-    -> feedback_evidence
-    -> feedback_skill_observations
-        -> framework_skills
-        -> framework_steps
+    FB --> FE[feedback_evidence]
+    FB --> FSO[feedback_skill_observations]
+    FSO --> FS[framework_skills]
+    FSO --> FST[framework_steps]
 
-frameworks
-    -> framework_skills (8)
-        -> framework_steps (16 per skill)
+    FW[frameworks] --> FS
+    FS -->|16 per skill| FST
+    AFA --> F
+    FE -.-> AM
 ```
+
+The diagram shows storage relationships, not automatic scoring. An activity, response, or media item becomes framework evidence only after feedback cites it and an authorized human confirms the related observation.
 
 ## 15A Student achievements Proud Moments and human review
 
@@ -1020,6 +1057,8 @@ frameworks
 Student-uploaded certificates and external achievements are separate from school-owned activities. They use the external-achievement VASK form and do not receive an official framework-skill mapping by default.
 
 Required fields include the issuer, date, category, level or grade, result type, certificate media, selected VASK items, submission status, publication status, and reviewer. Store the level and result separately. An attendance certificate, Grade 1 first runner-up, and Grade 8 first runner-up must not be treated as equivalent evidence.
+
+If no teacher or teaching assistant observed the external activity, keep the student reflection and selected VASK as self-reported evidence. Do not invent or average a missing teacher rating, and do not change a published 1–16 step by default.
 
 ### `proud_moment_selections`
 
@@ -1051,6 +1090,10 @@ If the human rating is missing, keep the value missing. Do not convert it to zer
 
 Peer review requires an explicit assignment containing the subject student, peer reviewer, assigning teacher or teaching assistant, activity, form version, due date, status, and moderation requirement. The school still needs to choose the assignment policy.
 
+### AI drafting provenance
+
+For AI-assisted summaries and report drafts, retain the selected profile and prompt version together with separate `generated_text`, `teacher_edited_text`, and `final_published_text`. The POC profiles are academic learning and reasoning; non-academic participation and personal growth; and interpersonal collaboration and intrapersonal development. Teacher editing never erases the original generated draft.
+
 ## 16 Minimum viable implementation
 
 The first database release does not need every optional table. A workable minimum is:
@@ -1078,6 +1121,12 @@ The first database release does not need every optional table. A workable minimu
 21. `feedback_skill_observations`
 22. `questionnaire_constructs`
 23. `question_framework_mappings`
+24. `question_vask_mappings`
+25. `question_mapping_review_assignments`
+26. `source_systems`
+27. `import_batches`
+28. `import_records`
+29. `import_record_corrections`
 
 Add media processing, shared collections, detailed access grants, VASK tables, cached radar snapshots, and advanced audit data as the corresponding product features are implemented.
 
@@ -1094,709 +1143,3 @@ These decisions should not be hidden inside JSON or application code. Store them
 
 ---
 
-# Aspects updated 中文版
-
-## 文件目的
-
-本部分是獨立的繁體中文版，方便直接與原始 `Aspects`、廣東話版技能框架及技能問卷比較用詞。它不是上方英文內容的逐句夾註。
-
-整個資料模型分為四層：
-
-1. **活動設計**：記錄活動希望培養甚麼，包括 VASK 和預期觀察的框架能力。
-2. **框架標準**：記錄八項能力，以及每項能力的 16 個發展階段。
-3. **評估工具**：記錄問卷、題目、量尺，以及題目與能力的對應關係。
-4. **觀察結果**：記錄教師實際看到的行為、選定的階段、出現頻率和文字證據。
-
-## 命名方式
-
-### 修改前
-
-- 資料表名稱混合單數和複數，例如 `Activities`、`Media`、`Form`、`FormQuestions`、`User`。
-- 欄位名稱混合不同寫法，例如 `activityId`、`upload/updateBy`、`accessBy`。
-- `activityVASK`、`mediaList` 等欄位會把多項資料放進同一欄。
-- `respondantId` 拼寫錯誤，正確英文是 `respondent_id`。
-
-### 修改後
-
-- 資料表統一使用複數 snake_case，例如 `activity_instances`、`media_assets`。
-- 欄位統一使用單數 snake_case，例如 `activity_instance_id`。
-- 主鍵及外鍵才使用 `_id`。
-- 時間欄位統一使用 `created_at`、`updated_at`、`starts_at`、`ends_at`。
-- 多對多關係使用中介表，不在單一欄位儲存陣列。
-- 已提交的評估保留當時使用的版本，不會因日後修改範本而改變。
-
-## 必須分開的兩套能力分類
-
-### 技能建構通用框架的八項能力
-
-這八項能力是雷達圖的八條軸。每項能力均有 16 個階段。
-
-| 排序 | 代碼 | 中文名稱 | 英文名稱 |
-|---:|---|---|---|
-| 1 | `listening` | 聆聽 | Listening |
-| 2 | `speaking` | 說話 | Speaking |
-| 3 | `problem_solving` | 解難 | Problem-solving |
-| 4 | `creativity` | 創意 | Creativity |
-| 5 | `adaptability` | 適應力 | Adaptability |
-| 6 | `planning` | 計劃能力 | Planning |
-| 7 | `leadership` | 領導力 | Leadership |
-| 8 | `teamwork` | 團隊協作 | Teamwork |
-
-### 技能問卷的十項評估構念
-
-問卷中的十項技能不等於雷達圖的八項能力。
-
-| 代碼 | 中文名稱 | 題目數量 | 與八項框架的關係 |
-|---|---|---:|---|
-| `adaptability` | 適應能力 | 12 | 可直接對應「適應力」 |
-| `collaboration` | 合作能力 | 18 | 可直接對應「團隊協作」 |
-| `communication` | 溝通能力 | 16 | 題目可分別對應「聆聽」、「說話」或兩者 |
-| `creativity` | 創造力 | 18 | 可直接對應「創意」 |
-| `critical_thinking` | 批判思維能力 | 18 | 輔助構念；個別題目可支援聆聽或解難 |
-| `curiosity` | 探究能力／好奇心 | 18 | 輔助構念；個別題目可支援創意或解難 |
-| `growth_mindset` | 成長型思維 | 12 | 輔助構念；個別題目可支援適應力或計劃能力 |
-| `leadership` | 領導力 | 22 | 可直接對應「領導力」 |
-| `perseverance` | 堅毅 | 14 | 輔助構念；個別題目可支援適應力或計劃能力 |
-| `problem_solving` | 問題解決能力 | 18 | 可直接對應「解難」 |
-
-因此，不應再用一個含糊的 `skill` 欄位同時代表兩套分類。問卷構念和框架能力應分開儲存，再按每條題目建立清晰的對應關係。
-
----
-
-## 一 活動
-
-### 修改前
-
-```text
-Activities
-    activityId
-    activityVASK
-    activityType
-    date (by School year)
-    uploadDate
-    upload/updateBy
-    updateDate
-```
-
-### 問題
-
-- 活動範本和實際舉行的一次活動混在一起。
-- 一個 `date` 無法表示課堂、旅行或為期兩週的項目。
-- `activityVASK` 無法清楚儲存多個 VASK 項目。
-- 建立者和最後更新者混在同一欄位。
-
-### 修改後
-
-#### `activity_templates` 活動範本
-
-儲存可重複使用的活動設計。
-
-| 欄位 | 中文意思 |
-|---|---|
-| `activity_template_id` | 活動範本主鍵 |
-| `name_zh` | 中文名稱 |
-| `name_en` | 英文名稱，可留空 |
-| `description` | 活動說明 |
-| `activity_type_id` | 活動類型 |
-| `default_duration_minutes` | 預設時長 |
-| `status` | 草稿、啟用或封存 |
-| `version_number` | 範本版本 |
-| `created_by_user_id` | 建立者 |
-| `created_at` | 建立時間 |
-| `updated_by_user_id` | 最後更新者 |
-| `updated_at` | 最後更新時間 |
-
-#### `activity_instances` 活動實例
-
-代表某班學生實際參與的一次活動。
-
-| 欄位 | 中文意思 |
-|---|---|
-| `activity_instance_id` | 活動實例主鍵 |
-| `activity_template_id` | 所使用的活動範本，可留空 |
-| `template_version_number` | 當時使用的範本版本 |
-| `title` | 本次活動名稱 |
-| `activity_type_id` | 活動類型 |
-| `academic_period_id` | 學年或學期 |
-| `group_id` | 班別、隊伍或項目小組 |
-| `starts_at` | 開始時間 |
-| `ends_at` | 結束時間 |
-| `lead_teacher_user_id` | 主責教師 |
-| `status` | 已計劃、進行中、已完成或已取消 |
-
----
-
-## 二 活動參加者和教師
-
-### 修改前
-
-```text
-ActivityData
-    Activity.activityId
-    mediaList (formId, mediaId)
-    teacherId (single or array)
-    studentId (single or array)
-```
-
-### 問題
-
-- `ActivityData` 沒有代表一個清楚的實體。
-- 教師和學生不應以陣列方式放進一個欄位。
-- 表格和媒體是不同資料，不應放在同一個 `mediaList`。
-
-### 修改後
-
-#### `activity_participants` 活動參加者
-
-| 欄位 | 中文意思 |
-|---|---|
-| `activity_participant_id` | 主鍵 |
-| `activity_instance_id` | 活動實例 |
-| `user_id` | 參加者 |
-| `participant_role` | 學生、同儕評估者、觀察者或訪客 |
-| `participation_status` | 已邀請、已出席、缺席或退出 |
-
-#### `activity_staff` 活動工作人員
-
-| 欄位 | 中文意思 |
-|---|---|
-| `activity_staff_id` | 主鍵 |
-| `activity_instance_id` | 活動實例 |
-| `user_id` | 教師或行政人員 |
-| `staff_role` | 主責教師、教師、觀察者或批核者 |
-
----
-
-## 三 媒體檔案
-
-### 修改前
-
-```text
-Media
-    mediaId
-    Activities.activityId
-    mediaType
-    path
-    uploadDate
-    uploadedBy
-```
-
-### 修改後
-
-#### `media_assets` 媒體資產
-
-| 欄位 | 中文意思 |
-|---|---|
-| `media_asset_id` | 主鍵 |
-| `owner_user_id` | 原始擁有人 |
-| `uploaded_by_user_id` | 上載者 |
-| `file_name` | 原始檔案名稱 |
-| `display_name` | 顯示名稱 |
-| `media_type` | 圖片、影片、聲音、文件或其他 |
-| `mime_type` | 真實檔案格式 |
-| `storage_provider` | 儲存服務 |
-| `storage_key` | 儲存位置識別碼 |
-| `file_size_bytes` | 檔案大小 |
-| `checksum_sha256` | 完整性檢查值 |
-| `visibility` | 私人、活動教師、活動參加者或全校 |
-| `moderation_status` | 待批核、已批核或已拒絕 |
-| `created_at` | 上載時間 |
-| `updated_at` | 更新時間 |
-
-#### `activity_media` 活動媒體連結
-
-用來連接媒體和活動。`relationship_type` 可分為活動指示、學生證據、教師證據或活動成果。
-
-學生上載的內容預設為私人及待批核，教師批核後才可進入活動共用媒體區。
-
----
-
-## 四 媒體存取權限
-
-### 修改前
-
-`MediaInfo` 重複儲存更新日期和上載者，`accessBy` 又把教師、班別和教師小組混在一個欄位。
-
-### 修改後
-
-核心資料留在 `media_assets`。只有需要額外權限時，才使用 `media_access_grants`：
-
-| 欄位 | 中文意思 |
-|---|---|
-| `media_access_grant_id` | 主鍵 |
-| `media_asset_id` | 媒體資產 |
-| `grantee_type` | 使用者、小組或角色 |
-| `grantee_id` | 被授權對象 |
-| `permission` | 檢視、評論或管理 |
-| `granted_by_user_id` | 授權者 |
-| `expires_at` | 權限到期時間，可留空 |
-
----
-
-## 五 媒體文字擷取
-
-### 修改前
-
-`mediaText` 和 `extract` 意思重疊，也沒有處理狀態、語言、工具版本或錯誤記錄。
-
-### 修改後
-
-#### `media_extractions` 媒體擷取結果
-
-| 欄位 | 中文意思 |
-|---|---|
-| `media_extraction_id` | 主鍵 |
-| `media_asset_id` | 原始媒體 |
-| `extraction_type` | OCR、轉錄、摘要、標籤或其他 |
-| `content_text` | 純文字結果 |
-| `content_json` | 時間碼、區域或結構化結果 |
-| `language_code` | 語言，例如 `zh-Hant` |
-| `source_type` | 系統、教師、學生或匯入 |
-| `processor_name` | 處理工具或模型名稱 |
-| `processor_version` | 工具或模型版本 |
-| `confidence_score` | 工具提供的可信度 |
-| `status` | 排隊中、處理中、完成、失敗或已審閱 |
-| `error_message` | 錯誤資料 |
-
----
-
-## 六 共用媒體資料夾
-
-### 修改前
-
-原始文件只留下 `(SharedMediaFolder)`，沒有欄位。
-
-### 修改後
-
-使用 `media_collections` 儲存資料夾資料，並使用 `media_collection_items` 連接多個媒體檔案。
-
-`media_collections` 包括名稱、說明、擁有人、相關活動、可見範圍、建立及更新時間。
-
-`media_collection_items` 包括資料夾、媒體檔案、顯示次序、加入者和加入時間。
-
----
-
-## 七 表格
-
-### 修改前
-
-```text
-Form
-    activityId
-    formId
-    formQuestionId(array)
-    uploaded/updatedBy
-    teacherId(array for access)
-    formType
-    respondantId
-    peerId
-```
-
-### 問題
-
-- 表格定義、活動分派、填寫者、檢視者和答案混在一起。
-- 題目陣列不能妥善處理題目次序和版本。
-- `isPeerReview`、`isTeacherReview` 等布林值可能同時衝突。
-
-### 修改後
-
-#### `forms` 表格範本
-
-代表一份可重用表格的固定身份，包括名稱、說明、表格類型、建立者和時間。版本內容和批核狀態另存在 `form_versions`。
-
-表格類型建議使用：
-
-- `teacher_observation` 教師觀察
-- `teacher_review` 教師評估
-- `peer_review` 同儕互評
-- `student_reflection` 學生反思
-- `activity_rewind` 活動回顧
-
-#### `form_versions` 表格版本
-
-每次修改已批核或已發布的表格，都建立新草稿版本，不直接改動舊版本。
-
-- `review_status`：`draft`、`in_review`、`changes_requested`、`approved`、`rejected`、`retired`。
-- `publication_status`：`unpublished`、`published`、`withdrawn`。
-- `visibility_scope`：`private_draft`、`reviewers_only`、`school_catalogue`、`assigned_activities_only`、`public_external`。
-- `valid_from` 和 `valid_until`：控制可分派日期。
-- `supersedes_form_version_id`：指出新版本取代哪一個舊版本。
-
-只有「已批核＋已發布＋仍在有效期」的版本才可建立新的活動表格分派。`public_external` 不屬於第一階段，必須另訂校方政策。
-
-#### `form_review_events` 表格審閱紀錄
-
-每次提交審閱、要求修改、批核、拒絕、發布、撤回、退役或建立修訂版本，都保存成不可覆寫的事件，並記錄執行者、時間和理由。
-
-#### `form_review_assignments` 表格審閱分派
-
-把一個不可變的表格版本分派給一名具備相應角色及範圍權限的審閱者。角色表決定誰有資格審閱；本表記錄實際由誰負責、由誰分派、期限、接受時間及完成結果。
-
-狀態包括：`assigned`、`accepted`、`in_review`、`changes_requested`、`approved`、`rejected`、`cancelled`、`expired`。預設不允許表格版本作者批核自己的版本。
-
-#### `form_questions` 表格題目次序
-
-連接一個指定 `form_version_id` 和題庫題目，記錄顯示次序、是否必答和所屬部分。
-
-#### `activity_form_assignments` 活動表格分派
-
-記錄哪一次活動使用哪一個已批核及已發布的表格版本、由誰分派、開放時間、截止時間、分派狀態及有效性檢查結果。
-
-「內容已批核」、「版本已發布」、「版本的可見範圍」和「已分派給活動」是四個不同概念，不能只用一個 `status` 欄位表示。
-
-#### `form_assignment_recipients` 填寫及評核關係
-
-分開記錄：
-
-- `respondent_user_id`：實際填表者。
-- `subject_user_id`：被評估的學生。
-- `reviewer_user_id`：只有檢視或審閱權限的人。
-
-#### `form_submissions` 表格提交
-
-記錄草稿、已提交、已鎖定或退回狀態，以及提交時間。
-
----
-
-## 八 題目和六分量尺
-
-### 修改前
-
-```text
-FormQuestions
-    questionId
-    questionIndex
-    questionText
-    questionType
-    skill (ch/en)
-    negativeQuestion
-```
-
-### 修改後
-
-#### `questions` 題庫
-
-主要欄位包括：
-
-- `question_code`：穩定的題目代碼。
-- `question_text_zh`：中文題目。
-- `question_text_en`：英文題目。
-- `question_type`：單選、多選、量尺、短答、長答或下拉選單。
-- `response_scale_id`：所使用的量尺。
-- `questionnaire_construct_id`：主要問卷構念。
-- `construct_subcategory_id`：問卷內的「範疇」。
-- `is_negatively_worded`：是否負向表述。
-- `requires_reverse_scoring`：計算分數時是否需要反向計分。
-
-題目次序改由 `form_questions.display_order` 管理。
-
-#### `response_scales` 和 `response_scale_options`
-
-來源檔案包含兩種六分量尺：
-
-| 量尺 | 1 | 2 | 3 | 4 | 5 | 6 |
-|---|---|---|---|---|---|---|
-| 頻率／效果 | 幾乎從不 | 很少 | 偶爾 | 經常 | 通常 | 幾乎總是 |
-| 同意程度 | 非常不同意 | 不同意 | 略為不同意 | 略為同意 | 同意 | 非常同意 |
-
-#### `question_framework_mappings` 題目與八項能力對應
-
-每條題目可設定：
-
-- 主要對應能力。
-- 輔助對應能力。
-- 對應理由。
-- 批核者和批核日期。
-- 經驗證後才使用的權重。
-
-不要只因為一條題目看似同時涉及多項能力，就立即加入複雜權重。第一版最好為每條題目設定一項主要能力，必要時才加入輔助能力。
-
-#### `question_responses` 題目答案
-
-分別儲存原始答案、文字答案、選項答案及反向計分後的數值，避免覆蓋原始輸入。
-
----
-
-## 九 八項框架能力和 16 個階段
-
-### 修改前
-
-原始資料模型沒有框架、八項能力或 16 個階段的獨立資料表。
-
-### 修改後
-
-#### `frameworks` 框架版本
-
-儲存框架代碼、名稱、版本、語言和狀態，例如：
-
-```text
-code: skills_builder_uf_2_0_zh_hant
-version: 2.0
-language_code: zh-Hant
-```
-
-#### `framework_skills` 八項能力
-
-每項記錄包括：
-
-- `code`
-- `name_zh`
-- `name_en`
-- `description_zh`
-- `display_order`
-
-#### `framework_steps` 發展階段
-
-每個階段包括：
-
-- `framework_skill_id`：所屬能力。
-- `step_number`：1 至 16。
-- `step_title_zh`：例如「質疑」。
-- `descriptor_zh`：完整的「我能……」句子。
-- `development_band`：入門、初階、高階或精通。
-
-每項能力的 `step_number` 不可重複。
-
-| 階段 | 分層代碼 | 中文名稱 |
-|---:|---|---|
-| 1–4 | `entry` | 入門 |
-| 5–8 | `intermediate` | 初階 |
-| 9–12 | `advanced` | 高階 |
-| 13–16 | `mastery` | 精通 |
-
-教師在評估時只選擇階段，不應直接修改標準句子。若需要修訂翻譯，應新增框架版本。
-
-#### `activity_framework_targets` 活動能力目標
-
-記錄某次活動希望學生練習哪些能力、預期階段、優先程度，以及該能力是否會被正式評估。
-
----
-
-## 十 教師回饋和能力觀察
-
-### 修改前
-
-教師回饋只被視為一種特殊表格，沒有獨立的觀察事件、證據、階段選擇或出現頻率。
-
-### 修改後
-
-#### `feedback` 回饋主記錄
-
-一筆回饋代表某人在一個時間點，對一名學生作出的一次回饋。
-
-| 欄位 | 中文意思 |
-|---|---|
-| `feedback_id` | 回饋主鍵 |
-| `activity_instance_id` | 相關活動，可留空 |
-| `subject_user_id` | 被評估學生 |
-| `author_user_id` | 撰寫者 |
-| `feedback_type` | 教師觀察、教師評估、同儕互評、學生反思或系統匯入 |
-| `overall_comment` | 整體文字回饋 |
-| `observed_at` | 行為發生時間 |
-| `status` | 草稿、已提交、已審閱或作廢 |
-| `visibility` | 可見範圍 |
-
-原先構想的 `feedback_list` 應改為 `feedback`。所謂「列表」只是介面顯示或資料查詢，不是另一個資料實體。
-
-#### `feedback_evidence` 觀察證據
-
-可儲存：
-
-- 具體行為文字。
-- 相片、影片、聲音或文件。
-- 表格答案。
-- 學生作品。
-
-#### `feedback_skill_observations` 能力觀察
-
-每項能力觀察分開記錄：
-
-- 八項能力中的哪一項。
-- 教師選擇的 1 至 16 階段。
-- 1 至 6 的出現頻率或效果。
-- 教師對這項能力的文字評語。
-- 建議的下一階段。
-- 可選的判斷信心。
-
-階段和頻率不可合併：
-
-```text
-觀察階段：第 9 階段
-出現頻率：4/6 經常
-```
-
-這代表學生曾展示第 9 階段的行為，而且在觀察期內「經常」出現。它不是 9 加 4，也不應被換算成一個沒有清楚意義的總分。
-
----
-
-## 十一 VASK 活動設定
-
-### 修改前
-
-只有一個未定義的 `activityVASK` 欄位。
-
-### 修改後
-
-#### `vask_items` VASK 項目
-
-每項資料包括：
-
-- 類別：價值、態度、技能或知識。
-- 中文名稱。
-- 英文名稱，可留空。
-- 狀態。
-- 用詞版本。
-
-#### `activity_template_vask_items` 活動範本的預設 VASK
-
-由教師或行政人員為活動範本設定預設 VASK。
-
-#### `activity_instance_vask_items` 某次活動實際使用的 VASK
-
-當教師開立一次活動時，系統複製範本的預設 VASK。教師可增加、刪除或調整本次活動的設定，但不會改動過去或其他活動。
-
-`source` 可記錄該項目來自：
-
-- `template_default` 範本預設。
-- `teacher_added` 教師新增。
-- `teacher_modified` 教師修改。
-
----
-
-## 十二 使用者、角色和班別
-
-### 修改前
-
-```text
-User
-    userId
-    userType(stud, teacher, Admin)
-    enabled
-    classId
-    classNo
-```
-
-### 問題
-
-- 一個人可能同時有多個角色。
-- 班別會隨學年改變，不應直接寫在使用者主記錄。
-- `classNo` 屬於班別成員資料。
-
-### 修改後
-
-#### `users` 使用者
-
-儲存使用者主鍵、外部系統識別碼、顯示名稱、電郵、狀態和時間資料。
-
-#### `roles` 和 `user_roles`
-
-角色包括學生、教師、行政人員和家長。`user_roles` 讓一個使用者在不同學校或時段擁有不同角色。
-
-#### `groups` 和 `group_memberships`
-
-`groups` 可代表班別、隊伍、教師小組或項目小組。
-
-`group_memberships` 儲存使用者、小組、成員角色、班號、開始日期和結束日期，保留歷史班別資料。
-
----
-
-## 十三 登入記錄和操作記錄
-
-### 修改前
-
-原始文件未定義，但系統需要這兩類記錄。
-
-### 修改後
-
-#### `login_events` 登入事件
-
-記錄使用者、時間、成功或失敗結果、驗證方式、IP 地址和瀏覽器資料。應制定私隱和保存期限政策。
-
-#### `audit_events` 系統操作記錄
-
-記錄：
-
-- 哪一位使用者或系統執行操作。
-- 操作代碼，例如 `feedback.submitted`。
-- 受影響的資料類型和記錄主鍵。
-- 發生時間。
-- 必要而不過量的修改摘要。
-
----
-
-## 十四 雷達圖資料
-
-### 修改前
-
-未定義雷達圖數據來源。
-
-### 修改後
-
-雷達圖的八個值應由 `feedback_skill_observations` 推算，不應只儲存八個可以任意修改的分數。
-
-每個顯示值應可追溯至：
-
-- 框架能力。
-- 目前有證據支持的階段。
-- 觀察日期。
-- 來源回饋。
-- 證據數量。
-- 使用的計算規則版本。
-
-未觀察的能力應顯示「未有證據」，不應當作第 0 階段。
-
-若效能需要快取，可加入 `student_skill_snapshots`，但它只是衍生結果，不能取代教師回饋和證據。
-
----
-
-## 十五 建議的資料關係
-
-```text
-活動範本
-    -> 活動實例
-        -> 活動參加者
-        -> 實際 VASK 設定
-        -> 活動能力目標
-        -> 活動媒體
-        -> 表格分派
-        -> 教師或學生回饋
-
-表格
-    -> 表格題目
-        -> 題庫
-            -> 問卷構念
-            -> 八項能力對應
-
-回饋
-    -> 觀察證據
-    -> 能力觀察
-        -> 八項框架能力
-        -> 16 個發展階段
-
-框架版本
-    -> 八項能力
-        -> 每項 16 個階段
-```
-
-## 十六 最小可行版本
-
-第一階段建議先建立：
-
-1. 使用者、角色、小組和成員關係。
-2. 活動範本、活動實例和參加者。
-3. 框架、八項能力和 128 個階段記錄。
-4. 表格、題庫、表格題目和六分量尺。
-5. 表格分派、填寫者、提交和題目答案。
-6. 回饋、觀察證據和能力觀察。
-7. 十項問卷構念和題目與八項能力的對應。
-
-媒體自動擷取、共用資料夾、詳細權限、VASK、雷達圖快取和進階審計記錄可按產品開發次序加入。
-
-## 十七 需要產品團隊決定的設定
-
-- 教師可否修改活動範本的 VASK，還是只能修改某次活動的副本。
-- 已提交的階段觀察可否直接修改，還是必須建立修訂版本。
-- 哪些問卷題目直接或輔助對應八項框架能力。
-- 多次觀察如何計算成一個學期的雷達圖階段。
-- 教師評語、同儕互評、學生反思和媒體分別由誰查看。
-- 登入、操作、媒體擷取及評估資料的保存期限。
