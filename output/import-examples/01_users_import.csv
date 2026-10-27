@@ -1,8 +1,8 @@
-external_user_id,role,school_id,student_number,staff_number,name_en,name_zh,email,class_name,academic_year,status,initial_access_mode,guardian_consent_status,media_consent_scope
-USR-ADM-001,admin,BHSS,,,System Administrator,系統管理員,admin@example.edu.hk,,2026/27,active,invite,not_applicable,not_applicable
-USR-T-001,teacher,BHSS,,T001,Chan Mei Ling,陳美玲,mlchan@example.edu.hk,,2026/27,active,invite,not_applicable,staff_only
-USR-T-002,teacher,BHSS,,T002,Wong Kai Ho,黃啟豪,khwong@example.edu.hk,,2026/27,active,invite,not_applicable,staff_only
-USR-ST-001,super_teacher,BHSS,,ST001,Lee Wai Man,李慧敏,wmlee@example.edu.hk,,2026/27,active,invite,not_applicable,staff_only
-USR-S-001,student,BHSS,S1001,,Alex Lam,林同學,alex.lam@example.edu.hk,S1A,2026/27,active,invite,granted,school_internal
-USR-S-002,student,BHSS,S1002,,Bella Ho,何同學,bella.ho@example.edu.hk,S1A,2026/27,active,invite,granted,no_publication
-USR-S-003,student,BHSS,S1003,,Chris Lee,李同學,chris.lee@example.edu.hk,S1B,2026/27,active,invite,pending,no_capture
+user_id,school_id,external_user_id,user_type,student_number,staff_number,name_en,name_zh,email,status,initial_access_mode,guardian_consent_status,media_consent_scope,created_at
+USR-ADM-001,BHSS,ADM001,staff,,,System Administrator,系統管理員,admin@example.edu.hk,active,invite,not_applicable,staff_only,2026-08-20T08:00:00+08:00
+USR-T-001,BHSS,T001,staff,,T001,Chan Mei Ling,陳美玲,mlchan@example.edu.hk,active,invite,not_applicable,staff_only,2026-08-20T08:00:00+08:00
+USR-T-002,BHSS,T002,staff,,T002,Wong Kai Ho,黃啟豪,khwong@example.edu.hk,active,invite,not_applicable,staff_only,2026-08-20T08:00:00+08:00
+USR-ST-001,BHSS,ST001,staff,,ST001,Lee Wai Man,李慧敏,wmlee@example.edu.hk,active,invite,not_applicable,staff_only,2026-08-20T08:00:00+08:00
+USR-S-001,BHSS,S1001,student,S1001,,Alex Lam,林同學,alex.lam@example.edu.hk,active,invite,granted,school_internal,2026-09-01T08:30:00+08:00
+USR-S-002,BHSS,S1002,student,S1002,,Bella Ho,何同學,bella.ho@example.edu.hk,active,invite,granted,no_publication,2026-09-01T08:30:00+08:00
+USR-S-003,BHSS,S1003,student,S1003,,Chris Lee,李同學,chris.lee@example.edu.hk,active,invite,pending,no_capture,2026-09-01T08:30:00+08:00

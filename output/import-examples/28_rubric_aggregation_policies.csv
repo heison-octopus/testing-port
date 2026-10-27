@@ -1,0 +1,4 @@
+aggregation_policy_id,rubric_catalogue_id,policy_code,version,method,eligible_observation_statuses,requires_human_confirmation,requires_prerequisite_levels,rounding_rule,active_from,active_until,status,notes
+POLICY-SB-MAX-001,RUB-SB-UF2,MAX-CONFIRMED,v1,max_confirmed,confirmed,true,false,none,2026-09-01,,active,Choose the highest human-confirmed satisfied level per student and axis; retain every contributing observation
+POLICY-SB-LATEST-DRAFT,RUB-SB-UF2,LATEST-CONFIRMED,draft,latest_confirmed,confirmed,true,false,none,,,draft,Stored as an interchangeable future option and not used for publication
+POLICY-SB-AVERAGE-DRAFT,RUB-SB-UF2,AVERAGE-CONFIRMED,draft,average_confirmed,confirmed,true,false,nearest_integer,,,draft,Disabled unless BHSS later approves averaging within the same rubric version

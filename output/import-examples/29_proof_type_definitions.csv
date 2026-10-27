@@ -1,0 +1,11 @@
+proof_type_id,proof_type_code,name_en,name_zh,source_category,requires_activity,requires_human_author,may_include_media,may_support_assessment,default_visibility,status
+PT-RESPONSE,question_response,Question response,題目回應,response,true,false,false,true,reviewers_only,active
+PT-TEACHER-FEEDBACK,teacher_feedback,Teacher feedback,老師回饋,feedback,true,true,false,true,reviewers_only,active
+PT-PEER-FEEDBACK,peer_feedback,Peer feedback,同儕回饋,feedback,true,true,false,true,reviewers_only,active
+PT-STUDENT-REFLECTION,student_reflection,Student reflection,學生反思,feedback,false,true,false,true,student_visible,active
+PT-ACTIVITY-PHOTO,activity_photo,Activity photo,活動相片,media,true,false,true,true,reviewers_only,active
+PT-ACTIVITY-AUDIO,activity_audio,Activity audio,活動錄音,media,true,false,true,true,staff_review_only,active
+PT-ACTIVITY-VIDEO,activity_video,Activity video,活動影片,media,true,false,true,true,reviewers_only,active
+PT-CERTIFICATE,external_certificate,External certificate,校外證書,media,false,false,true,false,pending_review,active
+PT-TIME-INFINITY,time_infinity_record,Time Infinity record,Time Infinity 紀錄,external_system,true,false,true,true,reviewers_only,active
+PT-OTHER-EXTERNAL,external_reference,Other approved external record,其他認可外部紀錄,external_system,false,false,true,false,reviewers_only,active

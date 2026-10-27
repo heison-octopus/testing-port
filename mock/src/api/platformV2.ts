@@ -1,0 +1,47 @@
+import { api } from './client';
+
+export type AttendanceStatus='attended'|'late'|'absent'|'partial';
+export interface AttendanceRow{id:string;student_id:string;student_number:string;english_name:string;chinese_name:string;planned_status:string;actual_status:AttendanceStatus|null;approval_status:string;review_note:string|null}
+export interface ActivityLabel{activity_label_id:string;label_role:'descriptor'|'intended_rubric_axis';label_id:string;code:string;name_en:string;name_zh:string;catalogue_code:string;catalogue_name:string;catalogue_kind:'vocabulary'|'rubric';labelling_capable:number;assessment_capable:number;radar_eligible:number;level_min:number|null;level_max:number|null;catalogue_status:string}
+export interface QuestionItem{id:string;prompt_zh:string;respondent_scope:string;scale_type:string;ability_code:string;ability_name_en:string;ability_name_zh:string;sort_order:number;required:number}
+export interface QuestionBlock{id:string;title_en:string;title_zh:string;audience:'teacher'|'student'|'peer';sort_order:number;version:number;status:string;questions:QuestionItem[]}
+export interface PeerAssignment{id:string;question_block_id:string;reviewer_student_id:string;subject_student_id:string;reviewer_number:string;reviewer_name:string;subject_number:string;subject_name:string;status:string}
+export interface ActivityWorkspace{attendance:AttendanceRow[];labels:ActivityLabel[];blocks:QuestionBlock[];peerAssignments:PeerAssignment[]}
+export interface CatalogueLabel{id:string;code:string;name_en:string;name_zh:string;display_order:number}
+export interface LabelCatalogue{id:string;code:string;name:string;catalogue_kind:'vocabulary'|'rubric';version:string;labelling_capable:number;assessment_capable:number;radar_eligible:number;definition_completeness:string;level_min:number|null;level_max:number|null;status:string;labels:CatalogueLabel[];levels:Array<Record<string,unknown>>;conditions:Array<Record<string,unknown>>}
+export interface FaceCandidate{id:string;face_index:number;candidate_student_id:string|null;student_number:string|null;chinese_name:string|null;confidence_percent:number;decision:string}
+export interface RubricCandidate{id:string;student_id:string|null;axis_en:string;axis_zh:string;rubric_name:string;proposed_level:number|null;confidence_percent:number;rationale:string;prompt_version:string;model_label:string;decision:string}
+export interface TranscriptChunk{id:string;chunk_index:number;speaker_label:string;confirmed_student_id:string|null;student_number:string|null;chinese_name:string|null;starts_ms:number;ends_ms:number;detected_language:string;original_text:string;cleaned_text:string;filler_log_json:unknown[];candidates:RubricCandidate[]}
+export interface ProcessingJob{id:string;job_type:string;status:string;provider:string;progress_percent:number;activity_id:string|null;activity_title:string|null;input_manifest_json:Record<string,unknown>;output_json:Record<string,unknown>|null;retry_count:number;faces:FaceCandidate[];chunks:TranscriptChunk[]}
+export interface StudentTasks{student:{id:string;student_number:string;chinese_name:string}|null;selfBlocks:QuestionBlock[];peerTasks:Array<PeerAssignment&{title_en:string;title_zh:string;questions:QuestionItem[]}>;responses:Array<Record<string,unknown>>}
+export interface Introduction{id:string;student_id:string;source_mode:'sentence_starters'|'generated_draft';draft_text:string;status:string;review_note:string|null;updated_at:string}
+export interface PortfolioClaim{id:string;academic_year:string;section_code:string;final_text:string;source_kind:string;rubric_name:string|null;prompt_version:string|null;model_label:string|null;approval_status:string;sources:Array<{id:string;citation_label:string;excerpt:string;source_type:string;source_id:string}>}
+export interface LearnerProfile{student:{id:string;student_number:string;english_name:string;chinese_name:string};introduction:Introduction|null;claims:PortfolioClaim[];achievements:Array<Record<string,string>>;skills:Record<string,number>;aggregation:{policy_code:string;version:string;rule:string};proofCount:number;years:Array<{code:string;academic_year:string;status:string}>;interests:{status:string;values:string[]};rubrics:LabelCatalogue[]}
+export interface FormAuthoringCandidate{include:string;question_id:string;question_version:number;section_code:string;section_title_zh:string;section_title_en:string;audience:'teacher'|'student'|'peer';display_order:number;question_text_zh:string;question_text_en:string;scale_type:string;scale_min:number;scale_max:number;required:string;ability_code:string;ability_name_en:string;ability_name_zh:string;teacher_note:string;source_construct_en:string;source_construct_zh:string;recommended:boolean}
+export interface FormVersion{id:string;activity_id:string;version:number;status:'draft'|'published'|'retired';selected_vask_json:string[];block_count:number;question_count:number;created_at:string;published_at:string|null}
+export interface FormDefinitionRow{id:string;row_number:number;include_flag:'yes'|'no';source_question_id:string|null;section_code:string;section_title_zh:string;section_title_en:string;audience:string;display_order:number;prompt_zh:string;prompt_en:string;scale_type:string;scale_min:number;scale_max:number;required:number;ability_code:string;ability_name_en:string;ability_name_zh:string;teacher_note:string;validation_status:string;validation_message:string|null;change_type:string}
+export interface FormDefinitionImport{id:string;activity_id:string;original_name:string;status:string;base_version:number|null;selected_vask_json:string[];valid:boolean;included_count:number;rows:FormDefinitionRow[]}
+export interface FormAuthoringState{activity:{id:string;title:string;title_zh:string};selectedVask:Array<{id:string;code:string;name_en:string;name_zh:string}>;candidates:FormAuthoringCandidate[];versions:FormVersion[];limits:{maximum_rows:number;question_text:number;scale_min:number;scale_max:number};mapping_notice:string}
+
+export const platformV2Api={
+  students:()=>api<Array<{id:string;student_number:string;english_name:string;chinese_name:string}>>('/students'),
+  workspace:(activityId:string)=>api<ActivityWorkspace>(`/activities/${activityId}/workspace-v2`),
+  catalogues:()=>api<LabelCatalogue[]>('/label-catalogues'),
+  submitAttendance:(activityId:string,rows:Array<Pick<AttendanceRow,'student_id'|'planned_status'|'actual_status'>>)=>api<AttendanceRow[]>(`/activities/${activityId}/attendance`,{method:'POST',body:JSON.stringify({rows})}),
+  reviewAttendance:(activityId:string,decision:'approve'|'return',note='')=>api<AttendanceRow[]>(`/activities/${activityId}/attendance-review`,{method:'POST',body:JSON.stringify({decision,note})}),
+  addLabel:(activityId:string,label_id:string,label_role:ActivityLabel['label_role'])=>api<ActivityLabel[]>(`/activities/${activityId}/labels`,{method:'POST',body:JSON.stringify({label_id,label_role})}),
+  replaceVask:(activityId:string,label_ids:string[])=>api<ActivityLabel[]>(`/activities/${activityId}/vask-labels`,{method:'PUT',body:JSON.stringify({label_ids})}),
+  addBlock:(activityId:string,data:{title_en:string;title_zh:string;audience:QuestionBlock['audience']})=>api<QuestionBlock>(`/activities/${activityId}/question-blocks`,{method:'POST',body:JSON.stringify(data)}),
+  addQuestion:(blockId:string,data:{prompt:string;construct?:string;ability_code?:string;ability_name_en?:string;ability_name_zh?:string;scale_type?:string;required?:boolean})=>api<QuestionItem>(`/question-blocks/${blockId}/questions`,{method:'POST',body:JSON.stringify(data)}),
+  setBlockStatus:(blockId:string,status:'draft'|'published'|'retired')=>api<QuestionBlock>(`/question-blocks/${blockId}/status`,{method:'POST',body:JSON.stringify({status})}),
+  assignPeer:(activityId:string,data:{block_id:string;reviewer_student_id:string;subject_student_id:string})=>api<PeerAssignment>(`/activities/${activityId}/peer-assignments`,{method:'POST',body:JSON.stringify(data)}),
+  myTasks:(activityId:string)=>api<StudentTasks>(`/activities/${activityId}/my-tasks`),
+  submitResponses:(activityId:string,data:{perspective:'self'|'peer';subject_student_id?:string;answers:Record<string,number|string>})=>api<{ok:boolean;submitted_at:string}>(`/activities/${activityId}/responses`,{method:'POST',body:JSON.stringify(data)}),
+  processingJobs:()=>api<ProcessingJob[]>('/processing-jobs'),
+  decideFace:(id:string,decision:'confirmed'|'rejected'|'unknown'|'not_student')=>api(`/face-candidates/${id}/decision`,{method:'POST',body:JSON.stringify({decision})}),
+  confirmSpeaker:(id:string,student_id:string)=>api(`/transcript-chunks/${id}/speaker`,{method:'POST',body:JSON.stringify({student_id})}),
+  decideRubric:(id:string,decision:'confirmed'|'rejected')=>api(`/rubric-candidates/${id}/decision`,{method:'POST',body:JSON.stringify({decision})}),
+  learnerProfile:(studentId:string)=>api<LearnerProfile>(`/students/${studentId}/learner-profile`),
+  saveIntroduction:(studentId:string,data:{source_mode:'sentence_starters'|'generated_draft';starter_code?:string;draft_text:string;submit:boolean;generated_input?:Record<string,unknown>})=>api<Introduction>(`/students/${studentId}/introduction`,{method:'PUT',body:JSON.stringify(data)}),
+  reviewIntroduction:(studentId:string,decision:'approve'|'return',note='')=>api<Introduction>(`/students/${studentId}/introduction-review`,{method:'POST',body:JSON.stringify({decision,note})})
+};

@@ -1,8 +1,15 @@
 # BHSS MVP repository guide
 
+## Repository owner context
+
+- The repository owner works as the System Analyst for this product. Treat their product interpretations as analyst decisions or assumptions according to the status they provide; do not silently present them as BHSS or JC approvals.
+- For the 26 October 2026 kickstart discussion, use the exact traceability tag `Discussed on Meeting Oct 26 - kickstart` in decision and question records.
+
 ## Project purpose
 
 Build a traceable student-growth portfolio that connects activities and evidence to VASK, teacher/peer/self review, and the eight Universal Framework skills (16 steps per skill). It should show growth and evidence; it is not intended to be a simple marks leaderboard.
+
+The product purpose includes making students visible through evidence beyond recalled classroom impressions, especially when academic results do not reveal their participation, strengths, interests or development. The platform groups school, teacher, student and authorized-staff inputs with traceable media and other proof so the Portfolio reflects what the student has actually demonstrated.
 
 ## Source-of-truth order
 
@@ -28,6 +35,7 @@ Temporary Office lock files beginning with `~$` are not sources.
 
 - `output/English/Core data relationships.md` / `output/Chinese/核心資料關係.md` — primary entity, cardinality, lifecycle, evidence, review, and human-in-the-loop model.
 - `output/English/Discussion questions.md` / `output/Chinese/討論問題.md` — single decision checklist for open high-, mid-, and low-level questions, with status and answer records.
+- `output/English/Current findings and questions v2.md` / `output/Chinese/最新發現及問題 v2.md` — latest meeting update separated into confirmed direction, approved architecture interpretation, product proposals, and unresolved dependencies.
 - `output/English/Aspects updated.md` / `output/Chinese/資料欄位修訂.md` — before/after data-model revision and naming conventions.
 - `output/English/Roles and permissions.md` / `output/Chinese/角色及權限.md` — Student, Teacher, SuperTeacher/staff, and SchoolAdmin permissions.
 - `output/English/Presentation agenda.md` / `output/Chinese/簡報議程.md` — IPO, scope, known/unknown register, traceability convention, and proposed discussion sequence.
@@ -39,12 +47,21 @@ Start with the English or Chinese `README.md`, then read the architecture, roles
 ## Key working model
 
 - An activity is configured with VASK and is packaged with one versioned form.
+- The current input model is one documented core activity contract, not a versioned per-school schema-mapping engine. Schools sanitize source data; the platform validates, previews, and audits approval.
+- Activities may carry VASK, activity-type, and rubric-axis labels. A tag describes intent; it is never an assessment result. A catalogue without levels/evidence rules cannot assess.
+- Prove one serial Skills Builder 1–16 path before enabling parallel RC360 results. Preserve rubric/version keys and do not average unlike rubrics by default.
+- Teachers confirm actual attendance against the planned roster. A planned participant marked absent creates a staff approval exception; no absence-explanation form is currently assumed.
 - A form contains ordered `question_sections`/`question_blocks`; sections contain reusable questions.
-- Questions may map to one or more of the eight skills using explicit weights. A questionnaire source is the supplied whole instrument, not a database child of a form.
+- Form-definition XLSX and response-entry XLSX are separate contracts. A teacher may export question definitions, edit and re-import them, review a staged diff, and create a successor draft. Students remain on the last published form version until explicit publication.
+- Each question owns a source, meaning and valid ability definition. There is no fixed Question → VASK, RC360 or Skills Builder mapping and no normalized question-to-skill weight. A questionnaire source is the supplied whole instrument, not a database child of a form.
+- Accepted question responses first become source-linked Proof List items. An authorized reviewer may interpret the question, answer, activity context and linked proof against the rubric selected at Portfolio review time.
+- Rubric catalogues declare labelling and assessment capabilities independently. Radar output requires versioned axes, ordered levels and concrete conditions; a vocabulary-only catalogue remains useful context but cannot assess.
+- The active Skills Builder working policy takes the highest human-confirmed satisfied level for each axis. Levels are not prerequisites; another aggregation rule must be separately versioned before use.
+- A review/outlook memory setting selects the school-period range and whether to include activity descriptions, confirmed outcomes, accepted proof summaries and published rubric results. Generated outputs freeze the exact inputs used.
 - Activity targets, responses, feedback, media, and observations are evidence. They do not automatically promote a student to a framework step.
 - Teacher/TA review is the human gate when evidence affects a published 1–16 skill step.
 - CHI/ENG/MATH/LS grades are partial supporting evidence only.
-- Student external certificates may carry VASK without an official skill mapping.
+- Student external certificates may carry VASK and create proof without an official rubric result.
 - Media deletion is a soft disable with reason, actor, and timestamp.
 - Form templates and submissions have separate draft/review/published-style lifecycles. Approval assignment is modelled separately from role membership.
 - Peer review requires an explicit reviewer assignment.
@@ -57,7 +74,7 @@ Start with the English or Chinese `README.md`, then read the architecture, roles
 - `output/D2 vask-skill-map/` — VASK-to-eight-skills visualization and workbook.
 - `output/portfolioDummyData.html` — student portfolio mock-up.
 - `D3 bhss-portfolio-ppt/` — bilingual presentation HTML, outline, script, and the current interactive POC; it remains at the repository root because the same artifact supports both languages.
-- `mock-poc/` — runnable Vite + React + Ant Design POC with Express/SQLite MVC-style API, opaque server sessions plus request keys, role-aware screens, activity/class/student/year-transition generators, effective-dated student history, staged XLSX/CSV participant import, teacher questionnaire XLSX submission and student release gating, separate certificate/activity media libraries, JPG/PNG preview processing, a staff-controlled memorable-activity window, and explicit AI input disclosure. Start with `mock-poc/README.md`.
+- `mock/` — runnable Vite + React + Ant Design POC with Express/SQLite layered API, opaque server sessions plus request keys, role-aware screens, activity/class/student/year-transition generators, effective-dated student history, staged XLSX/CSV participant import, VASK-guided form-definition XLSX round trips with diff/version/publication gating, separate response-entry XLSX release gating, certificate/activity media libraries, JPG/PNG preview jobs, actual-attendance approval, descriptive/rubric catalogues, teacher/student/peer blocks, face/speech review simulations, and a provenance-led learner profile. Start with `mock/README.md`.
 - `output/import-examples/` — example CSV contracts, manifest, enums, assignments, review history, external achievements, ratings, and peer review.
 
 The simulator is illustrative and uses `localStorage`; it is not the production security or persistence architecture.
@@ -67,7 +84,7 @@ The simulator is illustrative and uses `localStorage`; it is not the production 
 - User/role management and basic authentication/session security.
 - Academic year/reporting-period management.
 - Activities, participants, VASK, and one activity-form package.
-- Form versions, questions, skill mappings, approval assignment, submission, and review.
+- Form versions, question-owned abilities, approval assignment, submission, Proof List registration, and rubric-time review.
 - Media/evidence linkage, access/consent metadata, feedback, and soft disable.
 - Teacher/TA skill observations and a traceable portfolio view.
 - CSV/XLSX import/export and dummy-data visualization.
@@ -85,6 +102,9 @@ The simulator is illustrative and uses `localStorage`; it is not the production 
 - Is deployment a shared hosted service, a school-local server, or a single-device workflow?
 - What AI use is allowed beyond transcription/speaker separation, and which outputs always require human confirmation?
 - Should Proud Moments affect progression, remain portfolio curation only, or be deferred from the MVP?
+- What are the official RC360 axes, levels, descriptors, evidence rules, and publication authority?
+- Which production privacy/consent rules and provider terms permit face matching? Isolated school-supplied test photos prove interaction only.
+- What is the source and approved taxonomy for the learner-profile “My interests” section?
 
 ## Chinese language and translation standard
 

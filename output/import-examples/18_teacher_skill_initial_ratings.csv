@@ -1,4 +1,0 @@
-initial_rating_id,activity_id,student_id,framework_skill,proposed_step,source_instrument,source_authority,rated_by_user_id,rater_role,rating_status,rated_at,evidence_summary,required_for_step_contribution
-IR-001,ACT-COMM-001,USR-S-001,Listening,5,HKEAA-10-SKILLS,hkeaa,USR-T-001,teacher,confirmed,2026-09-19T16:00:00+08:00,Listened and paraphrased a peer before responding,true
-IR-002,ACT-COMM-001,USR-S-001,Speaking,,HKEAA-10-SKILLS,hkeaa,USR-T-001,teacher,missing,,Teacher or TA rating required before this activity can contribute a speaking step,true
-IR-003,ACT-SPORT-001,USR-S-002,Teamwork,7,teacher_observation,teacher_observation,USR-TA-001,teaching_assistant,confirmed,2026-10-17T10:00:00+08:00,Coordinated role changes and checked team readiness,true

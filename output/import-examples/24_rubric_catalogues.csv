@@ -1,0 +1,5 @@
+rubric_catalogue_id,code,name_en,name_zh,version,labelling_capable,assessment_capable,radar_eligible,level_order_type,definition_completeness,source_reference,status,notes
+RUB-VASK-2026,VASK,VASK reference vocabulary,VASK 參考詞彙,2026,true,false,false,none,complete,Assessment/VASK清單.docx,active,Labels describe activity or proof context and never produce a level
+RUB-SB-UF2,SKILLS-BUILDER-8X16,Skills Builder Universal Framework,Skills Builder 通用技能框架,UF2.0,true,true,true,ordered_1_to_16,complete_in_source,Assessment/UF2.0 Cantonese Framework.pdf,active,Production import must include every official axis level and condition before radar publication
+RUB-RC360-PENDING,RC360,RC360,RC360,pending-source,true,false,false,none,incomplete,Official source not yet supplied,pending_source,May be used only as a placeholder label catalogue until levels and conditions are approved
+RUB-SCHOOL-STRENGTHS,SCHOOL-STRENGTHS,School strengths vocabulary,校本優勢詞彙,1.0,true,false,false,none,complete,School-authored example,active,Example of a label-only school catalogue

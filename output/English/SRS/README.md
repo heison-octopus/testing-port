@@ -12,7 +12,8 @@ The matching Hong Kong Traditional Chinese edition is in [`../../Chinese/SRS/`](
 2. [`../Core data relationships.md`](../Core%20data%20relationships.md) is the current architectural baseline.
 3. [`../Roles and permissions.md`](../Roles%20and%20permissions.md) defines the access model.
 4. [`../Discussion questions.md`](../Discussion%20questions.md) controls unresolved decisions.
-5. The runnable `mock-poc/` demonstrates possibilities; it is not the authority when it conflicts with the documents above.
+5. [`../Current findings and questions v2.md`](../Current%20findings%20and%20questions%20v2.md) isolates the latest meeting update by certainty level.
+6. The runnable `mock/` demonstrates possibilities; it is not the authority when it conflicts with the documents above.
 
 ## Requirement status labels
 
@@ -33,7 +34,7 @@ The matching Hong Kong Traditional Chinese edition is in [`../../Chinese/SRS/`](
 | [SRS-02](SRS-02%20School%20structure%20and%20academic%20periods.md) | Students, classes, membership history and rollover |
 | [SRS-03](SRS-03%20Source%20systems%20imports%20and%20data%20quality.md) | CSV/XLSX imports, matching, correction and reconciliation |
 | [SRS-04](SRS-04%20Activities%20participants%20and%20VASK.md) | Activities, staff, students, VASK and approval |
-| [SRS-05](SRS-05%20Forms%20question%20blocks%20and%20governance.md) | Forms, questions, mappings, versions and approval |
+| [SRS-05](SRS-05%20Forms%20question%20blocks%20and%20governance.md) | Forms, question-owned abilities, Proof List registration, versions and approval |
 | [SRS-06](SRS-06%20Assignments%20submissions%20and%20peer%20review.md) | Assignments, responses, review and peer allocation |
 | [SRS-07](SRS-07%20Evidence%20media%20consent%20and%20external%20achievements.md) | Uploads, consent, moderation and certificates |
 | [SRS-08](SRS-08%20Assessment%20eight%20skills%20and%20sixteen%20steps.md) | Evidence-backed observations and 1–16 steps |
@@ -41,6 +42,7 @@ The matching Hong Kong Traditional Chinese edition is in [`../../Chinese/SRS/`](
 | [SRS-10](SRS-10%20AI-assisted%20processing%20and%20provenance.md) | OCR, transcription and controlled drafting |
 | [SRS-11](SRS-11%20Infrastructure%20security%20and%20operations.md) | Deployment, storage, jobs, backup and monitoring |
 | [SRS-12](SRS-12%20Page%20catalogue%20and%20role%20visibility.md) | Pages, navigation and role-specific visibility |
+| [SRS-13](SRS-13%20Scope%20v2%20rubric%20processing%20and%20learner%20profile.md) | Core input, attendance, rubric catalogues, observable processing and learner-profile provenance |
 
 ## Shared interpretation rule
 

@@ -14,7 +14,7 @@ Define who may see or change each record. Authorization is not role-only: every 
 | SchoolAdmin | School-wide administrative scope; raw media remains separately controlled |
 | External recipient | No account in P1; receives approved export only |
 
-`class_teacher`, `activity_teacher`, `TA`, `assessor`, `reviewer` and `approver` are effective-dated assignments, not reasons to create duplicate people. One user may hold several roles, but every sensitive action records the active role and scope used.
+Account identity, reusable role definitions, effective user-role assignments and named workflow approval assignments are separate records. `class_teacher`, `activity_teacher`, `TA` and `assessor` may be effective-dated role/scope assignments; `reviewer` and `approver` additionally require a named workflow assignment for the record being decided. One user may hold several roles, but every sensitive action records the active role and scope used. **Discussed on Meeting Oct 26 - kickstart.**
 
 ## 3. Functional requirements
 
@@ -28,10 +28,11 @@ Define who may see or change each record. Authorization is not role-only: every 
 | IAM-FR-006 | An activity teacher or TA may access the assigned activity roster, submissions and evidence needed for assessment. | Source-aligned | P0 |
 | IAM-FR-007 | Staff shall access only delegated programmes, classes, year levels or review queues unless separately granted school-wide operational scope. | Recommended architecture | P1 |
 | IAM-FR-008 | SchoolAdmin may manage identities and policy but shall not gain raw-media access or teacher-assessment authority merely from the admin role. | Confirmed working model | P1 |
-| IAM-FR-009 | Form authors shall not approve their own version by default. | Recommended; H-05 remains open | P1 |
+| IAM-FR-009 | Form authors shall not approve their own version by default. | Recommended; final form authority remains open | P1 |
 | IAM-FR-010 | Sessions shall be revocable server-side and stored in Secure, HttpOnly, SameSite cookies in production. | Recommended architecture | P0 |
 | IAM-FR-011 | Sign-in, sign-out, failed login, role/scope changes, sensitive reads, approvals, imports, exports, corrections and soft deletion shall be audited. | Source-aligned | P0/P1 |
 | IAM-FR-012 | Imported users shall receive activation/invitation records; import files shall not contain plaintext passwords. | Source-aligned | P1 |
+| IAM-FR-013 | Role definitions, effective role assignments and form/proof/rubric approval assignments shall be stored and audited separately. | Confirmed Oct 26 revision | P0 |
 
 ## 4. Capability matrix
 

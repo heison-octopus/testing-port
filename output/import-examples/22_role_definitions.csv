@@ -1,0 +1,7 @@
+role_id,role_code,name_en,name_zh,role_category,assignable,description_en,description_zh,status
+ROLE-STUDENT,student,Student,學生,participant,true,Contributes and views records within own student scope,在自己的學生範圍內提交及查看紀錄,active
+ROLE-CLASS-TEACHER,class_teacher,Class Teacher,班主任,teaching_staff,true,Reviews assigned class learners and Portfolio items,覆核所屬班別學生及 Portfolio 項目,active
+ROLE-ACTIVITY-TEACHER,activity_teacher,Activity Teacher,活動老師,teaching_staff,true,Creates assigned activities forms feedback and observations,建立獲分派的活動表格回饋及觀察,active
+ROLE-TEACHING-ASSISTANT,teaching_assistant,Teaching Assistant,教學助理,support_staff,true,Acts only within explicit activity or review assignments,只可在獲明確分派的活動或覆核範圍內操作,active
+ROLE-SUPER-TEACHER,super_teacher,SuperTeacher / Authorized Staff,SuperTeacher／獲授權職員,approval_staff,true,Reviews and approves within delegated scope,在獲授權範圍內覆核及批核,active
+ROLE-SCHOOL-ADMIN,school_admin,School Administrator,SchoolAdmin,administration,true,Manages accounts roles periods catalogues and system policy,管理帳戶角色學段目錄及系統政策,active

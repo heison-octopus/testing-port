@@ -10,6 +10,10 @@ The proposed central message is:
 
 The platform is not intended to turn every activity into a score. It connects activities, reflections, observations, media, feedback, and framework steps while preserving the underlying evidence and human review.
 
+**Product framing — Discussed on Meeting Oct 26 - kickstart:** BHSS is the lead solution proposer/reference school; JC may approve and fund programme operation or adoption; Octopus Infotech intends to own and supply the reusable product. Present this as current product direction, with ownership, licence and branding subject to written agreement. The educational proposition is to make evidence of overlooked student participation, abilities and growth visible beyond academic results and staff memory.
+
+The integration story must allow school-approved media to remain in several stores. Show a server-side connector resolving an opaque reference to metadata, a short-lived authorized URL or streamed media. Do not show raw storage paths or imply that external media bypasses consent and role checks.
+
 ---
 
 ## 1. Existing materials grouped by purpose
@@ -44,7 +48,7 @@ The `output/import-examples/` directory contains example CSV structures for:
 - Form items.
 - Media and evidence metadata.
 - Source questions.
-- Question-to-eight-skill mappings.
+- Question-owned ability definitions and Proof List registration.
 - A simulated Time Infinity activity export.
 
 ### D. Portfolio example
@@ -80,7 +84,7 @@ The `output/import-examples/` directory contains example CSV structures for:
 - Sixteen developmental steps for each framework skill.
 - Ten source questionnaire constructs stored separately from the eight skills.
 - Response scales, question types, negative wording, and reverse-scoring configuration.
-- Question-to-framework-skill mappings with versioning and approval.
+- Rubric-time interpretation of source-linked proof, with versioned conditions and human approval.
 
 ### Part 4: Activity management
 
@@ -99,7 +103,7 @@ Proposed terminology:
 - **Source questionnaire:** the complete assessment instrument represented by the supplied Excel workbook.
 - **Form template:** the platform version of the instrument or data-collection workflow.
 - **Question section:** a section within a form, such as Communication, Collaboration, teacher observation, student reflection, or peer feedback.
-- **Question:** an individual reusable item with a question type, scale, source construct, and optional framework mapping.
+- **Question:** an individual reusable item with a source, question type, scale, audience, version and valid ability definition; it has no fixed rubric mapping.
 - **Activity form assignment:** connects one form version to one activity and its intended respondents.
 - **Form submission:** one respondent's saved or submitted copy.
 - **Question response:** one answer inside a submission.
@@ -165,7 +169,7 @@ Role membership determines who is eligible to review. A separate form-review ass
 - Speaker separation such as Speaker A, B, and C.
 - Candidate identity suggestions, subject to human confirmation.
 - Candidate evidence extraction.
-- Candidate question, VASK, and framework mappings.
+- Candidate questions, question-owned abilities, activity VASK labels, and later rubric observations kept as separate concepts.
 - Summary and report drafting.
 
 AI should propose. Authorized staff should confirm identity, evidence, framework steps, and published feedback.
@@ -187,7 +191,7 @@ AI should propose. Authorized staff should confirm identity, evidence, framework
 - User import and update.
 - Time Infinity activity import.
 - Import-batch status, errors, and reconciliation.
-- Form, framework, mapping, and policy version administration.
+- Form, rubric, proof-type, role-assignment, period, and policy-version administration.
 - Dummy data for initial demonstrations and acceptance testing.
 
 ---
@@ -217,7 +221,7 @@ This is a working system name for authorized senior teaching or programme staff.
 
 - Review activities within an assigned programme, class, or year level.
 - Approve higher-risk activities.
-- Review customized forms and question mappings.
+- Review customized forms, question abilities, Proof List items, and rubric observations.
 - Resolve conflicting evidence and identity uncertainty.
 - Review or approve framework-step observations within assigned scope.
 
@@ -389,7 +393,7 @@ A living student-growth portfolio that can answer:
 - Immutable form versions, review history, publication scope, and assignment eligibility checks.
 - Form assignment, submissions, question responses, and open-text feedback.
 - Media metadata and linkage, with basic consent and access states.
-- Source question import and draft skill mappings.
+- Source question import with preserved construct and question-owned ability definition.
 - Time Infinity simulated CSV staging.
 - Dummy activity, student, period, and portfolio visualizations.
 
@@ -431,7 +435,7 @@ The authoritative checklist is `output/English/Discussion questions.md`. The ite
 12. Are its ten constructs ten sections in one form?
 13. Which questions are appropriate for students, peers, and teachers?
 14. Which questions directly map to one framework skill, and which provide supporting evidence for several?
-15. Who approves a changed form, question section, scale, negative item, or mapping?
+15. Who approves a changed form, question section, scale, negative item, or question ability definition?
 16. Does the same role approve content and publish it, or should those authorities be separated?
 17. Which visibility scopes are allowed in the MVP: reviewers, school catalogue, or assigned activities only?
 18. Are validity start/end dates required for every published form version?
@@ -441,7 +445,7 @@ The authoritative checklist is `output/English/Discussion questions.md`. The ite
 ### Activity and approval decisions
 
 21. Which activities can be automatically approved?
-22. Which conditions force human approval: trips, media, custom forms, external participants, or changed mappings?
+22. Which conditions force human approval: trips, media, custom forms, external participants, or changed intended rubric labels?
 23. May teachers change VASK and skill targets for one activity instance without changing the reusable template?
 
 ### Role and access decisions
@@ -616,7 +620,7 @@ The supplied RC360 discussion image adds requirements that were not explicit in 
 
 | Source ID | Image statement | Presentation interpretation |
 |---|---|---|
-| RCI-01 | 學生可以自主記錄校外活動、上載獎項及成就、隨時瀏覽及更新自己的成長歷程。 | Add a student-owned external-achievement pathway with certificate upload and VASK tagging. External achievements have no official eight-skill mapping by default. |
+| RCI-01 | 學生可以自主記錄校外活動、上載獎項及成就、隨時瀏覽及更新自己的成長歷程。 | Add a student-owned external-achievement pathway with certificate upload and VASK tagging. External achievements become proof but have no formal rubric result by default. |
 | RCI-02 | 學期末學生可在平台整理最能代表自己的價值及態度及最具意義的 Proud Moments。 | Proud Moments are student-selected activities or evidence for reflection and presentation, not automatic skill-step awards. |
 | RCI-03 | 技能部分由考評局（HKEAA）協助驗證。 | Record the HKEAA-related source instrument or validation authority where applicable. The exact calculation remains unresolved. |
 | RCI-04 | 回顧與展望由 AI 生成；教師作最終審視及確認。 | AI may draft `回顧與展望`; an assigned teacher or teaching assistant must confirm it before publication. |
@@ -625,11 +629,11 @@ The supplied RC360 discussion image adds requirements that were not explicit in 
 ### Required presentation changes
 
 - Add a separate slide for student-uploaded certificates and external achievements.
-- Explain that VASK tagging can exist without an official Skills Builder mapping.
+- Explain that VASK tagging provides context and can exist without a formal Skills Builder result.
 - Show Proud Moment selection inside activity history and self-evaluation, not as a direct progression calculation.
 - Show the same `not submitted -> review -> approved -> published` response workflow for questionnaire submissions and `回顧與展望`.
-- State that every school-owned activity references one immutable form version whose question blocks cover VASK and may map to one or more of the eight skills and optional 1–16 step ranges.
-- State that BHSS dummy questions are the proof-of-concept default; add only enough new questions to improve VASK coverage.
+- State that every school-owned activity references one immutable form version whose questions each preserve a valid ability definition and create proof when answered and accepted.
+- State that BHSS dummy questions are the proof-of-concept default; select or add questions because their meaning fits the activity and respondent, not to fill a fixed VASK/rubric map.
 - Show teacher or teaching-assistant initial rating and confirmation as the human gate before activity evidence changes a published framework step.
 - Keep the method for excluding a student-selected item from development outputs as an internal moderation rule. Do not expose that rationale in student-facing presentation slides.
 
@@ -639,5 +643,5 @@ The supplied RC360 discussion image adds requirements that were not explicit in 
 2. Which HKEAA instrument, scale, and validation method is authoritative?
 3. Who may act as teaching assistant, and what activity/student scope grants review authority?
 4. How does a teacher select peer reviewers: manual named assignment, same-group pairing, reciprocal pairing, or random assignment with exclusions?
-5. May an external achievement later receive an official skill mapping after review, and who approves it?
+5. May proof from an external achievement later support a human-confirmed rubric observation, and who approves publication?
 6. Which submission states are visible to students, teachers, and guardians?

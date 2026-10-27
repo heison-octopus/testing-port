@@ -1,0 +1,4 @@
+media_source_id,school_id,source_code,name_en,name_zh,connector_type,resolution_mode,authentication_profile_ref,allowed_reference_pattern,returns_metadata,returns_short_lived_url,returns_streamed_bytes,status,notes
+MEDIA-SOURCE-BHSS,BHSS,bhss_managed,BHSS managed storage,BHSS 管理儲存,internal_store,stream_or_preview,SERVER-SECRET-BHSS,opaque:bhss:*,true,false,true,active,Credentials and physical paths remain server-side
+MEDIA-SOURCE-SCHOOL-ARCHIVE,BHSS,school_archive,School media archive,校方媒體庫,approved_api,metadata_url_or_stream,SERVER-SECRET-ARCHIVE,opaque:archive:*,true,true,true,active,Connector enforces role consent lifecycle and source availability
+MEDIA-SOURCE-TIME-INFINITY,BHSS,time_infinity,Time Infinity,Time Infinity,approved_api,metadata_or_short_lived_url,SERVER-SECRET-TI,opaque:time-infinity:*,true,true,false,pending_approval,Provider terms and final API response shape remain to be confirmed

@@ -15,7 +15,7 @@ A student is the subject and contributor of their own growth record.
 - Submit self-reflections, self-evaluations, and permitted media or work.
 - Complete assigned peer feedback without receiving administrative access to the other student's record.
 - Request correction of misidentified evidence or inaccurate personal information.
-- Cannot approve activities, form templates, skill mappings, or step attainment.
+- Cannot approve activities, form templates, question ability definitions, proof acceptance, or step attainment.
 - Cannot view another student's private portfolio, raw media, teacher-only notes, or identity-review material.
 
 ### Teacher
@@ -29,7 +29,7 @@ A teacher is assigned to specific activities or students as an owner, supporting
 - View evidence needed for an assigned assessment, subject to media consent and access scope.
 - Submit observations, assessments, feedback, and evidence-verification decisions.
 - Confirm whether a transcript segment or media item belongs to a student when they have direct knowledge.
-- Propose skill mappings or step evidence, but cannot silently change an approved framework or published historical decision.
+- Propose proof-linked rubric observations, but cannot silently change an approved framework or published historical decision.
 - Cannot automatically see every student or every activity in the school.
 
 ### SuperTeacher (staff)
@@ -43,7 +43,7 @@ A teacher is assigned to specific activities or students as an owner, supporting
 - Submit change requests, approve or reject form versions, and record a review rationale.
 - Publish an approved form version within an authorized internal scope when school policy delegates this permission.
 - Retire or withdraw a form version within assigned scope without deleting historical assignments.
-- Approve or reject question-to-skill mappings and observable step ranges.
+- Review question ability definitions, Proof List items and human rubric observations within the assigned scope.
 - Review conflicting evidence, identity uncertainty, and requested corrections.
 - View published student summaries across their assigned scope.
 - Reopen or return an assessment to a teacher for clarification.
@@ -51,7 +51,7 @@ A teacher is assigned to specific activities or students as an owner, supporting
 
 ### SchoolAdmin
 
-A SchoolAdmin manages the school tenant, users, policies, periods, imports, and access configuration.
+A SchoolAdmin manages the school tenant, account identities, reusable role definitions, effective role assignments, policies, periods, imports, and access configuration. **Discussed on Meeting Oct 26 - kickstart:** role membership and named workflow approval assignments are separate records.
 
 - Import, create, update, suspend, and archive users.
 - Assign roles, classes, programmes, and activity scopes.
@@ -179,7 +179,7 @@ Use assignment-based access by default:
 Use risk-based approval rather than requiring the same approval process for every activity.
 
 - A routine school activity using the approved default form and no new media collection may be automatically approved if school policy allows it.
-- An activity requires human approval when it uses a custom form, collects image/audio/video, occurs off-site, imports external participants, changes the intended skill mapping, or introduces a new data-retention requirement.
+- An activity requires human approval when it uses a custom form, collects image/audio/video, occurs off-site, imports external participants, changes intended rubric-axis labels, or introduces a new data-retention requirement.
 - Suggested lifecycle: `draft → pending_review → approved → active → completed → archived`.
 
 ## Form authority and publication rule

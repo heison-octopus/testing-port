@@ -1,0 +1,12 @@
+axis_id,rubric_catalogue_id,axis_code,name_en,name_zh,axis_kind,display_order,status,notes
+AX-VASK-COMMUNICATION,RUB-VASK-2026,communication,Communication,溝通,label,1,active,Descriptive VASK item
+AX-VASK-SELF-AWARENESS,RUB-VASK-2026,self_awareness,Self-awareness,自我認識,label,2,active,Descriptive VASK item
+AX-SB-LISTEN,RUB-SB-UF2,listening,Listening,聆聽,assessable_axis,1,active,Uses ordered official levels and conditions
+AX-SB-SPEAK,RUB-SB-UF2,speaking,Speaking,說話,assessable_axis,2,active,Uses ordered official levels and conditions
+AX-SB-PROBLEM,RUB-SB-UF2,problem_solving,Problem Solving,解難,assessable_axis,3,active,Uses ordered official levels and conditions
+AX-SB-CREATIVITY,RUB-SB-UF2,creativity,Creativity,創意,assessable_axis,4,active,Uses ordered official levels and conditions
+AX-SB-POSITIVE,RUB-SB-UF2,staying_positive,Staying Positive,保持積極,assessable_axis,5,active,Uses ordered official levels and conditions
+AX-SB-AIMING,RUB-SB-UF2,aiming_high,Aiming High,追求卓越,assessable_axis,6,active,Uses ordered official levels and conditions
+AX-SB-LEADERSHIP,RUB-SB-UF2,leadership,Leadership,領導力,assessable_axis,7,active,Uses ordered official levels and conditions
+AX-SB-TEAMWORK,RUB-SB-UF2,teamwork,Teamwork,團隊合作,assessable_axis,8,active,Uses ordered official levels and conditions
+AX-SCHOOL-PERSEVERANCE,RUB-SCHOOL-STRENGTHS,perseverance,Perseverance,堅毅,label,1,active,Provides Portfolio and LLM context only

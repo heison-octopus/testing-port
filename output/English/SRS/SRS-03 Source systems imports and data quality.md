@@ -28,6 +28,9 @@ Inclusion does not publish the result to a student.
 | IMP-FR-007 | Re-importing the same source key and hash shall be idempotent or explicitly create a new version; it shall not duplicate included evidence. | Recommended architecture | P1 |
 | IMP-FR-008 | Imports shall generate a downloadable error/reconciliation report. | Recommended architecture | P1 |
 | IMP-FR-009 | Final column contracts and fallback identity rules remain Policy TBD. | L-03/L-06 | P1 |
+| IMP-FR-010 | A school-scoped source connector shall use a configured, allow-listed endpoint or root and a server-held authentication reference. | Partly addressed L-08; Discussed on Meeting Oct 26 - kickstart | P1 |
+| IMP-FR-011 | Connector results shall preserve the source record key, opaque media reference, retrieval method, observed metadata, retrieval time and validation outcome. | Recommended architecture | P1 |
+| IMP-FR-012 | A connector may return metadata, a short-lived authorized URL or media bytes; the API shall normalize these modes without exposing credentials or raw server paths. | Partly addressed L-08; Discussed on Meeting Oct 26 - kickstart | P1 |
 
 ## 4. Supported contracts
 
@@ -36,9 +39,11 @@ Inclusion does not publish the result to a student.
 | Users and memberships | Create/update identities without passwords |
 | Academic periods and classes | Establish dated school structure |
 | Activity roster | Match student IDs, preview names, edit staged rows and assign participants |
+| Form definition | Export VASK-guided question candidates, validate the edited definition, preview row-level changes and create a successor draft form version |
 | Questionnaire responses | Upload teacher-completed results; student visibility only after validation and publication |
 | Academic results | Store CHI/ENG/MATH/LS or other configured subjects as supporting evidence only |
 | External activity feed | Preserve Time Infinity or other source ownership |
+| External media connector | Resolve school-approved media references from one or more stores while preserving source ownership and access policy |
 
 ## 5. Limits and validation
 
@@ -54,6 +59,8 @@ Inclusion does not publish the result to a student.
 | Numeric result | Configured scale minimum | Configured scale maximum | Disable import contract until scale exists |
 
 Allowed spreadsheet types in P0 are `.xlsx` and `.csv`. Formula cells shall be read as stored values; macros and executable content shall not be run.
+
+The P0 form-definition contract accepts `.xlsx` only, maximum 4 MiB and 200 question rows. It is intentionally separate from the response-entry contract and contains no student answer rows.
 
 ## 6. Access and locking
 

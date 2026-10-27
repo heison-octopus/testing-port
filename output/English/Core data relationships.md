@@ -8,6 +8,54 @@ This document describes the core operational data model before analytics, aggreg
 
 Open and mid-level decisions are maintained in `output/English/Discussion questions.md`. This Core document records confirmed working rules and recommended architecture only; a question listed there does not become a system requirement until its decision is recorded here.
 
+The 26 October 2026 kickstart update is isolated in `output/English/Current findings and questions v2.md`. Its four registers distinguish meeting-confirmed direction, approved architecture interpretation, product proposals, and unresolved dependencies.
+
+## 26 October 2026 kickstart working architecture
+
+**Status: approved architecture interpretation, pending the formal RC360 source and production privacy decisions.**
+
+- The product has one core activity input contract. It does not include a versioned per-school schema mapper. Schools sanitize incoming data; the platform publishes required fields, validates, previews, and records approval.
+- An activity stores its public description, optional private context, time, student-upload window, cover treatment, planned participants, approval state, and media state. Private context may improve evidence association but is not silently shown to students or sent to a processor.
+- Teachers confirm actual attendance against the planned roster. A planned participant recorded absent creates a staff-approval exception. No absence-explanation form is assumed.
+- VASK and activity-type catalogues are descriptive. A rubric catalogue becomes assessment-capable only if it defines versioned axes, levels, evidence rules, and publication authority. Selecting a rubric-axis label records observation intent, not a score.
+- The first reliable path is serial: Skills Builder eight skills and 16 steps. Rubric/version keys preserve later parallel RC360 results, but the system does not average unlike rubrics by default.
+- One activity form may contain teacher, student, and peer question blocks. Each response assignment separately records respondent, perspective, and subject. Draft blocks remain author-only until published.
+- Image preview, face matching, speech transcription, and rubric suggestions use observable jobs. A completed job produces candidates only; authorized people confirm identity, speaker, evidence, and any published assessment.
+- Learner-profile claims retain evidence links, rubric/version, prompt/model where relevant, editor, approver, and timestamps. An S3 cumulative view may cite S1–S3 snapshots without rewriting older versions.
+- A student introduction starts from sentence starters or a generated draft, is edited and submitted by the student, and is approved or returned by the assigned teacher.
+
+The POC may use school-supplied isolated test photos to demonstrate face confirmation. This does not settle production consent, retention, guardian approval, reference-photo sources, or provider terms.
+
+### Approved linked-data revision
+
+**Status: confirmed working architecture, tagged `Discussed on Meeting Oct 26 - kickstart`.**
+
+- **Roles:** account identity, role definitions and effective user-role assignments are separate. An assignment records scope and effective dates. Approval assignments remain separate workflow records; holding a role does not prove that a particular approval was assigned.
+- **School periods:** staff enter activity start and end dates. The server resolves the single containing period, such as `2025-26-P1`. A cross-period range creates an exception that must be split or explicitly approved; staff do not silently choose a convenient period.
+- **Questions:** every question preserves its source, wording, meaning and a valid ability definition. There is no fixed Question → VASK, RC360 or Skills Builder mapping and no normalized mapping weight. The Portfolio cites the question, response, respondent, activity and linked proof, then applies the chosen rubric during authorized review.
+- **Rubrics:** one catalogue may be usable for labelling, assessment, both, or neither. Assessment and radar output require versioned axes, ordered levels and concrete level conditions. A vocabulary such as VASK may provide LLM context without becoming a score.
+- **Progression rule:** the active Skills Builder policy uses the highest human-confirmed satisfied level for each axis. A learner may satisfy step 8 without satisfying every earlier step. Alternative rules such as an average must be stored as separately versioned policies and are not active by default.
+- **Proof List:** responses, teacher/peer/self feedback, observations, platform media, external references and certificates are normalized through `proof_type_definitions`, `proof_items` and `proof_links`. Adding a source type does not require rewriting the rubric algorithm.
+- **AI boundary:** an LLM may draft positive, source-linked candidate statements only. It cannot downgrade a learner, accept proof, or publish a rubric level. Human confirmation remains mandatory.
+- **Review / outlook memory:** a teacher selects the school-period range and which source classes are remembered: activity descriptions, confirmed/distilled outcomes, accepted proof summaries and published rubric results. Each generated review/outlook record freezes the exact source items and prompt version used.
+
+### Product boundary and intended outcome
+
+**Status: product direction, tagged `Discussed on Meeting Oct 26 - kickstart`; contractual terms remain open under H-11 to H-14.**
+
+- BHSS is the lead solution proposer/reference school. JC may approve and fund programme operation or adoption. Octopus Infotech defines, owns and supplies the reusable product baseline, subject to written ownership, licence, branding and support terms.
+- The platform must produce a usable evidence-backed Portfolio. It is designed to reduce reliance on academic results and memory-based staff discussion by making otherwise overlooked participation, abilities, interests and growth visible to authorized educators.
+- The system consolidates school, teacher, student and authorized-staff contributions with media and other proof. It preserves differing perspectives and provenance rather than flattening them into an unsupported conclusion.
+- Product requirements may be defined by Octopus Infotech, but school assessment policy, consent, access, publication authority and local operating rules still require explicit school decisions.
+
+### Federated media sources
+
+**Status: partly addressed, tagged `Discussed on Meeting Oct 26 - kickstart`; provider details remain open under L-08 and V2-D15.**
+
+Media may remain in one or more school-approved stores. A `media_source_connector` records provider type, school scope, authentication reference, allow-listed root or endpoint, capabilities and status. A `media_asset` stores an opaque external reference plus available metadata, hash and provenance. It must not expose a raw filesystem path or storage credential to a browser client.
+
+The server-side connector may resolve the reference by returning metadata, issuing a short-lived authorized URL, or proxy-streaming the media. Every resolution must enforce role and assignment scope, consent, lifecycle state and source availability, and must append an access audit. Connector failure leaves the evidence reference visible as unavailable; it must not silently remove the historical citation or assessment provenance.
+
 The model preserves the original source of proof:
 
 - what activity took place;
@@ -49,37 +97,27 @@ The internal model may allow an authorized reviewer to exclude or withhold an it
 
 ### Activity form package
 
-Every school-owned activity must be packaged with one immutable form version. The form contains one or more question blocks. Each question block may:
+Every school-owned activity must be packaged with one immutable form version. The form contains one or more question blocks for teacher, student or peer respondents. Each question keeps its source, bilingual wording, audience, order, scale and its own ability code, name and description. The ability explains what the question can validly ask or observe; it is not a VASK label, rubric axis or assessment result.
 
-- target one or more approved VASK items;
-- contain the BHSS dummy questions by default;
-- add a small number of questions to improve VASK coverage for the proof of concept;
-- map individual questions to one or more of the eight framework skills; and
-- optionally define the 1–16 step range that an answer may provide evidence about.
-
-An activity does not receive a framework step merely because its form has a mapping. The mapping identifies candidate evidence. A teacher or assigned teaching assistant remains the human reviewer.
-
-### Question-to-skill weighting and evidence range
-
-The current working decision is to normalize every question to a total weight of `1.0`. When a question maps to several framework skills, that total is divided equally across the mapped skills:
+The working form-authoring flow uses two deliberately separate spreadsheet contracts:
 
 ```text
-normalized_skill_share = question_total_weight / mapped_skill_count
+review the activity purpose and available question abilities
+  -> select or write questions whose meaning fits that context
+  -> download form-definition XLSX
+  -> edit wording, audience, order, scale or ability definition
+  -> upload and validate a staged row-level diff
+  -> create a successor draft form version
+  -> explicitly publish the version
 ```
 
-One mapped skill therefore receives `1.0`; two receive `0.5` each; four receive `0.25` each. A broad question does not gain extra total influence merely because it has more mappings.
+The form-definition XLSX contains no student answers. The response-entry XLSX is generated only for entering answers against a published form. Importing a definition never changes student visibility; students stay on the last published version until the successor is explicitly published.
 
-Question difficulty is a separate property. A future mapping may record `evidence_band_min` and `evidence_band_max` to describe the range of behaviour that an answer could support. This range is a limit on candidate evidence, not an automatic step award. The response, activity context, behavioural evidence, and teacher/TA confirmation remain necessary.
+### Question evidence and rubric-time interpretation
 
-The original documents do not assign authority for question-to-VASK, question-to-skill, or evidence-range mappings. The recommended but unconfirmed workflow is:
+**Status: confirmed working architecture, tagged `Discussed on Meeting Oct 26 - kickstart`.**
 
-```text
-teacher or staff author proposes a versioned mapping
-  -> assigned SuperTeacher or staff member reviews it
-  -> authorized staff member or SchoolAdmin approves and publishes it
-```
-
-Whether the author may also approve the mapping remains open under `H-05` in the discussion question register.
+A submitted answer is registered as a source-linked Proof List item with its question, respondent, subject, activity, form version and provenance. At Portfolio processing time, an authorized reviewer may cite that proof when confirming a condition in the rubric then selected. The system does not pre-allocate question weight or an evidence-band ceiling. Approval of the form/question version and confirmation/publication of a rubric observation remain separate decisions.
 
 ### Shared submission review workflow
 
@@ -315,7 +353,7 @@ flowchart TD
     Source --> School
     Source --> External
     School --> Candidate
-    External -->|VASK allowed; no official skill mapping by default| Candidate
+    External -->|VASK allowed; no formal rubric result by default| Candidate
     Candidate --> Consent
     Consent -->|No| Unconfirmed
     Consent -->|Yes| Rating
@@ -499,8 +537,6 @@ flowchart LR
         Q[Questions]
         RS[Response scales]
         RSO[Response scale options]
-        QCM[Question construct mappings]
-        QFM[Question framework mappings]
     end
 
     subgraph Workflow[Assignment and submission]
@@ -510,12 +546,13 @@ flowchart LR
         RESP[Question responses]
     end
 
-    subgraph Proof[Feedback and source of proof]
+    subgraph Proof[Evidence / Proof List]
         FB[Feedback]
-        EVO[Feedback evidence]
-        OBS[Framework observations]
-        OE[Observation evidence links]
         MA[Media assets]
+        PT[Proof type definitions]
+        PI2[Proof items]
+        PL[Proof links]
+        OBS[Rubric observations]
     end
 
     subgraph Delivery[Import portfolio and delivery]
@@ -544,9 +581,7 @@ flowchart LR
     AFT -. optional target .-> FST
 
     FW --> FS --> FST
-    QC --> QCM --> Q
-    Q --> QFM --> FS
-    QFM -. optional step anchor .-> FST
+    QC --> Q
 
     IN --> II --> Q
     Q --> RS --> RSO
@@ -560,11 +595,13 @@ flowchart LR
     AI --> FB
     U --> FB
     SUB --> FB
-    FB --> EVO
-    FB --> OBS
+    PT --> PI2
+    RESP --> PI2
+    FB --> PI2
+    MA --> PI2
+    PI2 --> PL --> OBS
     FS --> OBS
     FST --> OBS
-    OBS --> OE --> EVO
     EVO -. optional media proof .-> MA
 
     SS --> IB --> IR
@@ -861,7 +898,7 @@ erDiagram
 
 ---
 
-## 4 Assessment instruments, questions, constructs, and scales
+## 4 Assessment instruments, question abilities, constructs, scales, and proof
 
 ```mermaid
 erDiagram
@@ -871,17 +908,11 @@ erDiagram
     RESPONSE_SCALES ||--|{ RESPONSE_SCALE_OPTIONS : contains
     RESPONSE_SCALES ||--o{ QUESTIONS : answers
 
-    QUESTIONS ||--o{ QUESTION_CONSTRUCT_MAPPINGS : classified_by
-    QUESTIONNAIRE_CONSTRUCTS ||--o{ QUESTION_CONSTRUCT_MAPPINGS : classifies
-
-    QUESTIONS ||--o{ QUESTION_VASK_MAPPINGS : indicates
-    VASK_ITEMS ||--o{ QUESTION_VASK_MAPPINGS : indicated_by
-
-    QUESTIONS ||--o{ QUESTION_FRAMEWORK_MAPPINGS : indicates
-    FRAMEWORK_SKILLS ||--o{ QUESTION_FRAMEWORK_MAPPINGS : indicated_by
-    FRAMEWORK_STEPS ||--o{ QUESTION_FRAMEWORK_MAPPINGS : anchors
-    QUESTIONS ||--o{ QUESTION_MAPPING_REVIEW_ASSIGNMENTS : reviewed_through
-    USERS ||--o{ QUESTION_MAPPING_REVIEW_ASSIGNMENTS : assigned_to
+    QUESTIONNAIRE_CONSTRUCTS ||--o{ QUESTIONS : source_classifies
+    QUESTIONS ||--o{ QUESTION_RESPONSES : answered_as
+    PROOF_TYPE_DEFINITIONS ||--o{ PROOF_ITEMS : types
+    QUESTION_RESPONSES ||--o| PROOF_ITEMS : accepted_as
+    PROOF_ITEMS ||--o{ PROOF_LINKS : cited_through
 
     ASSESSMENT_INSTRUMENTS {
         uuid assessment_instrument_id PK
@@ -902,7 +933,6 @@ erDiagram
         int display_order
         boolean is_required
         string section_name
-        decimal item_total_weight
         json configuration_json
     }
 
@@ -913,6 +943,11 @@ erDiagram
         string question_text_en
         string question_type
         uuid response_scale_id FK
+        string ability_code
+        string ability_name_zh
+        string ability_name_en
+        string ability_description_zh
+        string ability_description_en
         boolean is_negatively_worded
         boolean requires_reverse_scoring
         string status
@@ -924,26 +959,6 @@ erDiagram
         string name_zh
         string name_en
         string definition_zh
-    }
-
-    QUESTION_CONSTRUCT_MAPPINGS {
-        uuid question_construct_mapping_id PK
-        uuid question_id FK
-        uuid questionnaire_construct_id FK
-        string mapping_role
-        string rationale
-    }
-
-    QUESTION_VASK_MAPPINGS {
-        uuid question_vask_mapping_id PK
-        uuid question_id FK
-        uuid vask_item_id FK
-        string mapping_role
-        string mapping_rationale
-        int mapping_version
-        string approval_status
-        uuid approved_by_user_id FK
-        datetime approved_at
     }
 
     RESPONSE_SCALES {
@@ -962,33 +977,31 @@ erDiagram
         int display_order
     }
 
-    QUESTION_FRAMEWORK_MAPPINGS {
-        uuid question_framework_mapping_id PK
-        uuid question_id FK
-        uuid framework_skill_id FK
-        uuid framework_step_id FK
-        string mapping_role
-        decimal normalized_weight_share
-        int evidence_band_min
-        int evidence_band_max
-        string mapping_rationale
-        int mapping_version
-        string approval_status
-        uuid approved_by_user_id FK
-        datetime approved_at
+    PROOF_TYPE_DEFINITIONS {
+        uuid proof_type_id PK
+        string code UK
+        string source_category
+        boolean may_support_assessment
+        string default_visibility
     }
 
-    QUESTION_MAPPING_REVIEW_ASSIGNMENTS {
-        uuid mapping_review_assignment_id PK
-        uuid question_id FK
-        string mapping_scope
-        int mapping_version
-        uuid assigned_by_user_id FK
-        uuid reviewer_user_id FK
-        string status
-        datetime due_at
-        string decision_comment
-        datetime decided_at
+    PROOF_ITEMS {
+        uuid proof_item_id PK
+        uuid proof_type_id FK
+        uuid student_id FK
+        uuid activity_id FK
+        string source_entity_type
+        uuid source_entity_id
+        string review_status
+        string visibility_status
+    }
+
+    PROOF_LINKS {
+        uuid proof_link_id PK
+        uuid proof_item_id FK
+        string target_entity_type
+        uuid target_entity_id
+        string support_role
     }
 ```
 
@@ -1001,18 +1014,18 @@ erDiagram
 | `instrument_items` | The placement and order of a question in an instrument. |
 | `questionnaire_constructs` | General qualities measured by groups of questions, such as communication confidence. |
 | `response_scales` | How a question is answered, such as 1–6 frequency or agreement. |
-| `question_vask_mappings` | Which VASK items a question is intended to explore; this mapping requires its own approval record. |
-| `question_framework_mappings` | Which framework abilities or optional exact steps a question may provide evidence about. |
+| `proof_type_definitions` | Extensible source classes for responses, feedback, observations, media, certificates and external records. |
+| `proof_items` | Source-linked evidence with provenance, review and visibility state. |
+| `proof_links` | Typed links from proof to rubric observations, Portfolio claims or other reviewed targets. |
 
 ### Many-to-many relationships
 
 - One assessment instrument contains many questions, and one question may be reused in many instruments. `instrument_items` resolves this relationship.
-- One question may relate to several constructs, and one construct contains many questions. `question_construct_mappings` resolves it.
-- One question may indicate several VASK items. `question_vask_mappings` records the proposed relationship and its approval state.
-- One question may indicate several framework skills, and one framework skill may be indicated by many questions. `question_framework_mappings` resolves it.
-- `question_mapping_review_assignments` allocates review of a particular VASK, framework-skill, or evidence-range mapping version to an actual reviewer. Role membership alone does not prove that this review was assigned or completed.
+- Each question version has one primary source construct and one question-owned ability definition; this does not create a rubric mapping.
+- One proof item may support several reviewed targets, and one target may cite several proof items. `proof_links` resolves this relationship.
+- Role membership and workflow review assignment remain separate; holding a role does not prove that a form, proof item or rubric result was assigned to that user.
 
-A question-to-framework mapping does not by itself award a framework step. It states where the answer may provide evidence. An exact `framework_step_id` is used only for a deliberately step-anchored question. Unless an approved form version explicitly overrides the working default, `instrument_items.item_total_weight` is `1.0`, and the normalized share is divided equally across its mapped framework skills.
+**Discussed on Meeting Oct 26 - kickstart:** there is no fixed question-to-framework mapping or normalized question weight. A response becomes a Proof List item and is interpreted only when an authorized reviewer confirms a concrete condition in the selected rubric.
 
 ### Form version authority and publication
 

@@ -2,7 +2,9 @@
 
 ## Recommended outcome
 
-The first release should provide one school-operated workflow that connects activities, reflections, evidence, teacher feedback, and the eight skill areas into a reviewed student portfolio. It should support student growth conversations and produce a reproducible period record. It should not automatically decide a student's skill step.
+The first release should provide one school-operated workflow that connects activities, reflections, evidence, teacher feedback, and the eight skill areas into a reviewed student portfolio. It should help teachers see participation, abilities and growth that academic results and memory-based staff discussion may miss, support student growth conversations and produce a reproducible period record. It should not automatically decide a student's skill step.
+
+Current product direction: BHSS is the lead solution proposer/reference school; JC may approve and fund programme operation or adoption; Octopus Infotech intends to own and provide the reusable product. Contractual ownership, licensing and branding remain to be confirmed. **Discussed on Meeting Oct 26 - kickstart.**
 
 ## Delivery approach
 
@@ -13,6 +15,7 @@ This approach minimizes access-control development while preserving traceability
 ## Included workflow
 
 1. Staff import users, classes, academic periods, and Time Infinity activity data by CSV or XLSX.
+   School-approved media may remain in external stores and be resolved through a controlled server-side connector.
 2. Staff or an assigned teacher creates an activity using the approved default form and selects the intended VASK areas.
 3. The teacher confirms the roster, attendance, activity dates, and student response period.
 4. Students submit the assigned reflection and permitted evidence.
@@ -78,7 +81,7 @@ The activity form organizes collection. It does not automatically determine a st
 
 ## Assessment rule
 
-VASK describes the intended development areas of an activity. Questions and evidence may relate to one or more of the eight skill areas. The 16 steps describe evidenced development within each skill.
+VASK describes the intended development areas of an activity. Each question keeps its own valid ability definition; it is not pre-mapped to VASK or a rubric. Accepted responses and other proof may later be cited by an authorized reviewer against a concrete condition in the selected eight-skill rubric. The 16 steps describe evidenced development within each skill. **Discussed on Meeting Oct 26 - kickstart.**
 
 Student self-reflection, peer feedback, questionnaires, academic results, and media are supporting evidence. A teacher or assigned staff reviewer confirms any observation that contributes to a published skill step. Missing evidence is displayed as insufficient evidence and is not converted into a low score.
 

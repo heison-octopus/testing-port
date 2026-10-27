@@ -1,5 +1,0 @@
-activity_id,form_version_id,question_block_code,vask_dimension,vask_item_code,framework_skill,mapping_authority,mapping_status,notes
-ACT-COMM-001,FV-CORE-001,teacher_observation,S,S-COMMUNICATION,Listening,teacher_observation,approved,Teacher observation block can support a reviewed Listening step
-ACT-COMM-001,FV-CORE-001,teacher_observation,S,S-COMMUNICATION,Speaking,teacher_observation,approved,Teacher observation block can support a reviewed Speaking step
-ACT-SELF-001,FV-SELF-001,student_reflection,V,V-SELF-AWARENESS,,activity_form,approved,VASK reflection has no automatic framework-step effect
-ACT-SPORT-001,FV-CORE-001,peer_review,S,S-COLLABORATION,Teamwork,activity_form,draft,Peer question provides candidate evidence only until teacher or TA review

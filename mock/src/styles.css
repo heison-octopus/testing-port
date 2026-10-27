@@ -1,0 +1,158 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root{color:#262321;background:#fff;font-synthesis:none;text-rendering:optimizeLegibility}
+*{box-sizing:border-box}
+body{margin:0;min-width:320px;min-height:100vh;background:#fff;color:#262321}
+a{color:#9d4b1c}
+code{font-family:"SFMono-Regular",Consolas,monospace;font-size:.82rem}
+
+@layer components{
+  .center-screen{@apply min-h-screen flex items-center justify-center bg-white}
+  .app-shell{@apply min-h-screen bg-white}
+  .app-sider{@apply border-r border-stone-200 fixed left-0 top-0 bottom-0 overflow-auto z-10}
+  .brand-mark{@apply px-5 py-6 border-b border-stone-200 flex items-center gap-3}
+  .brand-mark span{@apply bg-accent text-stone-900 text-xs font-black tracking-wider px-2 py-1 rounded}
+  .brand-mark strong{@apply text-sm text-stone-800}
+  .sider-note{@apply absolute bottom-0 inset-x-0 px-5 py-4 border-t border-stone-200 text-xs text-stone-500 leading-5 bg-white}
+  .app-header{@apply h-16 px-6 ml-60 flex items-center justify-between border-b border-stone-200 sticky top-0 z-10 bg-white}
+  .app-content{@apply ml-60 px-8 py-8 min-h-[calc(100vh-4rem)] bg-white}
+  .account-name{@apply ml-2 font-semibold}
+  .role-label{@apply ml-2 text-xs text-stone-500}
+  .menu-secondary{@apply text-xs text-stone-500 mt-0.5}
+  .page-title{@apply flex items-start justify-between gap-6 pb-7 border-b border-stone-300 mb-0}
+  .page-title h1{@apply text-3xl leading-tight font-semibold text-stone-900 mt-1 mb-2}
+  .page-title p{@apply text-stone-600 m-0 max-w-3xl leading-6}
+  .eyebrow{@apply text-xs tracking-[.16em] font-bold text-accent-deep uppercase}
+  .page-section{@apply py-7 border-b border-stone-300}
+  .section-heading{@apply mb-5}
+  .section-heading h2{@apply text-xl font-semibold text-stone-900 m-0}
+  .section-heading p{@apply text-sm text-stone-600 mt-1 mb-0}
+  .stat-strip{@apply grid grid-cols-3 border-b border-stone-300}
+  .stat-strip>div{@apply px-5 py-6 border-r border-stone-200 last:border-r-0}
+  .unresolved-section{@apply bg-pending border-y border-pending-line px-5 py-5 my-7}
+  .unresolved-section h3,.ai-section h3{@apply text-lg font-semibold mt-1 mb-2}
+  .unresolved-section p,.ai-section p{@apply mt-0 text-stone-700 leading-6}
+  .ai-section{@apply bg-ai border-y border-ai-line px-5 py-5 my-7}
+  .context-label{@apply text-[11px] tracking-[.13em] font-bold text-stone-600}
+  .table-secondary{@apply text-xs text-stone-500 mt-1}
+  .button-row{@apply flex flex-wrap gap-2 mt-3}
+  .full-width{@apply w-full}
+  .form-divider{@apply font-semibold py-3 border-y border-stone-200 mb-5}
+  .inline-form-grid{@apply grid grid-cols-1 md:grid-cols-3 gap-x-4}
+  .field-error{@apply text-sm text-red-700 mt-2}
+  .json-view{@apply whitespace-pre-wrap break-words overflow-auto max-h-64 bg-white border-y border-stone-300 px-4 py-3 text-xs leading-5 text-stone-700}
+  .json-view.tall{@apply max-h-[28rem]}
+  .vask-grid{@apply grid grid-cols-1 md:grid-cols-4 mt-5 border-y border-stone-300}
+  .vask-grid>div{@apply p-4 border-b md:border-b-0 md:border-r border-stone-200 last:border-0 flex flex-col gap-1}
+  .vask-grid span{@apply text-xl font-black text-accent-deep}
+  .vask-grid small{@apply text-stone-500}
+  .mapping-list{@apply divide-y divide-stone-200}
+  .mapping-list>div{@apply grid grid-cols-[minmax(180px,1fr)_minmax(220px,2fr)_120px] items-center gap-4 py-3}
+  .mapping-list>div>div:first-child{@apply flex flex-col}
+  .mapping-list span{@apply text-xs text-stone-500}
+  .memory-checks{@apply grid grid-cols-2 gap-x-6 gap-y-1 border-y border-stone-200 py-3 mb-4}
+  .memory-checks .ant-form-item{@apply mb-0}
+  .guardrail-strip{@apply flex flex-wrap gap-2 mb-3}
+  .block-question-list small{@apply block mt-1}
+  .text-evidence{@apply w-[88px] h-16 border-y border-stone-300 flex items-center justify-center text-xs text-stone-500}
+  .decision-list{@apply divide-y divide-stone-300 border-y border-stone-300}
+  .decision-row{@apply grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-7 py-6 px-3}
+  .decision-row.open{@apply bg-pending}
+  .decision-row h3{@apply text-lg mt-1 mb-2}
+  .decision-row p{@apply text-stone-700 my-0}
+  .decision-row small{@apply block mt-3 text-stone-500}
+  .decision-id{@apply text-xs font-bold tracking-wider text-stone-500}
+  .drawer-copy{@apply py-4 text-stone-600 leading-6}
+  .import-panel{@apply mt-4 pt-4 border-t border-stone-300}
+  .import-panel .form-divider{@apply mt-0}
+  .import-summary{@apply flex flex-wrap items-center gap-3 mt-5 py-3 border-y border-stone-200 text-sm}
+  .submit-strip{@apply mt-5 pt-5 border-t border-stone-300 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4}
+  .visibility-note{@apply flex flex-wrap items-center gap-3 mb-4 py-3 border-y border-stone-200 text-sm text-stone-600}
+  .sample-downloads{@apply flex flex-wrap items-center gap-2 mb-5 text-sm text-stone-600}
+  .manual-participant-select{@apply mt-5 pt-5 border-t border-stone-200}
+  .inline-alert{@apply mt-4}
+  .question-cell-copy{@apply max-w-48 whitespace-normal}
+  .period-strip{@apply grid grid-cols-1 lg:grid-cols-3 border-y border-stone-300}
+  .period-strip>div{@apply px-4 py-4 border-b lg:border-b-0 lg:border-r border-stone-200 last:border-0 flex flex-col gap-1}
+  .field-label{@apply text-sm font-medium text-stone-700 mb-2}
+  .private-context{@apply mt-4 px-4 py-3 border-y border-stone-300 bg-stone-50 text-sm text-stone-700}
+  .attendance-select{@apply min-w-32}
+  .inline-action-form{@apply flex flex-wrap items-end gap-3 py-4 border-y border-stone-200}
+  .wide-select{@apply min-w-64}
+  .audience-select{@apply min-w-40}
+  .block-list{@apply divide-y divide-stone-300 border-y border-stone-300}
+  .block-row{@apply py-5}
+  .block-question-list{@apply divide-y divide-stone-200 mt-3}
+  .block-question-list>div{@apply flex items-start justify-between gap-4 py-3}
+  .student-question-list{@apply divide-y divide-stone-200 border-y border-stone-300}
+  .student-question-list>label{@apply grid grid-cols-[minmax(0,1fr)_180px] gap-4 items-center py-4}
+  .response-block{@apply py-6 border-b border-stone-300}
+  .face-grid{@apply divide-y divide-stone-300 border-y border-stone-300}
+  .face-row{@apply grid grid-cols-[72px_minmax(0,1fr)_auto] items-center gap-5 py-5}
+  .dummy-face{@apply h-16 w-16 border border-stone-300 flex items-center justify-center text-lg font-bold text-stone-500 bg-stone-50}
+  .transcript-list{@apply divide-y divide-stone-300 border-y border-stone-300}
+  .transcript-row{@apply py-6}
+  .transcript-meta{@apply flex flex-wrap items-center gap-3 text-sm text-stone-500}
+  .transcript-copy{@apply grid grid-cols-1 md:grid-cols-2 gap-5 my-4}
+  .transcript-copy>div{@apply border-t border-stone-200 pt-3}
+  .transcript-copy span{@apply text-xs font-bold text-stone-500 uppercase tracking-wide}
+  .transcript-copy p{@apply mt-1 mb-0}
+  .speaker-confirm{@apply mb-4}
+  .rubric-candidate{@apply flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 bg-ai border-y border-ai-line px-4 py-4}
+  .student-switcher{@apply min-w-64}
+  .learner-profile{@apply grid grid-cols-[250px_minmax(0,1fr)] border-b border-stone-300}
+  .learner-sidebar{@apply pr-6 py-7 border-r border-stone-300}
+  .profile-avatar{@apply h-24 w-24 rounded-full bg-accent-soft text-accent-deep flex items-center justify-center text-4xl font-semibold}
+  .learner-sidebar h2{@apply text-2xl mb-0}
+  .learner-sidebar>p{@apply mt-1 text-sm text-stone-500}
+  .profile-intro,.profile-interests{@apply py-5 border-t border-stone-200 mt-5}
+  .section-mini-title{@apply text-xs font-bold uppercase tracking-wider text-stone-500 mb-2}
+  .interest-chips{@apply flex flex-wrap gap-2}
+  .unresolved-inline{@apply mt-3 bg-pending border-y border-pending-line px-3 py-2 text-xs text-red-800}
+  .learner-report{@apply pl-7 py-7 min-w-0}
+  .profile-grid{@apply grid grid-cols-1 xl:grid-cols-2 border-y border-stone-300}
+  .profile-grid.three{@apply xl:grid-cols-3 mt-7}
+  .profile-panel{@apply p-5 border-b xl:border-b-0 xl:border-r border-stone-200 last:border-r-0}
+  .profile-panel h2{@apply mt-0 text-lg}
+  .profile-radar{@apply block w-full max-w-[320px] mx-auto}
+  .radar-legend{@apply grid grid-cols-2 gap-x-5 gap-y-2 text-xs}
+  .radar-legend span{@apply flex justify-between border-b border-stone-200 py-1}
+  .source-note{@apply mt-4 pt-3 border-t border-stone-200 text-xs text-stone-500}
+  .claim{@apply border-t border-stone-200 py-3}
+  .claim summary{@apply cursor-pointer flex justify-between gap-4}
+  .claim-provenance{@apply bg-ai border-y border-ai-line px-4 py-3 mt-3}
+  .citation{@apply mt-3 pt-3 border-t border-stone-300}
+  .citation p{@apply my-1}
+  .year-timeline{@apply grid grid-cols-1 md:grid-cols-3 border-y border-stone-300}
+  .year-timeline>div{@apply flex flex-col gap-1 px-4 py-4 border-b md:border-b-0 md:border-r border-stone-200 last:border-0}
+  .year-timeline .future{@apply bg-pending}
+  .form-definition-roundtrip{@apply border-y border-stone-300}
+  .form-definition-roundtrip>.ant-steps{@apply py-5 px-1 border-b border-stone-200 overflow-x-auto}
+  .roundtrip-stage{@apply py-6 border-b border-stone-300 last:border-b-0}
+  .roundtrip-stage>div:first-child{@apply flex items-start gap-4 mb-4}
+  .roundtrip-stage h3{@apply text-lg font-semibold mt-0 mb-1}
+  .roundtrip-stage p{@apply text-sm text-stone-600 m-0}
+  .stage-number{@apply shrink-0 w-8 h-8 flex items-center justify-center bg-accent-soft text-accent-deep font-bold}
+  .vask-picker{@apply min-w-72 max-w-3xl}
+  .coverage-strip,.diff-strip,.version-line{@apply flex flex-wrap items-center gap-3 py-3 mt-4 border-y border-stone-200 text-sm text-stone-600}
+  .diff-strip span{@apply pr-3 border-r border-stone-200}
+  .download-definition{@apply mt-4}
+  .publish-strip{@apply flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pt-5 mt-5 border-t border-stone-300}
+  .publish-stage{@apply flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 bg-accent-soft px-4}
+}
+
+.login-page{min-height:100vh;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(360px,.8fr);background:#fff}
+.login-language{position:fixed;right:26px;top:24px;z-index:2}
+.login-intro{padding:10vh 8vw;display:flex;flex-direction:column;justify-content:center;border-right:1px solid #d6d3d1}
+.login-intro h1{font-size:clamp(2.5rem,5vw,5rem);max-width:850px;line-height:1.05;margin:.4rem 0 1.5rem;color:#28231f}
+.login-intro p{font-size:1.15rem;line-height:1.7;max-width:700px;color:#625b55}
+.login-intro ul{list-style:none;padding:1.25rem 0 0;margin:1.5rem 0 0;border-top:1px solid #d6d3d1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem;color:#6b625b}
+.login-panel{padding:14vh 6vw 8vh;max-width:560px;width:100%;margin:auto}
+.login-panel h2{font-size:1.7rem;margin-bottom:.4rem}.login-panel>p{color:#6b625b;margin-bottom:1.5rem}
+.demo-accounts{margin-top:2rem;padding-top:1.5rem;border-top:1px solid #d6d3d1;display:flex;flex-direction:column}
+.demo-accounts>b{margin-bottom:.65rem}.demo-accounts button{appearance:none;background:#fff;border:0;border-top:1px solid #eee;padding:.7rem 0;display:grid;grid-template-columns:1fr auto auto;gap:.6rem;align-items:center;text-align:left;cursor:pointer}.demo-accounts button:hover{background:#fffaf6}.demo-accounts code{color:#78716c}
+
+@media(max-width:900px){.app-sider{position:static!important;min-width:190px!important;width:190px!important}.app-header,.app-content{margin-left:190px}.app-content{padding:24px}.login-page{grid-template-columns:1fr}.login-intro{padding:11vh 7vw 5vh;border-right:0;border-bottom:1px solid #d6d3d1}.login-panel{padding:6vh 7vw}.mapping-list>div{grid-template-columns:1fr}.account-name,.role-label{display:none}.learner-profile{grid-template-columns:1fr}.learner-sidebar{border-right:0;border-bottom:1px solid #d6d3d1}.learner-report{padding-left:0}.face-row{grid-template-columns:64px 1fr}.face-row>:last-child{grid-column:1/-1}.student-question-list>label{grid-template-columns:1fr}}
+@media(max-width:640px){.app-sider{display:none}.app-header,.app-content{margin-left:0}.app-content{padding:20px 16px}.stat-strip{grid-template-columns:1fr}.stat-strip>div{border-right:0;border-bottom:1px solid #e7e5e4}.page-title{flex-direction:column}.login-intro ul{grid-template-columns:1fr}}

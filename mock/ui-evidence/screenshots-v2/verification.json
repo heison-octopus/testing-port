@@ -1,0 +1,96 @@
+{
+  "verifiedAt": "2026-10-27T03:54:44.047Z",
+  "base": "http://127.0.0.1:4174",
+  "checks": [
+    {
+      "name": "01-activity-teacher-workspace",
+      "label": "實際出席及職員確認",
+      "status": "passed"
+    },
+    {
+      "name": "01-activity-teacher-workspace",
+      "label": "活動標籤及 Rubric 能力",
+      "status": "passed"
+    },
+    {
+      "name": "01-activity-teacher-workspace",
+      "label": "表格區塊：老師、學生及同儕",
+      "status": "passed"
+    },
+    {
+      "name": "02-staff-processing",
+      "label": "工作佇列",
+      "status": "passed"
+    },
+    {
+      "name": "02-staff-processing",
+      "label": "相片人物候選",
+      "status": "passed"
+    },
+    {
+      "name": "02-staff-processing",
+      "label": "語音、講者及 Rubric 佐證",
+      "status": "passed"
+    },
+    {
+      "name": "02-staff-processing",
+      "label": "正式私隱政策仍未確認",
+      "status": "passed"
+    },
+    {
+      "name": "03-staff-learner-profile-provenance",
+      "label": "expanded claim citation and provenance",
+      "status": "passed"
+    },
+    {
+      "name": "03-staff-learner-profile-provenance",
+      "label": "技能概況",
+      "status": "passed"
+    },
+    {
+      "name": "03-staff-learner-profile-provenance",
+      "label": "作為學習者的我",
+      "status": "passed"
+    },
+    {
+      "name": "03-staff-learner-profile-provenance",
+      "label": "S1–S3 版本",
+      "status": "passed"
+    },
+    {
+      "name": "04-student-self-review",
+      "label": "我的學生自評",
+      "status": "passed"
+    },
+    {
+      "name": "04-student-self-review",
+      "label": "老師已提交的問卷結果",
+      "status": "passed"
+    },
+    {
+      "name": "05-student-learner-profile",
+      "label": "學習者 Portfolio",
+      "status": "passed"
+    },
+    {
+      "name": "05-student-learner-profile",
+      "label": "自我介紹",
+      "status": "passed"
+    },
+    {
+      "name": "05-student-learner-profile",
+      "label": "我的興趣",
+      "status": "passed"
+    },
+    {
+      "name": "06-student-peer-assignment",
+      "label": "獲分配的同儕互評",
+      "status": "passed"
+    },
+    {
+      "name": "06-student-peer-assignment",
+      "label": "評核 S-001",
+      "status": "passed"
+    }
+  ]
+}

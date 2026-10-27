@@ -2,7 +2,7 @@
 
 ## 1. Purpose
 
-Record evidence-backed observations against eight framework skills and their 16 reference steps while preserving different perspectives and human authority.
+Record evidence-backed observations against interchangeable versioned rubrics while proving the first operational path with the eight Skills Builder skills and their 16 reference steps.
 
 ## 2. Fixed framework model
 
@@ -25,11 +25,13 @@ Development bands are display groupings, not separate marks.
 | ASM-FR-003 | Observed step and consistency shall remain separate numeric values. | Confirmed architecture | P1 |
 | ASM-FR-004 | Self, peer, teacher and external/professional perspectives shall remain separate source records. | Confirmed M-07 direction | P1 |
 | ASM-FR-005 | Missing evidence or rating shall produce a missing/unconfirmed state, not zero. | Confirmed M-11/H-04 recommendation | P0 |
-| ASM-FR-006 | A questionnaire mapping, VASK selection, academic mark, certificate or AI output shall not automatically publish a step. | Confirmed working model | P0 |
+| ASM-FR-006 | A question response, VASK selection, academic mark, certificate or AI output shall not automatically publish a step. | Confirmed working model | P0 |
 | ASM-FR-007 | Teacher/TA human confirmation is required by the current architecture before activity evidence changes a published step. | Recommended; final authority H-03/H-04 open | P1 |
 | ASM-FR-008 | Academic marks may be supporting evidence only and must use a named grading scheme. | Confirmed working model | P1 |
 | ASM-FR-009 | Published step decisions shall cite the evidence and authority/source instrument used. | Confirmed architecture | P1 |
-| ASM-FR-010 | The formula for aggregating observations into a current step, including caps/thresholds/decay, shall not be implemented until approved. | Policy TBD H-03/M-07 | P1 |
+| ASM-FR-010 | The active Skills Builder policy shall select the highest human-confirmed satisfied level per axis; levels are not prerequisites. | Confirmed M-21; Oct 26 revision | P0 |
+| ASM-FR-011 | Any future average, cap, threshold or decay rule shall be stored as a separately versioned policy and shall not combine unlike rubrics by default. | Confirmed M-21; other methods open | P1 |
+| ASM-FR-012 | A catalogue may feed a radar chart only when assessment-capable and complete with versioned axes, ordered levels and concrete conditions. | Confirmed M-20 | P0 |
 
 ## 4. Observation field contract
 
@@ -48,10 +50,11 @@ Development bands are display groupings, not separate marks.
 
 ```mermaid
 flowchart LR
-    Q[Question responses] --> C[Candidate skill evidence]
+    Q[Accepted question responses] --> PL[Evidence / Proof List]
     V[VASK context] --> C
-    M[Media / work / behaviour] --> C
-    S[Self and peer perspective] --> C
+    M[Media / work / behaviour] --> PL
+    S[Self and peer perspective] --> PL
+    PL --> C[Candidate rubric evidence]
     C --> T[Assigned teacher/TA observes and cites proof]
     T --> R[Authorized review]
     R --> P[Published step snapshot]
@@ -72,4 +75,6 @@ flowchart LR
 - A missing teacher rating leaves self/peer evidence visible to reviewers but unconfirmed.
 - One evidence item may support multiple skills, each with a separate observation.
 - Recalculation cannot overwrite an issued historical snapshot.
+- Step 8 may be published when its condition is human-confirmed even if earlier step conditions were not all satisfied.
+- When confirmed levels 4 and 8 exist for one axis, `MAX-CONFIRMED` publishes 8 and records the calculation trace.
 

@@ -17,7 +17,7 @@ The lowest-risk interpretation is to build a school-operated evidence and portfo
 | Existing systems | Keep Time Infinity and add a central/local AI layer | Connect Local AI to Time Infinity | Aligned | DI-05–06, page 2; DI-18, page 7 |
 | Activity context | Classroom, projects, social work, extracurricular and other experiences | In-school, out-school, personal, group and one-to-one cases | Aligned and more detailed | DI-12, page 4 |
 | VASK | VASK is the analysis and development reference | Activities are configured with VASK | Aligned | DI-08, page 2; DI-15–16, page 5 |
-| Skills framework | Skills Builder levels/descriptions support assessment | Questions may map to skills and step spectrum | Aligned as a proposed implementation | DI-11, page 2; DI-20, page 9 |
+| Skills framework | Skills Builder levels/descriptions support assessment | Question responses and other proof are reviewed against versioned rubric conditions | Aligned under the Oct 26 revision | DI-11, page 2; DI-20, page 9 |
 | AI role | OCR, transcription, classification, mapping and draft reports with school-owned rules | OCR, extraction, LLM summary and radar text | Aligned if human review remains mandatory | DI-10, page 2 |
 | Longitudinal output | Portfolio and continuing growth record | Proud Moments, skill summary and portfolio | Aligned | DI-03, page 1; DI-07, page 2; DI-17, page 5 |
 
@@ -100,7 +100,7 @@ A better discovery sequence is:
 
 - One immutable form version assigned to each school-owned activity.
 - Ordered question sections/blocks and reusable questions.
-- Response type, scale, audience, required state, VASK mapping, skill weights, and optional step evidence range.
+- Response type, scale, audience, required state, source and question-owned ability definition; no fixed VASK/rubric mapping or question-to-skill weight.
 - Draft, review, approval, publication, assignment, retirement, and historical version retention.
 - Default BHSS form first; custom form editing can be restricted to staff.
 
@@ -122,7 +122,7 @@ A better discovery sequence is:
 ### G External achievements
 
 - Student-entered award/certificate with issuer, date, level/difficulty, result, and VASK.
-- Default official skill mapping of none.
+- Default formal rubric contribution of none; accepted certificate evidence enters the Proof List.
 - Teacher/staff review before publication.
 
 ### H Assessment and framework observations

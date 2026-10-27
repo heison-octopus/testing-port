@@ -50,20 +50,20 @@ The source questionnaire and the Universal Framework do not contain the same ski
 
 ### Ten questionnaire constructs
 
-| Code | English name | Chinese name | Questions | Direct framework relationship |
+| Code | English name | Chinese name | Questions | Possible semantic overlap; not a system mapping |
 |---|---|---|---:|---|
-| `adaptability` | Adaptability | 適應能力 | 12 | Directly related to Adaptability |
-| `collaboration` | Collaboration | 合作能力 | 18 | Directly related to Teamwork |
-| `communication` | Communication | 溝通能力 | 16 | May map to Listening, Speaking, or both |
-| `creativity` | Creativity | 創造力 | 18 | Directly related to Creativity |
-| `critical_thinking` | Critical Thinking | 批判思維能力 | 18 | Supporting construct; may map to Listening or Problem-solving questions |
-| `curiosity` | Curiosity | 探究能力／好奇心 | 18 | Supporting construct; may map to Creativity or Problem-solving questions |
-| `growth_mindset` | Growth Mindset | 成長型思維 | 12 | Supporting construct; may map to Adaptability or Planning questions |
-| `leadership` | Leadership | 領導力 | 22 | Directly related to Leadership |
-| `perseverance` | Perseverance | 堅毅 | 14 | Supporting construct; may map to Adaptability or Planning questions |
-| `problem_solving` | Problem-Solving | 問題解決能力 | 18 | Directly related to Problem-solving |
+| `adaptability` | Adaptability | 適應能力 | 12 | Semantically overlaps adaptability |
+| `collaboration` | Collaboration | 合作能力 | 18 | Semantically overlaps teamwork |
+| `communication` | Communication | 溝通能力 | 16 | May provide context relevant to listening or speaking |
+| `creativity` | Creativity | 創造力 | 18 | Semantically overlaps creativity |
+| `critical_thinking` | Critical Thinking | 批判思維能力 | 18 | May provide context relevant to reasoning or problem solving |
+| `curiosity` | Curiosity | 探究能力／好奇心 | 18 | May provide context relevant to creativity or problem solving |
+| `growth_mindset` | Growth Mindset | 成長型思維 | 12 | May provide context relevant to adaptability or planning |
+| `leadership` | Leadership | 領導力 | 22 | Semantically overlaps leadership |
+| `perseverance` | Perseverance | 堅毅 | 14 | May provide context relevant to adaptability or planning |
+| `problem_solving` | Problem-Solving | 問題解決能力 | 18 | Semantically overlaps problem solving |
 
-Do not put both lists in one `skill` column. Store them as separate reference models and connect individual questions to framework skills through an explicit mapping table.
+Do not put both lists in one `skill` column. Store questionnaire constructs, question-owned abilities, VASK and rubric axes as separate concepts. **Discussed on Meeting Oct 26 - kickstart:** questions no longer have a fixed VASK/RC360/Skills Builder mapping; accepted responses become proof and are interpreted against the rubric selected during Portfolio review.
 
 ---
 
@@ -88,7 +88,7 @@ Activities
 - One `date` field cannot represent a lesson, trip, or two-week project.
 - `activityVASK` would contain multiple records in one field.
 - Creator and updater are combined.
-- The school year should be a referenced academic period, not inferred only from a date.
+- The school period should be resolved from the activity start/end dates against configured period boundaries, with an exception when the range crosses periods.
 
 ### After
 
@@ -122,7 +122,8 @@ One actual occurrence of an activity.
 | `template_version_number` | integer, nullable | Preserves the version used |
 | `title` | text | Display name for this occurrence |
 | `activity_type_id` | UUID | References `activity_types` |
-| `academic_period_id` | UUID | References `academic_periods` |
+| `academic_period_id` | UUID | Server-resolved from `starts_at`/`ends_at`; references `academic_periods` |
+| `period_resolution_status` | enum | `resolved`, `cross_period_exception`, `no_match`, `exception_approved` |
 | `group_id` | UUID, nullable | Class, team, or project group |
 | `starts_at` | timestamp | Required |
 | `ends_at` | timestamp, nullable | Supports multi-day activities |
@@ -464,7 +465,6 @@ Orders reusable questions within a form.
 | `display_order` | integer | Required |
 | `is_required` | boolean | Required |
 | `section_name` | text, nullable | Optional grouping |
-| `item_total_weight` | decimal | Defaults to `1.0`; divided across mapped framework skills |
 | `configuration_json` | json, nullable | UI-only settings, not core scoring data |
 
 #### `activity_form_assignments`
@@ -550,6 +550,9 @@ FormQuestions
 | `response_scale_id` | UUID, nullable | Required for scaled questions |
 | `questionnaire_construct_id` | UUID, nullable | Primary questionnaire construct |
 | `construct_subcategory_id` | UUID, nullable | Workbook “範疇” value |
+| `ability_code` | text | Stable code for the ability expressed by this question |
+| `ability_name_en` / `ability_name_zh` | text | Required bilingual ability label |
+| `ability_description_en` / `ability_description_zh` | text | Explains the question's valid meaning and use |
 | `is_negatively_worded` | boolean | Matches source wording |
 | `requires_reverse_scoring` | boolean | True only when scoring requires reversal |
 | `status` | enum | `draft`, `active`, `retired` |
@@ -604,34 +607,9 @@ Stores the 10 questionnaire skills separately from the eight framework skills.
 | `name_zh` | text | Workbook “範疇” |
 | `display_order` | integer | Required |
 
-#### `question_framework_mappings`
+#### Question ability and Proof List boundary
 
-Maps a question to zero, one, or several framework axes without pretending the two models are identical.
-
-| Field | Type | Notes |
-|---|---|---|
-| `question_framework_mapping_id` | UUID | Primary key |
-| `question_id` | UUID | References `questions` |
-| `framework_skill_id` | UUID | References `framework_skills` |
-| `mapping_role` | enum | `primary`, `supporting` |
-| `normalized_weight_share` | decimal | Equal share of the form item's total weight across mapped skills |
-| `evidence_band_min` | integer, nullable | Lowest step range the question may help evidence |
-| `evidence_band_max` | integer, nullable | Highest step range the question may help evidence; never an automatic award |
-| `mapping_rationale` | text | Explains why the mapping exists |
-| `mapping_version` | integer | Incremented when the interpretation changes |
-| `approval_status` | enum | `draft`, `in_review`, `changes_requested`, `approved`, `rejected`, `retired` |
-| `approved_by_user_id` | UUID, nullable | Governance record |
-| `approved_at` | timestamp, nullable | Governance record |
-
-The current working rule keeps every form item's total weight at `1.0` and divides it equally across all mapped framework skills. Mapping breadth therefore does not increase the question's total influence.
-
-#### `question_vask_mappings`
-
-Records a question's proposed relationship to one or more VASK items, including mapping role, rationale, mapping version, approval status, approver, and approval time. VASK mappings and framework-skill mappings remain separate.
-
-#### `question_mapping_review_assignments`
-
-Assigns a particular VASK, framework-skill, or evidence-range mapping version to a named reviewer. Store the question, mapping scope, version, assigning user, reviewer, due date, decision, comment, and decision time. The school still needs to confirm which role may approve each scope and whether an author may self-approve.
+**Discussed on Meeting Oct 26 - kickstart.** `question_framework_mappings`, `question_vask_mappings`, normalized mapping weights and fixed evidence bands are removed from the current model. The question version itself stores a valid ability definition. A submitted and accepted response creates a `proof_item` with source type `question_response`; `proof_links` may later connect it to a human-confirmed `rubric_observation`. This keeps historical question meaning stable while allowing the same evidence to be reviewed against an interchangeable, versioned rubric.
 
 #### `question_responses`
 
@@ -1035,20 +1013,22 @@ flowchart LR
     F[forms] --> FQ[form_questions]
     FQ --> Q[questions]
     Q --> QC[questionnaire_constructs]
-    Q --> QFM[question_framework_mappings]
+    Q --> QR[question_responses]
+    QR --> PI[proof_items]
 
-    FB --> FE[feedback_evidence]
-    FB --> FSO[feedback_skill_observations]
-    FSO --> FS[framework_skills]
-    FSO --> FST[framework_steps]
+    FB --> PI
+    AM --> PI
+    PI --> PL[proof_links]
+    PL --> RO[rubric_observations]
+    RO --> FS[framework_skills]
+    RO --> FST[framework_steps]
 
     FW[frameworks] --> FS
     FS -->|16 per skill| FST
     AFA --> F
-    FE -.-> AM
 ```
 
-The diagram shows storage relationships, not automatic scoring. An activity, response, or media item becomes framework evidence only after feedback cites it and an authorized human confirms the related observation.
+The diagram shows storage relationships, not automatic scoring. A response, feedback record or media reference first becomes a typed Proof List item. It affects a framework result only after an authorized human cites it, confirms a rubric condition and completes the separate publication workflow.
 
 ## 15A Student achievements Proud Moments and human review
 
@@ -1071,10 +1051,10 @@ Internal moderation may prevent publication when context, consent, or evidence i
 Every school-owned activity references one immutable form version. A form version contains question blocks. For the proof of concept:
 
 - use the BHSS dummy questions as the default question source;
-- associate each block or question with approved VASK items;
-- add only enough questions to improve uncovered VASK areas;
-- allow one question to map to one or more of the eight framework skills; and
-- keep any observable 1–16 step range as candidate evidence, not an awarded step.
+- give each question version its own valid ability code, bilingual name and description;
+- select or write questions whose meaning fits the activity and respondent;
+- create a Proof List item from an accepted response; and
+- interpret that proof against the selected rubric only during authorized Portfolio review.
 
 ### Submission review and publication states
 
@@ -1082,9 +1062,9 @@ Questionnaire responses, student reflection, and `回顧與展望` share respons
 
 ### Teacher and teaching-assistant initial ratings
 
-`teacher_skill_initial_ratings` records the activity, student, framework skill, proposed step, source instrument or authority, rater, evidence summary, and confirmation status. When an activity is intended to contribute to the published 1–16 skill state, the current scope requires a confirmed rating from the assigned teacher or teaching assistant.
+`rubric_observations` records the activity, student, rubric/version, axis, satisfied level condition, observer, evidence summary, Proof List links and confirmation status. When an activity is intended to contribute to the published 1–16 skill state, the current scope requires a confirmed observation from an authorized person.
 
-If the human rating is missing, keep the value missing. Do not convert it to zero and do not let self-review, peer review, or AI inference set the published step. Those responses remain visible as unconfirmed evidence.
+If human confirmation is missing, keep the value missing. Do not convert it to zero and do not let self-review, peer review, or AI inference set the published step. Under the active `MAX-CONFIRMED` policy, the published result is the highest human-confirmed satisfied level for that axis; earlier levels are not prerequisites.
 
 ### `peer_review_assignments`
 
@@ -1120,13 +1100,17 @@ The first database release does not need every optional table. A workable minimu
 20. `feedback_evidence`
 21. `feedback_skill_observations`
 22. `questionnaire_constructs`
-23. `question_framework_mappings`
-24. `question_vask_mappings`
-25. `question_mapping_review_assignments`
-26. `source_systems`
-27. `import_batches`
-28. `import_records`
-29. `import_record_corrections`
+23. `role_definitions`
+24. `user_role_assignments`
+25. `rubric_catalogues`, axes, levels and level conditions
+26. `rubric_aggregation_policies`
+27. `proof_type_definitions`
+28. `proof_items`
+29. `proof_links`
+30. `rubric_observations`
+31. `published_rubric_results`
+32. `review_outlook_memory_settings` and frozen memory items
+33. `source_systems`, import batches, import records and correction history
 
 Add media processing, shared collections, detailed access grants, VASK tables, cached radar snapshots, and advanced audit data as the corresponding product features are implemented.
 
@@ -1134,8 +1118,8 @@ Add media processing, shared collections, detailed access grants, VASK tables, c
 
 - Whether teachers can change activity-template VASK defaults or only activity-instance copies.
 - Whether a submitted framework-stage observation can be edited or must be superseded by a new revision.
-- Which questionnaire questions have direct versus supporting mappings to the eight framework axes.
-- How multiple observations become one reporting-period radar value.
+- Whether a submitted rubric observation can be edited or must be superseded by a new revision.
+- Which future aggregation policies may be activated in addition to `MAX-CONFIRMED`.
 - Who can view teacher comments, peer reviews, student reflections, and attached media.
 - How long login, audit, media-extraction, and assessment data are retained.
 

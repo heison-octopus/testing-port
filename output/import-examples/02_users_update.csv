@@ -1,4 +1,4 @@
-external_user_id,operation,name_en,name_zh,email,class_name,academic_year,status,guardian_consent_status,media_consent_scope,effective_at,updated_by_user_id,update_reason
-USR-S-001,update,Alex Lam,林同學,alex.lam@example.edu.hk,S1A,2026/27,active,granted,school_internal,2026-09-05T09:00:00+08:00,USR-ADM-001,Confirmed class allocation
-USR-S-002,update,Bella Ho,何同學,bella.ho@example.edu.hk,S1A,2026/27,active,granted,no_publication,2026-09-05T09:00:00+08:00,USR-ADM-001,Guardian consent restriction recorded
-USR-S-003,update,Chris Lee,李同學,chris.lee@example.edu.hk,S1B,2026/27,active,granted,school_internal,2026-09-20T11:00:00+08:00,USR-ADM-001,Guardian consent received
+user_id,operation,name_en,name_zh,email,status,guardian_consent_status,media_consent_scope,effective_at,updated_by_user_id,update_reason
+USR-S-001,update,Alex Lam,林同學,alex.lam@example.edu.hk,active,granted,school_internal,2026-09-05T09:00:00+08:00,USR-ADM-001,Confirmed identity and consent details
+USR-S-002,update,Bella Ho,何同學,bella.ho@example.edu.hk,active,granted,no_publication,2026-09-05T09:00:00+08:00,USR-ADM-001,Guardian consent restriction recorded
+USR-S-003,update,Chris Lee,李同學,chris.lee@example.edu.hk,active,granted,school_internal,2026-09-20T11:00:00+08:00,USR-ADM-001,Guardian consent received

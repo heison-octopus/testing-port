@@ -1,0 +1,5 @@
+memory_snapshot_item_id,memory_snapshot_id,memory_setting_id,student_id,source_kind,source_entity_type,source_entity_id,period_id,source_version,display_summary,included_at,content_hash
+MEMITEM-001,MEMSNAP-001,MEMSET-001,USR-S-001,activity_description,activity,ACT-COMM-001,2026-27-P1,activity-v3,Communication lesson description,2026-12-18T17:55:00+08:00,hash-example-001
+MEMITEM-002,MEMSNAP-001,MEMSET-001,USR-S-001,activity_outcome,rubric_observation,OBS-001,2026-27-P1,observation-v1,Confirmed listening observation at level 5,2026-12-18T17:55:00+08:00,hash-example-002
+MEMITEM-003,MEMSNAP-001,MEMSET-001,USR-S-001,proof_summary,proof_item,PRF-REFLECTION-001,2026-27-P1,proof-v1,Student reflection on unfamiliar situations,2026-12-18T17:55:00+08:00,hash-example-003
+MEMITEM-004,MEMSNAP-001,MEMSET-001,USR-S-001,published_rubric_result,published_rubric_result,RESULT-001,2026-27-P1,result-v1,Published Listening level 5 under MAX-CONFIRMED-v1,2026-12-18T17:55:00+08:00,hash-example-004

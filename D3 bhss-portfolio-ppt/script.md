@@ -4,6 +4,10 @@
 
 This script accompanies `index.html`. The deck separates original source requirements, current product interpretations, and unresolved school decisions. It is designed for review and revision rather than final approval.
 
+State the current product framing carefully: BHSS is the lead solution proposer/reference school, JC may approve and fund programme operation or adoption, and Octopus Infotech intends to own and supply the reusable product. Ownership, licensing and any JC-exclusive branding require written confirmation. Tag this statement **Discussed on Meeting Oct 26 - kickstart** and do not present it as JC approval.
+
+The plain-language value proposition is that the Portfolio helps teachers see student participation, abilities and growth that academic results and memory-based staff discussion may miss. Evidence must still exist; the product does not manufacture a positive profile.
+
 ## Slides 1–4 — Purpose, original flow, and use model
 
 Start by explaining that the original document describes an educational outcome and a central integration layer, but not the daily operating model. Ask whether the pilot means one shared computer, a web application on the school network, or a hosted/hybrid platform. Clarify that `localhost` normally serves only the machine running the application unless it is deliberately exposed to other devices on the network.
@@ -60,6 +64,8 @@ Separate intake from interpretation:
 - Interpretation: multiple perspectives, AI-assisted extraction, human verification, and publication to activity, period, annual, and longitudinal views.
 
 Ask which data is imported automatically, which is uploaded in batches, and which is entered directly by teachers or students.
+
+Also ask which school-approved stores hold media. A connector may receive an opaque media reference and retrieve metadata, a short-lived authorized URL or the media content. Explain that access still passes through server-side role, assignment, consent and lifecycle checks; never propose exposing a raw server path to the browser. This was **Discussed on Meeting Oct 26 - kickstart** and remains partly open under L-08.
 
 ## Interactive POC — role surfaces and publication gate
 

@@ -16,8 +16,12 @@ Preserve evidence safely while keeping ownership, assessment use, portfolio disp
 | EVD-FR-006 | JPG/PNG shall receive a safe preview derivative; the original shall not be used directly as the UI preview. | POC-aligned recommendation | P0 |
 | EVD-FR-007 | An evidence item affects assessment only when explicitly cited by feedback/observation. | Confirmed architecture | P1 |
 | EVD-FR-008 | A student external achievement shall retain issuer, date, category, level/difficulty, result, certificate, reflection and student-selected VASK. | Confirmed H-06/M-15 | P1 |
-| EVD-FR-009 | External achievements default to no official skill mapping and no formal step effect without suitable human observation. | Confirmed H-06/M-15 | P1 |
+| EVD-FR-009 | External achievements create Proof List items but no formal rubric result without suitable human observation and publication authority. | Confirmed H-06/M-15; Oct 26 revision | P1 |
 | EVD-FR-010 | Consent, retention and guardian rules remain configurable and unresolved. | Policy TBD H-07/L-02 | P1 |
+| EVD-FR-011 | An asset may be platform-managed or externally referenced through a school-approved connector. | Partly addressed L-08; Discussed on Meeting Oct 26 - kickstart | P1 |
+| EVD-FR-012 | External retrieval shall re-check role/assignment scope, consent, lifecycle state and connector availability on every access. | Recommended architecture | P1 |
+| EVD-FR-013 | Connector responses may provide metadata, a short-lived authorized URL or streamed bytes; browser responses shall never contain raw server paths or storage credentials. | Partly addressed L-08; Discussed on Meeting Oct 26 - kickstart | P1 |
+| EVD-FR-014 | If an external source is unavailable or revoked, historical evidence linkage and provenance shall remain, while original-media access is marked unavailable. | Recommended architecture | P1 |
 
 ## 3. Evidence and visibility model
 
@@ -56,7 +60,7 @@ The UI shall show the active type and maximum before file selection and beside a
 | Reflection | Required for publication request | 1–4,000 characters; meaningful minimum Policy TBD |
 | VASK | At least one for submission | 1–100 temporary cap |
 | Certificate/evidence | At least one for certificate claim | Max 20 files per action |
-| Official skill mapping | Default `none` | Human-reviewed exception only |
+| Rubric contribution | Default `none` | Requires a separate human-confirmed observation and authorized publication |
 
 ## 6. Access and disable behaviour
 

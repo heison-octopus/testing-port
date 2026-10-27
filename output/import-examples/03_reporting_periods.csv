@@ -1,5 +1,8 @@
-period_id,academic_year,name_en,name_zh,start_date,end_date,sequence,is_summer,portfolio_snapshot_due,status
-P1,2026/27,Period 1,第一學段,2026-09-01,2026-12-18,1,false,2027-01-08,open
-P2,2026/27,Period 2,第二學段,2027-01-04,2027-04-09,2,false,2027-04-23,planned
-P3,2026/27,Period 3,第三學段,2027-04-19,2027-07-16,3,false,2027-07-23,planned
-SUMMER,2026/27,Summer activities,暑期活動,2027-07-17,2027-08-31,4,true,2027-09-10,planned
+period_id,school_id,academic_year_id,academic_year_label,period_code,name_en,name_zh,start_date,end_date,sequence,is_summer,portfolio_snapshot_due,resolution_priority,status
+2025-26-P1,BHSS,AY-2025-26,2025/26,P1,Period 1,第一學段,2025-09-01,2025-12-19,1,false,2026-01-09,100,closed
+2025-26-P2,BHSS,AY-2025-26,2025/26,P2,Period 2,第二學段,2026-01-05,2026-04-10,2,false,2026-04-24,100,closed
+2025-26-P3,BHSS,AY-2025-26,2025/26,P3,Period 3,第三學段,2026-04-20,2026-08-31,3,false,2026-09-11,100,closed
+2026-27-P1,BHSS,AY-2026-27,2026/27,P1,Period 1,第一學段,2026-09-01,2026-12-18,1,false,2027-01-08,100,open
+2026-27-P2,BHSS,AY-2026-27,2026/27,P2,Period 2,第二學段,2027-01-04,2027-04-09,2,false,2027-04-23,100,planned
+2026-27-P3,BHSS,AY-2026-27,2026/27,P3,Period 3,第三學段,2027-04-19,2027-07-16,3,false,2027-07-23,100,planned
+2026-27-SUMMER,BHSS,AY-2026-27,2026/27,SUMMER,Summer activities,暑期活動,2027-07-17,2027-08-31,4,true,2027-09-10,90,planned

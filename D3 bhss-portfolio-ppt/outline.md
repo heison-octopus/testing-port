@@ -24,6 +24,8 @@
 - Supporting points: Multi-source evidence; multiple perspectives; student, teacher, and school audiences
 - Sources: DI-01, DI-02, DI-03
 
+Speaker framing: the product should help teachers see students whose demonstrated participation, abilities or growth may be missed by academic results and memory-based discussion. Do not claim that the platform creates strengths where no evidence exists. Status: **Discussed on Meeting Oct 26 - kickstart**.
+
 ### Slide 3 — What the platform is meant to do
 
 - Type: Input–process–outcome diagram
@@ -68,6 +70,7 @@
 - Sources: Time Infinity, activity records, school-based curriculum, student work, reflection, recordings, photos, teacher assessment, self-assessment, and peer assessment
 - Boundary: Time Infinity supplies outside-class records; the new platform collects school-based curriculum activity records
 - Sources: DI-05, DI-18
+- Integration note: approved media may remain in multiple school-managed stores and be resolved through a server-side connector; provider details remain open under L-08. Status: **Discussed on Meeting Oct 26 - kickstart**.
 
 ### Slide 9 — Activity scope
 
@@ -139,7 +142,10 @@
 - Governance: Activity/form/mapping approval owners
 - Privacy: Consent, media access, retention, withdrawal, and deletion
 - Integration: Authoritative systems and real Time Infinity fields
+- Product governance: signed ownership/licensing/support terms, JC funding role, and any JC-exclusive or co-branded trademark arrangement
 - Sources: DI-13 and current open-issues documentation
+
+Product-direction note: BHSS is the lead solution proposer/reference school; JC may approve/fund operation or adoption; Octopus Infotech intends to own and supply the reusable product. This is **Discussed on Meeting Oct 26 - kickstart**, not evidence of JC approval.
 
 ### Slide 16 — Recommended discussion order
 

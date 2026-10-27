@@ -15,6 +15,8 @@ Maintain stable student identity while classes, grades, school status and assign
 | SCH-FR-005 | Rollover shall run as preview, classify continuing/new/outgoing/unmatched rows, require confirmation and then apply atomically. | POC-aligned recommendation | P1 |
 | SCH-FR-006 | Closed periods and published snapshots shall remain reproducible after later membership changes. | Confirmed architecture | P1 |
 | SCH-FR-007 | The exact overlap, cut-off and cross-year progression rules shall remain configurable. | Policy TBD H-08 | P1 |
+| SCH-FR-008 | Staff shall enter activity start/end dates; the server shall resolve the one reporting period containing the complete range. | Confirmed L-09; Oct 26 revision | P0 |
+| SCH-FR-009 | A cross-period activity shall create an exception and be blocked until split or explicitly approved by an authorized user. | Confirmed L-09; exception authority open | P0 |
 
 ## 3. Core entities
 
@@ -69,4 +71,6 @@ flowchart LR
 - A teacher's access ends when the effective assignment ends, except for explicitly retained historical review access.
 - Applying a rollover with unresolved duplicate student IDs is blocked.
 - A closed-period portfolio still shows the class label recorded for that snapshot.
+- An activity entirely within `2025-26-P1` receives that period automatically; staff do not select it manually.
+- An activity crossing P1 and P2 is blocked until it is split or its exception is explicitly approved and audited.
 

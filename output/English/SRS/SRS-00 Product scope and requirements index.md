@@ -2,7 +2,9 @@
 
 ## 1. Product objective
 
-The platform records academic and non-academic activities, preserves evidence and review provenance, and publishes an evidence-backed student growth portfolio across eight Universal Framework skills. It is not a marks leaderboard and must not turn questionnaire answers, certificates, AI output, or missing data directly into an official 1–16 step.
+The platform records academic and non-academic activities, preserves evidence and review provenance, and publishes an evidence-backed student growth portfolio across eight Universal Framework skills. It helps authorized educators see participation, abilities and growth that academic results or memory-based staff discussion may miss. It is not a marks leaderboard and must not turn questionnaire answers, certificates, AI output, or missing data directly into an official 1–16 step.
+
+Product direction: BHSS is the lead solution proposer/reference school, JC may approve and fund programme operation or adoption, and Octopus Infotech intends to own and supply the reusable product. Ownership, licensing and branding remain subject to written agreement. **Discussed on Meeting Oct 26 - kickstart.**
 
 ## 2. Scope by phase
 
@@ -40,6 +42,11 @@ flowchart LR
 | PRD-FR-006 | Every numeric input shall display and enforce its minimum and maximum in UI, API and persistence validation. | Recommended architecture | P0 |
 | PRD-FR-007 | Unresolved requirements shall be displayed as `Policy TBD`; temporary caps shall remain configurable and separately labelled. | Confirmed documentation rule | P0 |
 | PRD-FR-008 | English and Chinese requirement sets shall share the same IDs, enums, limits and meanings. | Confirmed documentation rule | P0 |
+| PRD-FR-009 | The current product shall use one documented core activity contract rather than arbitrary per-school schemas. School sanitation, platform validation, preview, and approval remain separate responsibilities. | Approved POC interpretation V2-A01 | P0 |
+| PRD-FR-010 | Descriptive labels and formal assessment records shall remain distinct, even when a label names a rubric axis. | Approved POC interpretation V2-B01 | P0 |
+| PRD-FR-011 | Model-assisted processing shall produce review candidates with provenance, never an automatically published identity, evidence claim, or skill step. | Approved POC interpretation V2-B05–B08 | P0 |
+| PRD-FR-012 | The Portfolio shall consolidate school, teacher, student and authorized-staff evidence so non-academic participation and demonstrated abilities remain visible and traceable. | Discussed on Meeting Oct 26 - kickstart | P1 |
+| PRD-FR-013 | Media may be resolved from school-approved external stores through server-side connectors; raw paths and storage credentials shall not be exposed to browser clients. | Partly addressed L-08; Discussed on Meeting Oct 26 - kickstart | P1 |
 
 ## 5. Shared lifecycle vocabulary
 
@@ -62,10 +69,10 @@ Transitions shall be append-audited. A single generic `status` shall not replace
 | Framework step number | 1 | 16 | Fixed source model; integer |
 | Supplied questionnaire response | 1 | 6 | Source scale; integer |
 | Observation consistency rating | 1 | 6 | Confirmed architecture; integer |
-| Skills mapped to one question | 1 | 8 | Fixed by eight-skill model |
-| Mapping percentage | 0 | 100 | Two decimal places; mappings per question total exactly 100 |
-| Normalized question weight | 0 | 1.0 | Default total is 1.0 and is divided equally across mapped skills |
-| Evidence band | 1 | 16 | Optional; minimum must not exceed maximum; candidate evidence only |
+| Question ability definitions | 1 | 1 | One valid ability code/name per question version; not a rubric mapping |
+| Rubric axes | 1 | Catalogue-defined | Required for assessment/radar eligibility |
+| Rubric level order/value | Catalogue-defined | Catalogue-defined | Ordered and versioned; concrete conditions required |
+| Proof links per proof item | 0 | Configurable | Typed links; no automatic assessment effect |
 | Display order | 1 | 2,147,483,647 | Positive integer; values need not be contiguous |
 | Version number | 1 | 9,999 | Temporary technical cap |
 

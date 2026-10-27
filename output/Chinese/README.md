@@ -6,6 +6,7 @@
 | --- | --- | --- |
 | `核心資料關係.md` | 核心操作流程、資料關係、狀態、證據及發布規則 | `../English/Core data relationships.md` |
 | `討論問題.md` | 高、中、低層次未決問題、狀態及答案紀錄的權威清單 | `../English/Discussion questions.md` |
+| `最新發現及問題 v2.md` | 最新會議發現、已採納架構、產品建議及尚待確認事項 | `../English/Current findings and questions v2.md` |
 | `角色及權限.md` | 角色職責、存取界線及批核權限 | `../English/Roles and permissions.md` |
 | `簡報議程.md` | 輸入、流程、輸出、未決問題及簡報次序 | `../English/Presentation agenda.md` |
 | `資料欄位修訂.md` | 詳細實體及欄位修訂 | `../English/Aspects updated.md` |
@@ -22,3 +23,5 @@
 - `../../D3 bhss-portfolio-ppt/` 保存雙語簡報及互動 POC。
 
 如中英文版本出現差異，應先按原始證據核對；校方確認決定後，再同步更新兩套架構文件。
+
+標籤為 `Discussed on Meeting Oct 26 - kickstart` 的關聯資料修訂已同步至中英文版本，包括：按活動日期自動找出學段、具生效日期的角色分派、題目本身的能力定義、可互換 Rubric 的功能條件、具類型的佐證清單、`MAX-CONFIRMED` 進展規則、只產生正面候選內容的 AI 界線，以及凍結回望／展望實際輸入資料。

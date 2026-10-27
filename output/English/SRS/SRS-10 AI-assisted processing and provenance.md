@@ -30,6 +30,9 @@ Final permitted AI uses remain Policy TBD H-10.
 | AI-FR-007 | AI outputs shall use a brown-toned visual treatment and a clear draft label until human approval. | Confirmed UI convention | P0/P2 |
 | AI-FR-008 | AI failure shall not block manual assessment or portfolio publication. | Recommended architecture | P2 |
 | AI-FR-009 | Sensitive data sent to external processors shall follow configured consent, residency, retention and vendor policy. | Policy TBD H-07/H-10 | P2 |
+| AI-FR-010 | Portfolio LLM output shall be positive, source-linked candidate text only; it shall not downgrade, accept proof or publish a rubric level. | Confirmed M-23; Oct 26 revision | P0/P2 |
+| AI-FR-011 | Review/outlook generation shall use a teacher-selected from/to school period and explicit source classes. | Confirmed M-24 | P0/P2 |
+| AI-FR-012 | Each generated review/outlook record shall freeze the exact activity descriptions, confirmed outcomes, accepted proof summaries, published rubric results and prompt version used. | Confirmed M-24 | P0/P2 |
 
 ## 4. Input and output limits
 

@@ -1,16 +1,37 @@
 upload_batch_id,source_system,source_file,record_type,schema_version,academic_year,period_id,uploaded_by_user_id,uploaded_at,contains_personal_data,processing_status,notes
-UP-2026-0001,BHSS Admin,01_users_import.csv,user_create,1.0,2026/27,,USR-ADM-001,2026-09-01T08:30:00+08:00,true,validated,New student and staff accounts
-UP-2026-0002,BHSS Admin,02_users_update.csv,user_update,1.0,2026/27,,USR-ADM-001,2026-09-05T09:00:00+08:00,true,validated,Class and display-name updates
-UP-2026-0003,BHSS Platform,04_activities.csv,activity,1.0,2026/27,P1,USR-T-001,2026-09-10T10:00:00+08:00,true,validated,Default form applies unless override_form_template_id is populated
-UP-2026-0004,Time Infinity,11_time_infinity_activity_export.csv,external_activity_participation,simulated-1.0,2026/27,P1,USR-ADM-001,2026-10-01T07:30:00+08:00,true,pending_review,Fictional import for integration design only
-UP-2026-0005,BHSS Platform,08_media_evidence.csv,media_metadata,1.0,2026/27,P1,USR-T-002,2026-10-09T16:30:00+08:00,true,consent_check,Original files are stored separately; this CSV contains metadata only
-UP-2026-0006,BHSS Admin,12_form_review_history.csv,form_review_event,1.0,2026/27,,USR-ST-001,2026-08-25T10:00:00+08:00,true,validated,Immutable review and publication history
-UP-2026-0007,BHSS Platform,13_activity_form_assignments.csv,activity_form_assignment,1.0,2026/27,P1,USR-T-001,2026-09-10T10:05:00+08:00,true,validated,Only approved and published form versions may be assigned
-UP-2026-0008,BHSS Admin,14_enum_reference.csv,enum_reference,1.0,2026/27,,USR-ADM-001,2026-08-20T09:00:00+08:00,false,validated,Reference list of permitted values used by the example CSV schemas
-UP-2026-0009,BHSS Admin,15_form_review_assignments.csv,form_review_assignment,1.0,2026/27,,USR-ADM-001,2026-08-20T09:05:00+08:00,true,validated,Assigns one immutable form version to a specific authorized reviewer
-UP-2026-0010,BHSS Platform,16_student_external_achievements.csv,student_external_achievement,1.0,2026/27,P1,USR-S-001,2026-11-12T18:00:00+08:00,true,pending_review,Student-entered certificates and external achievements with VASK but no official skill mapping by default
-UP-2026-0011,BHSS Platform,17_proud_moment_selections.csv,proud_moment_selection,1.0,2026/27,P1,USR-S-001,2026-12-15T18:00:00+08:00,true,pending_review,Student-selected meaningful activity or evidence; separate from framework-step calculation
-UP-2026-0012,BHSS Platform,18_teacher_skill_initial_ratings.csv,teacher_skill_initial_rating,1.0,2026/27,P1,USR-T-001,2026-09-19T16:05:00+08:00,true,validated,Human-in-the-loop rating gate for activity evidence intended to affect skill steps
-UP-2026-0013,BHSS Platform,19_peer_review_assignments.csv,peer_review_assignment,1.0,2026/27,P1,USR-T-002,2026-10-16T16:10:00+08:00,true,validated,Named peer reviewer assignments created by teacher or teaching assistant
-UP-2026-0014,BHSS Admin,20_activity_form_vask_mappings.csv,activity_form_vask_mapping,1.0,2026/27,P1,USR-ST-001,2026-08-25T10:10:00+08:00,true,pending_review,Question-block VASK coverage and optional eight-skill mapping
-UP-2026-0015,BHSS Platform,21_review_outlook_submissions.csv,review_outlook_submission,1.0,2026/27,P1,USR-S-001,2026-12-18T18:00:00+08:00,true,pending_review,Term review and outlook with AI draft and teacher or TA final confirmation
+UP-2026-0001,BHSS Admin,01_users_import.csv,user_identity,2.0,2026/27,,USR-ADM-001,2026-09-01T08:30:00+08:00,true,validated,Identity only; role membership is imported separately
+UP-2026-0002,BHSS Admin,02_users_update.csv,user_identity_update,2.0,2026/27,,USR-ADM-001,2026-09-05T09:00:00+08:00,true,validated,Account and consent changes only
+UP-2026-0003,BHSS Admin,03_reporting_periods.csv,school_period,2.0,2026/27,,USR-ADM-001,2026-08-20T08:00:00+08:00,false,validated,School-defined date boundaries used for server-side period resolution
+UP-2026-0004,BHSS Platform,04_activities.csv,activity,2.0,2026/27,2026-27-P1,USR-T-001,2026-09-10T10:00:00+08:00,true,validated,Staff input dates; resolved period fields are system outputs
+UP-2026-0005,BHSS Platform,05_activity_people.csv,activity_person_assignment,2.0,2026/27,2026-27-P1,USR-T-001,2026-09-10T10:05:00+08:00,true,validated,Activity relationship is separate from global role membership
+UP-2026-0006,BHSS Admin,06_form_templates.csv,form_template,2.0,2026/27,,USR-ST-001,2026-08-25T10:00:00+08:00,true,validated,Versioned form templates
+UP-2026-0007,BHSS Admin,07_form_template_items.csv,form_template_item,2.0,2026/27,,USR-ST-001,2026-08-25T10:02:00+08:00,true,validated,Questions keep their own ability and proof intent without fixed rubric mapping
+UP-2026-0008,BHSS Platform,08_media_evidence.csv,media_source_record,2.0,2026/27,2026-27-P1,USR-T-002,2026-10-09T16:30:00+08:00,true,consent_check,Media source record is registered in the shared Evidence / Proof List
+UP-2026-0009,BHSS Admin,09_question_bank_example.csv,question_definition,2.0,2026/27,,USR-ST-001,2026-08-25T10:04:00+08:00,false,validated,Question meaning and independent ability retained; no absolute rubric mapping
+UP-2026-0010,Time Infinity,11_time_infinity_activity_export.csv,external_activity_participation,simulated-2.0,2026/27,2026-27-P1,USR-ADM-001,2026-10-01T07:30:00+08:00,true,pending_review,Fictional connector example; period is resolved after import
+UP-2026-0011,BHSS Admin,12_form_review_history.csv,form_review_event,2.0,2026/27,,USR-ST-001,2026-08-25T10:00:00+08:00,true,validated,Immutable review and publication history
+UP-2026-0012,BHSS Platform,13_activity_form_assignments.csv,activity_form_assignment,2.0,2026/27,2026-27-P1,USR-T-001,2026-09-10T10:05:00+08:00,true,validated,Only approved published versions may be assigned
+UP-2026-0013,BHSS Admin,14_enum_reference.csv,enum_reference,2.0,2026/27,,USR-ADM-001,2026-08-20T09:00:00+08:00,false,validated,Permitted values for the revised linked contracts
+UP-2026-0014,BHSS Admin,15_form_review_assignments.csv,form_review_assignment,2.0,2026/27,,USR-ADM-001,2026-08-20T09:05:00+08:00,true,validated,Workflow approval assignment remains separate from role membership
+UP-2026-0015,BHSS Platform,16_student_external_achievements.csv,student_external_achievement,2.0,2026/27,2026-27-P1,USR-S-001,2026-11-12T18:00:00+08:00,true,pending_review,Achievement links to a proof item and optional labels; no automatic level
+UP-2026-0016,BHSS Platform,17_proud_moment_selections.csv,proud_moment_selection,2.0,2026/27,2026-27-P1,USR-S-001,2026-12-15T18:00:00+08:00,true,pending_review,Student curation links to proof without changing a rubric level
+UP-2026-0017,BHSS Platform,18_rubric_observations.csv,rubric_observation,2.0,2026/27,2026-27-P1,USR-T-001,2026-09-19T16:05:00+08:00,true,validated,Human-confirmed rubric observation linked to proof
+UP-2026-0018,BHSS Platform,19_peer_review_assignments.csv,peer_review_assignment,2.0,2026/27,2026-27-P1,USR-T-002,2026-10-16T16:10:00+08:00,true,validated,Named reviewer assignment
+UP-2026-0019,BHSS Admin,20_activity_rubric_labels.csv,activity_rubric_label,2.0,2026/27,2026-27-P1,USR-ST-001,2026-08-25T10:10:00+08:00,true,validated,Activity labels describe intent and never award a level
+UP-2026-0020,BHSS Platform,21_review_outlook_submissions.csv,review_outlook_submission,2.0,2026/27,2026-27-P1,USR-S-001,2026-12-18T18:00:00+08:00,true,pending_review,Submission references a teacher-configured memory setting
+UP-2026-0021,BHSS Admin,22_role_definitions.csv,role_definition,2.0,2026/27,,USR-ADM-001,2026-08-20T08:30:00+08:00,false,validated,Reusable role catalogue
+UP-2026-0022,BHSS Admin,23_user_role_assignments.csv,user_role_assignment,2.0,2026/27,,USR-ADM-001,2026-08-20T08:35:00+08:00,true,validated,Effective school-scoped role memberships
+UP-2026-0023,BHSS Admin,24_rubric_catalogues.csv,rubric_catalogue,2.0,2026/27,,USR-ST-001,2026-08-20T08:40:00+08:00,false,validated,Independent labelling and assessment capabilities
+UP-2026-0024,BHSS Admin,25_rubric_axes.csv,rubric_axis,2.0,2026/27,,USR-ST-001,2026-08-20T08:41:00+08:00,false,validated,Versioned labels and assessable axes
+UP-2026-0025,BHSS Admin,26_rubric_levels.csv,rubric_level,2.0,2026/27,,USR-ST-001,2026-08-20T08:42:00+08:00,false,validated,Ordered levels do not imply prerequisite completion
+UP-2026-0026,BHSS Admin,27_rubric_level_conditions.csv,rubric_level_condition,2.0,2026/27,,USR-ST-001,2026-08-20T08:43:00+08:00,false,validated,Concrete conditions required for assessable radar output
+UP-2026-0027,BHSS Admin,28_rubric_aggregation_policies.csv,rubric_aggregation_policy,2.0,2026/27,,USR-ST-001,2026-08-20T08:44:00+08:00,false,validated,Versioned replaceable level derivation policy
+UP-2026-0028,BHSS Admin,29_proof_type_definitions.csv,proof_type_definition,2.0,2026/27,,USR-ST-001,2026-08-20T08:45:00+08:00,false,validated,Extensible proof types keep algorithms source-neutral
+UP-2026-0029,BHSS Platform,30_proof_items.csv,proof_item,2.0,2026/27,2026-27-P1,USR-T-001,2026-10-18T09:00:00+08:00,true,validated,Shared Evidence / Proof List
+UP-2026-0030,BHSS Platform,31_proof_links.csv,proof_link,2.0,2026/27,2026-27-P1,USR-T-001,2026-10-18T09:05:00+08:00,true,validated,Links proof to observations claims and curation
+UP-2026-0031,BHSS Admin,32_review_outlook_memory_settings.csv,review_outlook_memory_setting,2.0,2026/27,2026-27-P1,USR-T-001,2026-12-01T09:00:00+08:00,true,validated,Teacher selects the memory window and source classes
+UP-2026-0032,BHSS Platform,33_review_outlook_memory_items.csv,review_outlook_memory_item,2.0,2026/27,2026-27-P1,USR-T-001,2026-12-18T17:55:00+08:00,true,validated,Exact records included in one generation are frozen for audit
+UP-2026-0033,BHSS Admin,34_media_source_definitions.csv,media_source_definition,2.0,2026/27,,USR-ADM-001,2026-08-20T08:50:00+08:00,false,validated,Approved internal and external media connectors
+UP-2026-0034,BHSS Platform,35_external_media_references.csv,external_media_reference,2.0,2026/27,2026-27-P1,USR-T-002,2026-10-09T16:31:00+08:00,true,consent_check,Opaque reference resolved server-side to metadata URL or streamed bytes
+UP-2026-0035,BHSS Platform,36_published_rubric_results.csv,published_rubric_result,2.0,2026/27,2026-27-P1,USR-ST-001,2026-12-20T15:05:00+08:00,true,validated,Highest human-confirmed satisfied level under policy MAX-CONFIRMED-v1
+UP-2026-0036,BHSS Platform,37_llm_candidate_claims.csv,llm_candidate_claim,2.0,2026/27,2026-27-P1,USR-T-001,2026-12-18T18:02:00+08:00,true,pending_review,Positive evidence-linked suggestion only; human confirmation required
