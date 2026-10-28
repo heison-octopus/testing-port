@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { repo } from '../repositories/store.js';
 import { checkSchool, requireStudent, requireActivity, role, scoped, fail } from './access.js';
 import { calculationProcessors, inputTemplates } from '../processors/registry.js';
@@ -6,6 +6,76 @@ import { calculationProcessors, inputTemplates } from '../processors/registry.js
 const id = () => randomUUID();
 const now = () => new Date().toISOString();
 const PERIOD = '2026–27 Term 1';
+
+function cleanDateTime(value, label) {
+  if (typeof value !== 'string' || Number.isNaN(Date.parse(value))) fail(400, `${label} must be a valid date and time`);
+  return value;
+}
+
+function dateOnly(value) {
+  return value.slice(0, 10);
+}
+
+function cleanDay(value, label) {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value) || Number.isNaN(Date.parse(`${value}T00:00:00Z`))) fail(400, `${label} must use YYYY-MM-DD`);
+  return value;
+}
+
+function resolveActivityPeriod(user, startsAt, endsAt) {
+  const start = cleanDateTime(startsAt, 'Start');
+  const end = cleanDateTime(endsAt, 'End');
+  if (Date.parse(start) > Date.parse(end)) fail(400, 'Activity start must not be after its end');
+  return { startsAt: start, endsAt: end, ...repo.resolvePeriod(user.school_id, dateOnly(start), dateOnly(end)) };
+}
+
+function manualQuestion(prompt, sourceId, position = 1) {
+  return {
+    id: id(), formQuestionId: id(), position, prompt, inputType: 'long_text',
+    source: 'School-authored reflection question', meaning: 'Student reflection', definitionId: null,
+    sourceId, sourceRow: null, abilityCode: 'AB-STUDENT-REFLECTION',
+    abilityName: 'Student reflection', abilityDescription: 'Describe what the learner noticed, contributed or would change.',
+    required: true, configurationJson: '{}', version: 1,
+  };
+}
+
+function libraryQuestion(definition, position, promptOverride = null, required = true) {
+  return {
+    id: id(), formQuestionId: id(), position, prompt: promptOverride?.trim() || definition.prompt_zh,
+    inputType: definition.input_type, source: `${definition.source_name || 'Questionnaire source'} · ${definition.source_sheet || 'source'} row ${definition.source_row}`,
+    meaning: definition.ability_description_en, definitionId: definition.id, sourceId: definition.source_id,
+    sourceRow: definition.source_row, abilityCode: definition.ability_code, abilityName: definition.ability_name_en,
+    abilityDescription: definition.ability_description_en, required,
+    configurationJson: JSON.stringify({ scale: definition.scale_json ? JSON.parse(definition.scale_json) : null, negativelyWorded: Boolean(definition.is_negative) }),
+    version: definition.version,
+  };
+}
+
+function selectedQuestions(user, data) {
+  const sourceMode = data.reflectionMode || 'manual';
+  if (sourceMode === 'manual') {
+    const prompt = data.question?.trim();
+    if (!prompt || prompt.length > 1000) fail(400, 'Enter a reflection question of 1–1000 characters');
+    const sourceId = `source-manual-${user.school_id}`;
+    return { sourceMode, sourceId, questions: [manualQuestion(prompt, sourceId)] };
+  }
+  if (sourceMode !== 'question_bank') fail(400, 'Choose manual authoring or the question bank');
+  const questionIds = Array.isArray(data.questionIds) ? [...new Set(data.questionIds.map(String))].slice(0, 20) : [];
+  if (!questionIds.length) fail(400, 'Choose at least one source question');
+  const definitions = questionIds.map(questionId => repo.questionDefinition(user.school_id, questionId));
+  if (definitions.some(item => !item)) fail(400, 'One or more source questions are unavailable for this school');
+  const sourceIds = [...new Set(definitions.map(item => item.source_id))];
+  if (sourceIds.length !== 1) fail(400, 'One form import must use one questionnaire source');
+  return { sourceMode, sourceId: sourceIds[0], questions: definitions.map((definition, index) => libraryQuestion(definition, index + 1)) };
+}
+
+function formRecord(user, { formId, name, version, status, templateKey, supersedesId = null, sourceMode, sourceId, importBatchId = null }) {
+  const published = status === 'published';
+  return {
+    id: formId, schoolId: user.school_id, name, version, status, authorId: user.id, templateKey,
+    supersedesId, sourceMode, sourceId, importBatchId,
+    reviewStatus: published ? 'approved' : 'draft', publicationStatus: published ? 'published' : 'unpublished',
+  };
+}
 
 function parseLabels(value) {
   try { return JSON.parse(value || '[]'); } catch { return []; }
@@ -100,11 +170,22 @@ export const service = {
     };
   },
 
+  academicContext(user) {
+    checkSchool(user);
+    const context = repo.academicContext(user.school_id);
+    return {
+      ...context,
+      rule: 'The server resolves the reporting period from activity start and end dates. SchoolId is taken from the authenticated session and is never accepted from an activity form.',
+    };
+  },
+
   activities(user) {
     checkSchool(user, 'activities');
+    const periods = new Map(repo.academicContext(user.school_id).reportingPeriods.map(period => [period.id, period]));
     return visibleActivities(user).map(activity => ({
       ...activity,
       labels: parseLabels(activity.labels),
+      reporting_period: periods.get(activity.reporting_period_id) || null,
       event_count: repo.get('SELECT COUNT(*) count FROM activity_events WHERE activity_id=?', activity.id).count,
     }));
   },
@@ -117,9 +198,14 @@ export const service = {
     if (!activity) fail(404, 'Record not found');
     const participants = repo.all(`SELECT u.id,u.name,p.attendance,p.attendance_approval FROM participants p
       JOIN users u ON u.id=p.student_id WHERE p.activity_id=?`, activityId).filter(item => user.role !== 'student' || item.id === user.id);
-    const questions = repo.all('SELECT * FROM questions WHERE form_version_id=? AND block_audience=? ORDER BY position', activity.form_version_id, user.role === 'student' ? 'student' : 'teacher');
+    const questions = repo.questionsForForm(activity.form_version_id, user.role === 'student' ? 'student' : 'teacher').map(question => {
+      let configuration = {};
+      try { configuration = JSON.parse(question.configuration_json || '{}'); } catch { configuration = {}; }
+      return { ...question, configuration };
+    });
     const proof = repo.all('SELECT * FROM proof WHERE activity_id=? AND school_id=?', activityId, user.school_id).filter(item => user.role !== 'student' || item.student_id === user.id);
-    return { ...activity, labels: parseLabels(activity.labels), participants, questions, proof, events: activityEvents(user, activityId) };
+    const reportingPeriod = activity.reporting_period_id ? repo.reportingPeriod(user.school_id, activity.reporting_period_id) : null;
+    return { ...activity, labels: parseLabels(activity.labels), reporting_period: reportingPeriod, participants, questions, proof, events: activityEvents(user, activityId) };
   },
 
   createActivity(user, data) {
@@ -128,22 +214,40 @@ export const service = {
     if (typeof data.title !== 'string' || !data.title.trim() || data.title.length > 160) fail(400, 'Enter an activity title of 1–160 characters');
     if (typeof data.description !== 'string' || !data.description.trim() || data.description.length > 4000) fail(400, 'Enter an activity description of 1–4000 characters');
     const labels = Array.isArray(data.labels) ? data.labels.map(value => String(value).trim()).filter(Boolean).slice(0, 12) : [];
+    const period = resolveActivityPeriod(user, data.startsAt || '2026-10-28T09:00:00+08:00', data.endsAt || '2026-10-28T10:00:00+08:00');
+    const reflection = selectedQuestions(user, data);
     const activityId = id();
     const formId = id();
-    const questionId = id();
-    const status = user.role === 'staff' ? 'published' : 'draft';
-    repo.transaction(() => {
-      repo.run('INSERT INTO form_versions VALUES(?,?,?,?,?,?,?)', formId, user.school_id, `${data.title.trim()} reflection`, 1, 'published', user.id, 'reflection-v1');
-      repo.run('INSERT INTO questions VALUES(?,?,?,?,?,?,?,?)', questionId, formId, 'student', 1, data.question?.trim() || 'What did you contribute and learn?', 'long_text', 'POC activity creator', 'Student reflection');
-      repo.run('INSERT INTO form_links VALUES(?,?)', formId, activityId);
-      repo.run('INSERT INTO activities VALUES(?,?,?,?,?,?,?)', activityId, user.school_id, data.title.trim(), data.description.trim(), status, formId, JSON.stringify(labels));
-      repo.run('INSERT INTO participants VALUES(?,?,?,?)', activityId, 'student-1', 'pending', 'none');
-      repo.run('INSERT OR IGNORE INTO assignments VALUES(?,?,?)', user.id, 'activity', activityId);
-      repo.run('INSERT OR IGNORE INTO assignments VALUES(?,?,?)', 'staff-1', 'activity', activityId);
-      repo.run('INSERT OR IGNORE INTO assignments VALUES(?,?,?)', 'staff-1', 'form_approve', activityId);
-      recordActivityEvent(user, activityId, status === 'published' ? 'published' : 'created_draft', status === 'published' ? 'Authorized staff created and directly published the activity.' : 'Teacher created a draft for staff review.');
+    const status = user.role === 'staff' && period.status === 'resolved' ? 'published' : 'draft';
+    const createdAt = now();
+    const form = formRecord(user, {
+      formId, name: `${data.title.trim()} reflection`, version: 1, status,
+      templateKey: reflection.sourceMode === 'manual' ? 'reflection-v1' : 'questionnaire-scale-v1',
+      sourceMode: reflection.sourceMode, sourceId: reflection.sourceId,
     });
-    return { id: activityId, status };
+    repo.createActivityPackage({
+      activity: {
+        id: activityId, schoolId: user.school_id, title: data.title.trim(), description: data.description.trim(), status,
+        labels: JSON.stringify(labels), startsAt: period.startsAt, endsAt: period.endsAt,
+        academicYearId: period.period?.academic_year_id || null, periodId: period.period?.id || null,
+        periodStatus: period.status, createdBy: user.id,
+      },
+      form: { ...form, event: { id: id(), type: status === 'published' ? 'published' : 'created_revision', actorId: user.id, comment: status === 'published' ? 'Authorized staff created and published the initial form package.' : 'Teacher created the initial form package as a draft.', createdAt } },
+      questions: reflection.questions,
+      participants: ['student-1'],
+      assignments: [
+        { userId: user.id, scopeType: 'activity', scopeId: activityId },
+        { userId: 'staff-1', scopeType: 'activity', scopeId: activityId },
+        { userId: 'staff-1', scopeType: 'form_approve', scopeId: activityId },
+      ],
+      event: {
+        id: id(), actorId: user.id, action: status === 'published' ? 'published' : 'created_draft', createdAt,
+        detail: period.status === 'resolved'
+          ? (status === 'published' ? 'Authorized staff created and directly published the activity.' : 'Teacher created a draft for staff review.')
+          : `Activity saved as a draft because period resolution is ${period.status}. Correct the dates or configured periods before submission.`,
+      },
+    });
+    return { id: activityId, status, periodResolutionStatus: period.status, reportingPeriod: period.period };
   },
 
   transitionActivity(user, activityId, action, reason = '') {
@@ -155,10 +259,12 @@ export const service = {
     };
     const from = allowed[user.role]?.[action];
     if (!from || !from.includes(activity.status)) fail(403, 'This activity transition is not permitted');
+    if (['submit', 'publish'].includes(action) && !['resolved', 'exception_approved'].includes(activity.period_resolution_status)) fail(400, 'Resolve the school reporting period before submission or publication');
     if (action === 'reject' && (typeof reason !== 'string' || !reason.trim())) fail(400, 'A rejection reason is required');
     const next = action === 'submit' ? 'submitted' : action === 'publish' ? 'published' : 'rejected';
     repo.transaction(() => {
       repo.run('UPDATE activities SET status=? WHERE id=?', next, activityId);
+      if (action === 'publish') repo.publishInitialForm(activity.form_version_id, user.id, id(), now());
       recordActivityEvent(user, activityId, next, action === 'reject' ? reason.trim() : `${user.role} changed the activity from ${activity.status} to ${next}.`);
     });
   },
@@ -174,11 +280,13 @@ export const service = {
   forms(user) {
     checkSchool(user, 'forms');
     role(user, 'teacher', 'staff');
+    const forms = repo.formWorkspace(user.school_id).filter(form => form.activity_id && scoped(user, 'activity', form.activity_id));
     return {
       templates: inputTemplates,
-      forms: repo.all(`SELECT f.*, l.activity_id, q.prompt FROM form_versions f
-        LEFT JOIN form_links l ON l.form_version_id=f.id LEFT JOIN questions q ON q.form_version_id=f.id
-        WHERE f.school_id=?`, user.school_id).filter(form => form.activity_id && scoped(user, 'activity', form.activity_id)),
+      forms,
+      sources: repo.questionSources(user.school_id),
+      questionLibrary: repo.questionLibrary(user.school_id),
+      imports: repo.importsForSchool(user.school_id).filter(batch => scoped(user, 'activity', batch.activity_id)),
     };
   },
 
@@ -190,13 +298,17 @@ export const service = {
     if (!template || template.audience !== 'student') fail(400, 'Choose a supported student input template');
     if (typeof data.prompt !== 'string' || !data.prompt.trim() || data.prompt.length > 1000) fail(400, 'Enter a question of 1–1000 characters');
     const formId = id();
-    const previous = repo.get('SELECT * FROM form_versions WHERE id=?', activity.form_version_id);
-    const version = repo.get('SELECT COALESCE(MAX(version),0) n FROM form_versions WHERE school_id=? AND name=?', user.school_id, previous.name).n + 1;
-    repo.transaction(() => {
-      repo.run('INSERT INTO form_versions VALUES(?,?,?,?,?,?,?)', formId, user.school_id, previous.name, version, 'draft', user.id, data.templateKey);
-      repo.run('INSERT INTO form_links VALUES(?,?)', formId, activity.id);
-      repo.run('INSERT INTO questions VALUES(?,?,?,?,?,?,?,?)', id(), formId, 'student', 1, data.prompt.trim(), template.input, 'POC draft', 'Student reflection');
-      repo.audit(user, 'form.draft', formId);
+    const previous = repo.activityForm(user.school_id, activity.id);
+    const version = repo.maxFormVersion(user.school_id, previous.name) + 1;
+    const sourceId = `source-manual-${user.school_id}`;
+    const question = manualQuestion(data.prompt.trim(), sourceId);
+    question.inputType = template.input;
+    const createdAt = now();
+    repo.createDraftFormPackage({
+      form: formRecord(user, { formId, name: previous.name, version, status: 'draft', templateKey: data.templateKey, supersedesId: previous.id, sourceMode: 'manual', sourceId }),
+      activityId: activity.id,
+      questions: [question],
+      event: { id: id(), type: 'created_revision', actorId: user.id, comment: 'Teacher created a manual successor draft. The published form remains active.', createdAt },
     });
     return { id: formId };
   },
@@ -204,17 +316,98 @@ export const service = {
   publishForm(user, formId) {
     checkSchool(user, 'forms');
     role(user, 'staff');
-    const form = repo.get(`SELECT f.*,l.activity_id FROM form_versions f JOIN form_links l ON l.form_version_id=f.id
-      WHERE f.id=? AND f.school_id=?`, formId, user.school_id);
+    const form = repo.formForPublication(user.school_id, formId);
     if (!form) fail(404, 'Form not found');
     requireActivity(user, form.activity_id);
     if (!scoped(user, 'form_approve', form.activity_id)) fail(403, 'Named form approval assignment required');
     if (form.author_id === user.id || form.status !== 'draft') fail(403, 'Separate reviewer and draft required');
-    repo.transaction(() => {
-      repo.run("UPDATE form_versions SET status='published' WHERE id=?", formId);
-      repo.run('UPDATE activities SET form_version_id=? WHERE id=?', formId, form.activity_id);
-      repo.audit(user, 'form.publish', formId);
+    repo.publishForm(formId, form.activity_id, user.id, id(), now());
+    repo.audit(user, 'form.publish', formId);
+  },
+
+  stageFormImport(user, data) {
+    checkSchool(user, 'forms');
+    role(user, 'teacher');
+    const activity = requireActivity(user, data.activityId);
+    const source = repo.questionSources(user.school_id).find(item => item.id === data.sourceId);
+    if (!source || source.source_type !== 'supplied_instrument') fail(400, 'Choose an available supplied questionnaire source');
+    const fileName = typeof data.fileName === 'string' && data.fileName.trim() ? data.fileName.trim() : 'form-definition.xlsx';
+    if (!fileName.toLowerCase().endsWith('.xlsx') || fileName.length > 240) fail(400, 'The form-definition contract accepts one .xlsx file');
+    const inputRows = Array.isArray(data.rows) ? data.rows : [];
+    if (!inputRows.length || inputRows.length > 200) fail(400, 'Provide 1–200 form-definition rows');
+    const currentQuestions = repo.questionsForForm(activity.form_version_id, 'student');
+    const seenPositions = new Set();
+    const seenQuestions = new Set();
+    const rows = inputRows.map((input, index) => {
+      const rowNumber = index + 2;
+      const position = Number(input.position ?? index + 1);
+      const audience = input.audience || 'student';
+      const definition = repo.questionDefinition(user.school_id, String(input.questionId || ''));
+      const errors = [];
+      if (!definition || definition.source_id !== source.id) errors.push('Question does not belong to the selected source');
+      if (!Number.isInteger(position) || position < 1 || position > 200 || seenPositions.has(position)) errors.push('Position must be a unique whole number from 1–200');
+      if (audience !== 'student') errors.push('This POC import surface currently accepts the student reflection block only');
+      if (seenQuestions.has(input.questionId)) errors.push('Question is duplicated in this form definition');
+      const promptOverride = typeof input.promptOverride === 'string' && input.promptOverride.trim() ? input.promptOverride.trim() : null;
+      if (promptOverride && promptOverride.length > 4000) errors.push('Prompt override exceeds 4,000 characters');
+      seenPositions.add(position);
+      seenQuestions.add(input.questionId);
+      const existing = definition ? currentQuestions.find(question => question.question_definition_id === definition.id) : null;
+      const diffType = existing ? (promptOverride && promptOverride !== existing.prompt ? 'modified' : 'unchanged') : 'added';
+      return {
+        id: id(), rowNumber, questionId: definition?.id || null, audience, position: Number.isInteger(position) ? position : index + 1,
+        required: input.required !== false, promptOverride, validationStatus: errors.length ? 'error' : 'valid',
+        validationMessage: errors.join('; '), diffType, payloadJson: JSON.stringify(input), definition,
+      };
     });
+    const summary = {
+      total: rows.length,
+      valid: rows.filter(item => item.validationStatus === 'valid').length,
+      errors: rows.filter(item => item.validationStatus === 'error').length,
+      added: rows.filter(item => item.diffType === 'added').length,
+      modified: rows.filter(item => item.diffType === 'modified').length,
+      unchanged: rows.filter(item => item.diffType === 'unchanged').length,
+    };
+    const fileHash = createHash('sha256').update(JSON.stringify({ sourceId: source.id, rows: inputRows })).digest('hex');
+    const duplicate = repo.importBatchByHash(user.school_id, activity.id, source.id, fileHash);
+    if (duplicate) return { ...duplicate, summary: JSON.parse(duplicate.summary_json), idempotent: true };
+    const batch = {
+      id: id(), schoolId: user.school_id, activityId: activity.id, sourceId: source.id, fileName, format: 'xlsx', fileHash,
+      uploadedBy: user.id, status: summary.errors ? 'needs_correction' : 'validated', summaryJson: JSON.stringify(summary), createdAt: now(),
+    };
+    repo.stageFormImport({ batch, rows });
+    return { ...batch, summary, rows: rows.map(({ definition, ...row }) => row), idempotent: false };
+  },
+
+  applyFormImport(user, batchId) {
+    checkSchool(user, 'forms');
+    role(user, 'teacher');
+    const batch = repo.importBatch(user.school_id, batchId);
+    if (!batch) fail(404, 'Import batch not found');
+    if (batch.uploaded_by !== user.id) fail(403, 'Only the staging teacher may create this draft');
+    if (batch.status !== 'validated') fail(400, 'Correct every staged row before creating a successor draft');
+    const activity = requireActivity(user, batch.activity_id);
+    const previous = repo.activityForm(user.school_id, activity.id);
+    const formId = id();
+    const questions = batch.rows.map(row => {
+      const definition = repo.questionDefinition(user.school_id, row.question_definition_id);
+      if (!definition || definition.source_id !== batch.source_id) fail(400, 'A staged source question is no longer available');
+      return libraryQuestion(definition, row.position, row.prompt_override, Boolean(row.required));
+    });
+    const createdAt = now();
+    repo.createDraftFormPackage({
+      form: formRecord(user, {
+        formId, name: previous.name, version: repo.maxFormVersion(user.school_id, previous.name) + 1,
+        status: 'draft', templateKey: 'questionnaire-scale-v1', supersedesId: previous.id,
+        sourceMode: 'imported_instrument', sourceId: batch.source_id, importBatchId: batch.id,
+      }),
+      activityId: activity.id,
+      questions,
+      event: { id: id(), type: 'created_revision', actorId: user.id, comment: 'Teacher accepted the staged row-level diff and created a successor draft. The published form remains active.', createdAt },
+    });
+    repo.markImportApplied(batch.id, formId);
+    repo.audit(user, 'form_import.applied', `${batch.id}:${formId}`);
+    return { id: formId, version: repo.maxFormVersion(user.school_id, previous.name), questionCount: questions.length };
   },
 
   catalogues(user) {
@@ -255,13 +448,22 @@ export const service = {
     checkSchool(user, 'activities');
     role(user, 'student');
     const activity = requireActivity(user, activityId);
-    const question = repo.get('SELECT * FROM questions WHERE id=? AND form_version_id=? AND block_audience=?', questionId, activity.form_version_id, 'student');
+    const question = repo.questionsForForm(activity.form_version_id, 'student').find(item => item.id === questionId);
     if (!question || activity.status !== 'published') fail(403, 'Form unavailable');
     if (typeof answer !== 'string' || !answer.trim() || answer.length > (question.input_type === 'short_text' ? 300 : 4000)) fail(400, question.input_type === 'short_text' ? 'Enter a response of 1–300 characters' : 'Enter a response of 1–4000 characters');
+    let proofContent = answer.trim();
+    if (question.input_type === 'scale') {
+      let configuration = {};
+      try { configuration = JSON.parse(question.configuration_json || '{}'); } catch { configuration = {}; }
+      const value = Number(answer);
+      const options = Array.isArray(configuration.scale) ? configuration.scale : [];
+      if (!Number.isInteger(value) || value < 1 || value > options.length) fail(400, 'Choose one valid scale response');
+      proofContent = `${question.prompt}: ${value} — ${options[value - 1]}`;
+    }
     repo.transaction(() => {
       const responseId = id();
       repo.run('INSERT INTO responses VALUES(?,?,?,?,?,?,?,?)', responseId, user.school_id, activityId, user.id, questionId, user.id, answer.trim(), now());
-      repo.run('INSERT INTO proof VALUES(?,?,?,?,?,?,?,?,?,?,?)', id(), user.school_id, activityId, user.id, responseId, 'reflection', 'self', 'human_authored', answer.trim(), 'accepted', now());
+      repo.run('INSERT INTO proof VALUES(?,?,?,?,?,?,?,?,?,?,?)', id(), user.school_id, activityId, user.id, responseId, 'reflection', 'self', 'human_authored', proofContent, 'accepted', now());
       repo.audit(user, 'response.submit', responseId);
     });
   },
@@ -594,6 +796,60 @@ export const service = {
     };
   },
 
+  createAcademicYear(user, data) {
+    checkSchool(user, 'admin');
+    role(user, 'admin');
+    const code = typeof data.code === 'string' ? data.code.trim() : '';
+    const name = typeof data.name === 'string' ? data.name.trim() : '';
+    if (!code || code.length > 64 || !name || name.length > 200) fail(400, 'Academic-year code and name are required');
+    const startDate = cleanDay(data.startDate, 'Academic-year start');
+    const endDate = cleanDay(data.endDate, 'Academic-year end');
+    if (startDate > endDate) fail(400, 'Academic-year start must not be after its end');
+    if (repo.academicContext(user.school_id).academicYears.some(year => year.code.toLowerCase() === code.toLowerCase())) fail(400, 'Academic-year code already exists');
+    const record = { id: id(), schoolId: user.school_id, code, name, startDate, endDate, status: data.status === 'planned' ? 'planned' : 'active', createdAt: now() };
+    repo.saveAcademicYear(record);
+    repo.audit(user, 'academic_year.create', record.id);
+    return record;
+  },
+
+  createReportingPeriod(user, data) {
+    checkSchool(user, 'admin');
+    role(user, 'admin');
+    const context = repo.academicContext(user.school_id);
+    const year = context.academicYears.find(item => item.id === data.academicYearId);
+    if (!year) fail(400, 'Choose an academic year in this school');
+    const code = typeof data.code === 'string' ? data.code.trim() : '';
+    const nameEn = typeof data.nameEn === 'string' ? data.nameEn.trim() : '';
+    const nameZh = typeof data.nameZh === 'string' ? data.nameZh.trim() : '';
+    if (!code || code.length > 64 || !nameEn || nameEn.length > 200 || !nameZh || nameZh.length > 200) fail(400, 'Period code and bilingual names are required');
+    if (context.reportingPeriods.some(period => period.academic_year_id === year.id && period.code.toLowerCase() === code.toLowerCase())) fail(400, 'Period code already exists in this academic year');
+    const startDate = cleanDay(data.startDate, 'Period start');
+    const endDate = cleanDay(data.endDate, 'Period end');
+    if (startDate > endDate || startDate < year.start_date || endDate > year.end_date) fail(400, 'Period dates must fall within the selected academic year');
+    if (repo.overlappingPeriods(user.school_id, startDate, endDate).length) fail(400, 'Reporting periods must not overlap because activity period resolution must be deterministic');
+    const sequence = Number(data.sequence);
+    if (!Number.isInteger(sequence) || sequence < 1 || sequence > 20) fail(400, 'Sequence must be a whole number from 1–20');
+    const status = ['planned', 'open', 'closed'].includes(data.status) ? data.status : 'planned';
+    const record = {
+      id: id(), schoolId: user.school_id, academicYearId: year.id, code, nameEn, nameZh, startDate, endDate,
+      sequence, isSummer: Boolean(data.isSummer), snapshotDue: data.snapshotDue ? cleanDay(data.snapshotDue, 'Snapshot due date') : null,
+      priority: 100, status, createdAt: now(),
+    };
+    repo.saveReportingPeriod(record);
+    repo.audit(user, 'reporting_period.create', record.id);
+    return record;
+  },
+
+  updateReportingPeriodStatus(user, periodId, status) {
+    checkSchool(user, 'admin');
+    role(user, 'admin');
+    if (!['planned', 'open', 'closed'].includes(status)) fail(400, 'Choose planned, open or closed');
+    const period = repo.academicContext(user.school_id).reportingPeriods.find(item => item.id === periodId);
+    if (!period) fail(404, 'Reporting period not found');
+    repo.updateReportingPeriodStatus(user.school_id, periodId, status, now());
+    repo.audit(user, 'reporting_period.status', `${periodId}:${status}`);
+  },
+
   updatePolicy(user, key, value) {
     checkSchool(user, 'admin');
     role(user, 'admin');
@@ -610,6 +866,7 @@ export const service = {
     checkSchool(user, 'admin');
     role(user, 'admin');
     return {
+      ...repo.academicContext(user.school_id),
       users: repo.all('SELECT id,name,role FROM users WHERE school_id=?', user.school_id),
       assignments: repo.all('SELECT a.* FROM assignments a JOIN users u ON u.id=a.user_id WHERE u.school_id=?', user.school_id),
       features: repo.all('SELECT feature,enabled FROM features WHERE school_id=?', user.school_id),

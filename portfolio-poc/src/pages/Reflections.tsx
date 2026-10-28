@@ -6,7 +6,7 @@ import { Empty, Notice, PageHeader, SourceTags } from '../components/Layout';
 export function SelfReview({ report }: { report: (error: unknown) => void }) {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [current, setCurrent] = useState<Activity | null>(null);
-  const [answer, setAnswer] = useState('');
+  const [answers, setAnswers] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState(false);
 
   useEffect(() => { api.activities().then(async items => {
@@ -16,12 +16,13 @@ export function SelfReview({ report }: { report: (error: unknown) => void }) {
   }).catch(report); }, []);
 
   async function choose(id: string) {
-    try { setCurrent(await api.activity(id)); setAnswer(''); setSaved(false); } catch (error) { report(error); }
+    try { setCurrent(await api.activity(id)); setAnswers({}); setSaved(false); } catch (error) { report(error); }
   }
 
   async function submit() {
-    if (!current?.questions?.[0]) return;
-    try { await api.response(current.id, current.questions[0].id, answer); setSaved(true); setAnswer(''); setCurrent(await api.activity(current.id)); } catch (error) { report(error); }
+    const completed = current?.questions?.filter(question => answers[question.id]?.trim()) || [];
+    if (!current || !completed.length) return;
+    try { for (const question of completed) await api.response(current.id, question.id, answers[question.id]); setSaved(true); setAnswers({}); setCurrent(await api.activity(current.id)); } catch (error) { report(error); }
   }
 
   return <>
@@ -31,10 +32,10 @@ export function SelfReview({ report }: { report: (error: unknown) => void }) {
       <section><span className="eyebrow">ACTIVITY CONTEXT</span><h2>{current.title}</h2><p>{current.description}</p><SourceTags tags={current.labels} />
         <h3 className="section-title">My accepted proof</h3>{current.proof?.length ? current.proof.map(proof => <div className="proof-row" key={proof.id}><span className="proof-kind">{proof.kind.replaceAll('_', ' ')}</span><p>{proof.content}</p></div>) : <Empty>No reflection submitted yet.</Empty>}
       </section>
-      <section className="response-panel"><span className="eyebrow">MY RESPONSE</span><h2>{current.questions?.[0]?.prompt || 'No published student question'}</h2>
+      <section className="response-panel"><span className="eyebrow">MY RESPONSE</span><h2>{current.questions?.length ? `${current.questions.length} reflection question${current.questions.length === 1 ? '' : 's'}` : 'No published student question'}</h2>
         <Notice tone="info">Your response becomes source-linked proof. It does not automatically award a framework step.</Notice>
-        {current.questions?.[0]?.input_type === 'short_text' ? <input value={answer} onChange={event => setAnswer(event.target.value)} maxLength={300} /> : <textarea value={answer} onChange={event => setAnswer(event.target.value)} maxLength={4000} placeholder="Write what happened, what you contributed and what you learned..." />}
-        <button className="primary" onClick={submit} disabled={!answer.trim()}><CheckCircle size={17} />Submit reflection</button>
+        {current.questions?.map((question, index) => <div className="response-question" key={question.id}><small>QUESTION {index + 1} · {question.ability_name || 'STUDENT REFLECTION'}</small><h3>{question.prompt}</h3>{question.input_type === 'scale' ? <div className="scale-options">{question.configuration?.scale?.map((option, optionIndex) => <label className={answers[question.id] === String(optionIndex + 1) ? 'selected' : ''} key={option}><input type="radio" name={question.id} value={optionIndex + 1} checked={answers[question.id] === String(optionIndex + 1)} onChange={event => setAnswers(items => ({ ...items, [question.id]: event.target.value }))} /><span><b>{optionIndex + 1}</b>{option}</span></label>)}</div> : question.input_type === 'short_text' ? <input value={answers[question.id] || ''} onChange={event => setAnswers(items => ({ ...items, [question.id]: event.target.value }))} maxLength={300} /> : <textarea value={answers[question.id] || ''} onChange={event => setAnswers(items => ({ ...items, [question.id]: event.target.value }))} maxLength={4000} placeholder="Write what happened, what you contributed and what you learned..." />}{question.source && <small className="question-source">Source: {question.source}</small>}</div>)}
+        <button className="primary" onClick={submit} disabled={!Object.values(answers).some(answer => answer.trim())}><CheckCircle size={17} />Submit completed responses</button>
         {saved && <p className="success-text">Reflection accepted into your Proof List.</p>}
       </section>
     </div> : <Empty>No published activity is available.</Empty>}

@@ -4,6 +4,8 @@
 
 This document compares the original entity notes with an updated relational model for activities, media, forms, teacher feedback, the eight Universal Framework skills, their 16 steps, questionnaire constructs, and optional VASK configuration.
 
+**Authority notice (28 October 2026):** this is a before/after explanation and implementation aid, not an independent schema source. `Core data relationships.md` is the only authoritative domain relationship model. If a field/table example here differs from Core, Core governs and the CSV contracts must follow Core. The staff-scope, approval, activity-revision and Portfolio-version examples below summarize that model rather than define a competing one.
+
 The central distinction is:
 
 - **Activity design** records what an activity intends to develop.
@@ -113,24 +115,39 @@ Reusable definitions such as “Communication lesson” or “Two-week problem-s
 
 #### `activity_instances`
 
-One actual occurrence of an activity.
+The stable root of one actual activity. Governed display/content fields belong to `activity_revisions` so approval history is not overwritten.
 
 | Field | Type | Notes |
 |---|---|---|
-| `activity_instance_id` | UUID | Primary key |
+| `activity_id` | UUID | Primary key |
+| `school_id` | UUID | References `schools`; required |
 | `activity_template_id` | UUID, nullable | Null for a standalone observation |
-| `template_version_number` | integer, nullable | Preserves the version used |
-| `title` | text | Display name for this occurrence |
-| `activity_type_id` | UUID | References `activity_types` |
-| `academic_period_id` | UUID | Server-resolved from `starts_at`/`ends_at`; references `academic_periods` |
+| `resolved_period_id` | UUID | Server-resolved from the active revision's `start_at`/`end_at`; references `academic_periods` |
 | `period_resolution_status` | enum | `resolved`, `cross_period_exception`, `no_match`, `exception_approved` |
 | `group_id` | UUID, nullable | Class, team, or project group |
-| `starts_at` | timestamp | Required |
-| `ends_at` | timestamp, nullable | Supports multi-day activities |
-| `lead_teacher_user_id` | UUID | References `users` |
-| `status` | enum | `planned`, `active`, `completed`, `cancelled` |
+| `created_by_user_id` | UUID | Original creator; not an ongoing permission grant |
+| `latest_revision_id` | UUID | Latest draft or submitted revision |
+| `current_approved_revision_id` | UUID, nullable | Official content revision; may trail latest revision |
+| `operational_status` | enum | `planned`, `scheduled`, `active`, `completed`, `cancelled`, `archived` |
 | `created_at` | timestamp | Required |
 | `updated_at` | timestamp | Required |
+
+#### `activity_revisions`
+
+| Field | Type | Notes |
+|---|---|---|
+| `activity_revision_id` | UUID | Primary key |
+| `activity_id` | UUID | Stable parent activity |
+| `revision_number` | integer | Starts at 1; unique within activity |
+| `title_en`, `title_zh`, `description_en`, `description_zh`, `activity_type` | mixed | Governed content snapshot |
+| `start_at`, `end_at` | timestamp | Used for period validation |
+| `requested_form_version_id` | UUID | Exact requested form version; VASK selections remain in their versioned relationship records |
+| `approval_status` | enum | `draft`, `pending_review`, `approved`, `changes_requested`, `rejected`, `superseded` |
+| `publication_status` | enum | Separate `unpublished`, `published` or `withdrawn` state |
+| `material_change_reason`, `supersedes_revision_id` | mixed | Explains and links a material successor |
+| `created_by_user_id`, `created_at` | mixed | Revision provenance |
+
+Material changes create a successor revision and reapproval without changing `activity_id`. `activity_change_requests` record proposed field/value, reason, requester, target owner/editor, resolution and timestamps when the assigned teacher lacks direct edit authority.
 
 #### `activity_types`
 
@@ -163,22 +180,25 @@ ActivityData
 | Field | Type | Notes |
 |---|---|---|
 | `activity_participant_id` | UUID | Primary key |
-| `activity_instance_id` | UUID | References `activity_instances` |
+| `activity_id` | UUID | References `activity_instances` |
 | `user_id` | UUID | Usually a student |
 | `participant_role` | enum | `student`, `peer_reviewer`, `observer`, `guest` |
 | `joined_at` | timestamp, nullable | Optional attendance information |
 | `participation_status` | enum | `invited`, `attended`, `absent`, `withdrawn` |
 
-Unique constraint: `activity_instance_id + user_id + participant_role`.
+Unique constraint: `activity_id + user_id + participant_role`.
 
 #### `activity_staff`
 
 | Field | Type | Notes |
 |---|---|---|
 | `activity_staff_id` | UUID | Primary key |
-| `activity_instance_id` | UUID | References `activity_instances` |
+| `activity_id` | UUID | References `activity_instances` |
 | `user_id` | UUID | Teacher or administrator |
-| `staff_role` | enum | `lead_teacher`, `teacher`, `observer`, `approver` |
+| `role_assignment_id` | UUID | Effective functional role/scope that authorizes the relationship |
+| `relationship_type` | enum | `owner`, `supporting_teacher`, `assessor`, `observer`, `class_teacher` |
+| `can_edit` | boolean | Explicit activity edit assignment; approval remains separate |
+| `starts_at`, `ends_at` | timestamp | Effective dates |
 
 Media and form links belong in their own tables described below.
 
@@ -230,7 +250,7 @@ Media
 
 | Field | Type | Notes |
 |---|---|---|
-| `activity_instance_id` | UUID | References `activity_instances` |
+| `activity_id` | UUID | References `activity_instances` |
 | `media_asset_id` | UUID | References `media_assets` |
 | `relationship_type` | enum | `instruction`, `student_evidence`, `teacher_evidence`, `result` |
 | `added_by_user_id` | UUID | References `users` |
@@ -371,7 +391,7 @@ SharedMediaFolder
 | `name` | text | Required |
 | `description` | text, nullable | Optional |
 | `owner_user_id` | UUID | References `users` |
-| `activity_instance_id` | UUID, nullable | Optional activity context |
+| `activity_id` | UUID, nullable | Optional activity context |
 | `visibility` | enum | Same controlled vocabulary as media |
 | `created_at` | timestamp | Required |
 | `updated_at` | timestamp | Required |
@@ -501,7 +521,7 @@ Orders reusable questions within a form.
 | Field | Type | Notes |
 |---|---|---|
 | `activity_form_assignment_id` | UUID | Primary key |
-| `activity_instance_id` | UUID | References `activity_instances` |
+| `activity_id` | UUID | References `activity_instances` |
 | `form_version_id` | UUID | References one immutable `form_versions` record |
 | `assigned_by_user_id` | UUID | References `users` |
 | `assigned_at` | timestamp | Required |
@@ -726,7 +746,7 @@ Stores what an activity is designed to practise.
 | Field | Type | Notes |
 |---|---|---|
 | `activity_framework_target_id` | UUID | Primary key |
-| `activity_instance_id` | UUID | References `activity_instances` |
+| `activity_id` | UUID | References `activity_instances` |
 | `framework_skill_id` | UUID | References `framework_skills` |
 | `target_step_id` | UUID, nullable | Optional expected step |
 | `priority` | enum | `primary`, `secondary`, `exposure_only` |
@@ -751,7 +771,7 @@ One feedback event about one subject in an optional activity context.
 | Field | Type | Notes |
 |---|---|---|
 | `feedback_id` | UUID | Primary key |
-| `activity_instance_id` | UUID, nullable | Null for standalone feedback |
+| `activity_id` | UUID, nullable | Null for standalone feedback |
 | `subject_user_id` | UUID | Student being assessed |
 | `author_user_id` | UUID | Teacher, peer, or student |
 | `feedback_type` | enum | `teacher_observation`, `teacher_review`, `peer_review`, `self_reflection`, `system_import` |
@@ -852,7 +872,7 @@ The actual selection used for one activity occurrence.
 | Field | Type | Notes |
 |---|---|---|
 | `activity_instance_vask_item_id` | UUID | Primary key |
-| `activity_instance_id` | UUID | References activity instance |
+| `activity_id` | UUID | References activity instance |
 | `vask_item_id` | UUID | References VASK item |
 | `vask_item_version_number` | integer | Historical wording reference |
 | `priority` | enum | `primary`, `secondary` |
@@ -938,19 +958,17 @@ The pair `school_id + feature_key` is unique. A disabled school, retired/unknown
 | `created_at` | timestamp | Required |
 | `updated_at` | timestamp | Required |
 
-#### `roles`
+#### Staff position, functional role, capability and scope
 
-Examples: `student`, `teacher`, `administrator`, `guardian`.
+The earlier single `roles`/`user_roles` sketch is superseded. Follow Core's authoritative decomposition:
 
-#### `user_roles`
+- `staff_position_definitions` and `user_position_assignments` describe effective-dated job titles only.
+- `role_definitions` and `user_role_assignments` define stackable functional roles with `scope_type`/`scope_id` and effective dates.
+- `capability_definitions`, `role_capabilities` and `capability_policy_overrides` calculate effective actions; an applicable explicit deny wins.
+- `departments`, `subjects`, `department_subjects`, `staff_groups` and `staff_group_memberships` provide teacher organization/scope records. Learner/class groups remain separate.
+- `approval_policy_versions`, `approval_policy_steps`, `approval_assignments`, `approval_decisions` and `approval_escalations` govern named decisions. There is no `approval_staff` user type.
 
-| Field | Type |
-|---|---|
-| `user_id` | UUID |
-| `role_id` | UUID |
-| `school_id` | UUID | Required for school-scoped roles; nullable only for a separately controlled platform-operations role |
-| `starts_at` | timestamp |
-| `ends_at` | timestamp, nullable |
+Supported scope types are `school`, `department`, `subject`, `year`, `class`, `group`, `programme`, `activity` and `student`. See Core for fields, cardinalities and precedence.
 
 #### `groups`
 
@@ -958,8 +976,8 @@ Examples: `student`, `teacher`, `administrator`, `guardian`.
 |---|---|---|
 | `group_id` | UUID | Primary key |
 | `school_id` | UUID | References `schools` |
-| `academic_period_id` | UUID | References `academic_periods` |
-| `group_type` | enum | `class`, `team`, `teacher_group`, `project_group` |
+| `period_id` | UUID | References `academic_periods` |
+| `group_type` | enum | `class`, `team`, `project_group` |
 | `name` | text | Required |
 
 #### `group_memberships`
@@ -973,6 +991,10 @@ Examples: `student`, `teacher`, `administrator`, `guardian`.
 | `class_number` | text, nullable | Former `classNo` |
 | `starts_at` | timestamp | Required |
 | `ends_at` | timestamp, nullable | Preserves history |
+
+#### `staff_groups` and `staff_group_memberships`
+
+Staff groups have their own stable ID, school, code, bilingual name, purpose, optional department/subject scope, effective dates and status. Memberships link a user with a membership role and effective dates. A staff group can be a policy target, but membership is not a job position or functional-role assignment; an applicable user-level explicit deny still wins.
 
 ---
 
@@ -1060,7 +1082,7 @@ If performance requires cached results, use:
 | `student_skill_snapshot_id` | UUID | Primary key |
 | `student_user_id` | UUID | Student |
 | `framework_skill_id` | UUID | Radar axis |
-| `academic_period_id` | UUID | Reporting period |
+| `period_id` | UUID | Reporting period |
 | `step_number` | integer, nullable | Null means no evidence, not zero |
 | `calculation_rule_id` | UUID | Versioned aggregation rule |
 | `calculated_at` | timestamp | Required |

@@ -1,0 +1,3 @@
+department_subject_id,department_id,subject_id,school_id,effective_from,effective_until,status,assigned_by_user_id,assigned_at
+DS-LANG-CHI,DEPT-LANG,SUB-CHI,BHSS,2026-08-20,,active,USR-ADM-001,2026-08-20T08:52:00+08:00
+DS-LANG-ENG,DEPT-LANG,SUB-ENG,BHSS,2026-08-20,,active,USR-ADM-001,2026-08-20T08:52:00+08:00

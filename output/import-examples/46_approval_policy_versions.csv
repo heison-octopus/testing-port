@@ -1,0 +1,6 @@
+approval_policy_version_id,school_id,workflow_type,policy_version,mode,scope_type,scope_id,allow_self_assignment,allow_self_approval,publication_separate,max_human_steps,default_queue_key,unassigned_escalation_minutes,overdue_escalation_minutes,status,effective_from,effective_until,configured_by_user_id,configured_at
+APOL-ACT-v1,BHSS,activity,1,single_reviewer,school,BHSS,true,true,true,1,activity_approval,240,1440,active,2026-08-20,,USR-ADM-001,2026-08-20T09:20:00+08:00
+APOL-FORM-v1,BHSS,form,1,single_reviewer,school,BHSS,false,false,true,1,form_review,240,1440,active,2026-08-20,,USR-ADM-001,2026-08-20T09:20:00+08:00
+APOL-SUB-v1,BHSS,submission,1,automatic,school,BHSS,false,false,false,0,submission_exception,60,720,active,2026-08-20,,USR-ADM-001,2026-08-20T09:20:00+08:00
+APOL-PORT-v1,BHSS,portfolio,1,two_stage_sequential,school,BHSS,false,false,true,2,portfolio_approval,240,1440,active,2026-08-20,,USR-ADM-001,2026-08-20T09:20:00+08:00
+APOL-PUB-v1,BHSS,portfolio_publication,1,single_reviewer,school,BHSS,true,true,false,1,portfolio_publication,240,1440,active,2026-08-20,,USR-ADM-001,2026-08-20T09:20:00+08:00

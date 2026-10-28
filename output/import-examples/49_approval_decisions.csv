@@ -1,0 +1,4 @@
+approval_decision_id,approval_assignment_id,school_id,step_number,outcome,reason,decided_by_user_id,used_capability_id,used_scope_type,used_scope_id,decided_at
+ADEC-ACT-SPORT,AASG-ACT-SPORT,BHSS,1,approved,Risk and media controls confirmed,USR-ST-001,CAP-ACTIVITY-APPROVE,school,BHSS,2026-10-01T12:00:00+08:00
+ADEC-PORT-S1-PUB,AASG-PORT-S1-PUB,BHSS,1,approved,Approved version published,USR-ST-001,CAP-PORTFOLIO-PUBLISH,school,BHSS,2026-12-20T15:00:00+08:00
+ADEC-PORT-S2-1,AASG-PORT-S2-1,BHSS,1,approved,Selected submitted items are suitable for staff approval,USR-T-001,CAP-PORTFOLIO-REVIEW,class,S1A-2026-27,2026-12-19T09:30:00+08:00

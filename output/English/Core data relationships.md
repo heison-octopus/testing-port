@@ -2,7 +2,7 @@
 
 ## Scope
 
-This document describes the core operational data model before analytics, aggregation, radar-chart snapshots, recommendations, or progress calculations are introduced.
+This document describes the authoritative core operational data model before analytics, aggregation, radar-chart snapshots, recommendations, or progress calculations are introduced. `Aspects updated.md` remains a before/after explanation and implementation aid; when a field or relationship differs, this Core document governs and the import contracts must be aligned to it.
 
 `Design ideas.docx` remains the original design source. `output/Questions.docx` is a later discovery document containing proposed workflows, implementation questions, and unconfirmed values. Items from the latter are labelled below rather than treated automatically as approved requirements.
 
@@ -65,6 +65,28 @@ flowchart LR
     Validate --> Snapshot[Approved frozen snapshot DTO]
     Snapshot --> View[Visualization / export]
 ```
+
+### Configurable staff, scope and approval architecture
+
+**Status: approved System Analyst architecture decision on 28 October 2026. This is a reusable-product decision and not a BHSS or JC policy approval. Each school must configure the people, scopes and approval policies it actually uses.**
+
+- **Position is not permission:** school job positions such as subject teacher, mentoring teacher, subject leader, principal, vice-principal, teaching assistant, programme coordinator, counsellor/social worker and school-office staff are searchable organizational facts. They do not grant access by themselves.
+- **Functional roles are stackable:** one person may concurrently hold effective-dated functional roles such as educator, activity creator, activity editor, class teacher, assessor, Portfolio reviewer, Portfolio publisher, approval coordinator or SchoolAdmin. The separate `activity_staff.relationship` records whether that person is an owner, supporting teacher, assessor or observer on a particular activity. Every sensitive action records the role assignment and scope used.
+- **Explicit scopes:** role, capability and approval eligibility may be scoped to a school, department, subject, year level, class, staff group, programme, activity or named student. Departments, subjects and staff groups are first-class school-owned records rather than free-text labels.
+- **Capability policy:** `capability_definitions` names server-enforced actions. `role_capabilities` supplies the product default, while school policy may allow or deny a capability for a role, group or individual within a defined scope and effective period. An applicable explicit deny wins. UI navigation and teacher-search filters reflect effective capabilities but never replace server authorization.
+- **Common teacher presentation:** the MVP may use one capability-driven Teacher workspace rather than separate visual designs for every position. Records, actions, filters and queues change according to effective assignments; the position label alone does not select the interface or authorize data.
+- **Approval eligibility is not a staff type:** there is no permanent `approval_staff` identity. A teacher or other employee becomes eligible through a scoped functional role/capability. A separate named assignment allocates an actual record/version to an approver, and an immutable decision records the result.
+- **Per-school, per-workflow policy:** each school independently configures activity revision, form, submission, proof/rubric, Portfolio and other approval workflows. The lean MVP supports only `not_required`, `automatic`, `single_reviewer` and `two_stage_sequential`; no parallel voting, quorum, arbitrary branching or user-authored workflow scripting is included.
+- **Flexible separation of duties:** approval and publication are separate capabilities and events, but the same person may perform both when the active school policy permits. Self-approval is also configured per workflow step. Form, official rubric-result and Portfolio-publication policies should default to no self-approval; activity policy may permit the author to assign themselves when the school chooses.
+- **Unowned work cannot bypass review:** manual assignments may name any eligible person, including the author when permitted. If no eligible reviewer exists, no one accepts the item, or a deadline expires, the work enters `approval_escalations`; it remains blocked until an authorized coordinator reassigns or resolves it.
+- **Reasons and delegation:** rejection, exclusion, withdrawal, reassignment, post-publication correction and exceptional bypass always require a reason. Delegation is explicit, time-bounded, scoped and audited; informal forwarding does not transfer authority.
+- **Teacher directory:** authorized staff can search/filter educators by position, functional role, department, subject, year, class, staff group, programme, approval eligibility and active/effective status. Search results remain school-scoped and do not expose records the searching user cannot otherwise access.
+- **Stable activity identity with versioned content:** `activity_id` never changes when title, description or other governed configuration is revised. Material changes create an `activity_revision` and a new approval request; evidence, media, participants and submissions remain linked to the stable activity. The last approved revision remains the operational/student-visible revision until a successor is approved, unless a safety/privacy rule withdraws it.
+- **Activity ownership and change requests:** a user with `activity.create` may create an activity. The creator/assigned editor may revise their own activity and submit the revision for approval. An assigned teacher who is not an editor may create an `activity_change_request` but cannot silently change a staff-owned activity. A teacher's publish action creates a publication/approval request when policy requires review; it does not itself make the revision visible.
+- **Versioned Portfolio workspace:** a student may continue editing their latest self-introduction and selections, while the official Portfolio resolves the latest approved version. A class teacher may include all or part of the submitted student content, return it, and submit a proposed Portfolio version to the configured publisher. If no approved version exists, the official view shows `no_approved_version` and the student appears in the staff exception/escalation queue.
+- **Authorship and source rules:** student-authored introductions/reflections are clearly labelled as student-authored and do not need external proof citations, although the submission and revision history remain traceable. LLM-generated `me_as_a_learner` claims and system-generated rubric summaries require source references. A class teacher may edit only the controlled prompt or generated learner narrative, not the student's own words or another educator's observation; generated, edited and final approved text remain separate, and the edited successor requires the configured approval.
+
+The four-mode, two-step limit is intentionally small enough for the lean MVP. It replaces repeated domain-specific `approved_by_user_id` assumptions with one reusable control without attempting to become a general business-process engine.
 
 ### Product boundary and intended outcome
 
@@ -197,7 +219,7 @@ If the required human rating is missing, student self-review and peer review rem
 
 For each rubric version and axis, the authorized review screen groups eligible human-confirmed candidate observations by configurable `proof_type_definition`. Each group shows its **candidate maximum supported level** and, after review decisions exist, the **included maximum supported level** that enters the active policy, together with exact proof links, perspective, dates, reviewer state and any authorship/AI-assistance declaration. Both source-type maximums are evidence summaries, not official results. AI suggestions are derived analysis and remain outside the proof-type calculation.
 
-An assigned SuperTeacher/authorized Staff reviewer decides which observations and proof links are included in the official calculation. A Teacher/TA may propose or confirm an observation within assignment scope; SchoolAdmin configures policy but receives no assessment authority merely from that role. Under `MAX-CONFIRMED`, the published level is the highest level among the included, eligible, unrevoked and human-confirmed observations for the same rubric version and axis. The reviewer may exclude an unsuitable candidate with a recorded reason, but cannot enter a source-free override. Selecting a higher level requires a human-confirmed observation linked to eligible proof.
+An assigned reviewer holding the required assessment-review capability and scope decides which observations and proof links are included in the official calculation. A person holding an effective assessor capability may propose or confirm an observation within assignment scope; a Teacher or TA position alone grants neither action. SchoolAdmin configures policy but receives no assessment authority merely from that role. Under `MAX-CONFIRMED`, the published level is the highest level among the included, eligible, unrevoked and human-confirmed observations for the same rubric version and axis. The reviewer may exclude an unsuitable candidate with a recorded reason, but cannot enter a source-free override. Selecting a higher level requires a human-confirmed observation linked to eligible proof.
 
 Multiple LLM/provider suggestions for the same frozen evidence manifest are stored and shown side by side with provider, model, prompt version, input manifest and warnings. A reviewer may reject or ignore each suggestion independently. Accepting a suggestion creates or updates a human-reviewed observation; it never turns the model output into proof and never overwrites a different suggestion.
 
@@ -223,7 +245,7 @@ flowchart LR
     Proof[Accepted typed proof] --> Candidate[Human-confirmed candidate observations]
     Candidate --> Group[Group by proof/input type]
     Group --> Max[Candidate maximum per type + exact sources]
-    Models[Parallel LLM suggestions] -. advisory .-> Review[Assigned SuperTeacher / Staff review]
+    Models[Parallel LLM suggestions] -. advisory .-> Review[Assigned capability-scoped reviewer]
     Max --> Review
     Review --> Included[Included observations and proof links]
     Included --> IncludedMax[Included maximum per type]
@@ -286,7 +308,7 @@ flowchart LR
     Peer[Assigned peer reviewer] -->|peer response| Platform
     ActivityTeacher[Activity teacher or TA] -->|activity setup, observation, rating| Platform
     ClassTeacher[Class teacher] -->|portfolio review and return| Platform
-    Staff[SuperTeacher or authorized staff] -->|exception review and publication| Platform
+    Staff[Assigned authorized reviewer or publisher] -->|exception review and publication| Platform
     Admin[SchoolAdmin] -->|users, periods, policy and access| Platform
     TimeInfinity[Time Infinity or school files] -->|controlled import| Platform
     Platform -->|published portfolio and feedback| Student
@@ -342,7 +364,7 @@ Activity membership does not grant unrestricted media or portfolio access. Media
 sequenceDiagram
     autonumber
     participant Admin as SchoolAdmin
-    participant Staff as SuperTeacher or staff
+    participant Staff as Assigned authorized reviewer
     participant Teacher as Activity teacher or TA
     participant System
     participant Student
@@ -698,21 +720,38 @@ The arrows in this overview show direction of reference and workflow. The ER dia
 
 ```mermaid
 erDiagram
-    USERS ||--o{ USER_ROLES : receives
-    ROLES ||--o{ USER_ROLES : classifies
-    SCHOOLS ||--o{ USER_ROLES : scopes
+    SCHOOLS ||--o{ USERS : contains
+    USERS ||--o{ USER_POSITION_ASSIGNMENTS : holds
+    STAFF_POSITION_DEFINITIONS ||--o{ USER_POSITION_ASSIGNMENTS : names
+    USERS ||--o{ USER_ROLE_ASSIGNMENTS : receives
+    ROLE_DEFINITIONS ||--o{ USER_ROLE_ASSIGNMENTS : classifies
+    SCHOOLS ||--o{ USER_ROLE_ASSIGNMENTS : scopes
+    ROLE_DEFINITIONS ||--o{ ROLE_CAPABILITIES : grants_by_default
+    CAPABILITY_DEFINITIONS ||--o{ ROLE_CAPABILITIES : defines
+    SCHOOLS ||--o{ CAPABILITY_POLICY_OVERRIDES : configures
+    CAPABILITY_DEFINITIONS ||--o{ CAPABILITY_POLICY_OVERRIDES : modifies
     SCHOOLS ||--o{ SCHOOL_FEATURE_POLICIES : configures
     FEATURE_DEFINITIONS ||--o{ SCHOOL_FEATURE_POLICIES : controls
     USERS ||--o{ SCHOOL_FEATURE_POLICIES : changes
 
+    SCHOOLS ||--o{ DEPARTMENTS : contains
+    SCHOOLS ||--o{ SUBJECTS : contains
+    DEPARTMENTS ||--o{ DEPARTMENT_SUBJECTS : contains
+    SUBJECTS ||--o{ DEPARTMENT_SUBJECTS : offered_by
     SCHOOLS ||--o{ GROUPS : contains
     SCHOOLS ||--o{ ACADEMIC_PERIODS : defines
     ACADEMIC_PERIODS ||--o{ GROUPS : organises
     USERS ||--o{ GROUP_MEMBERSHIPS : joins
     GROUPS ||--o{ GROUP_MEMBERSHIPS : contains
+    SCHOOLS ||--o{ STAFF_GROUPS : contains
+    DEPARTMENTS ||--o{ STAFF_GROUPS : may_scope
+    SUBJECTS ||--o{ STAFF_GROUPS : may_scope
+    USERS ||--o{ STAFF_GROUP_MEMBERSHIPS : joins
+    STAFF_GROUPS ||--o{ STAFF_GROUP_MEMBERSHIPS : contains
 
     USERS {
         uuid user_id PK
+        uuid school_id FK
         string external_user_id
         string display_name
         string email
@@ -721,19 +760,97 @@ erDiagram
         datetime updated_at
     }
 
-    ROLES {
-        uuid role_id PK
-        string code UK
-        string name
+    STAFF_POSITION_DEFINITIONS {
+        uuid position_id PK
+        uuid school_id FK
+        string position_code
+        string name_en
+        string name_zh
+        string position_category
+        int sort_order
+        string status
+        uuid created_by_user_id FK
+        datetime created_at
     }
 
-    USER_ROLES {
-        uuid user_role_id PK
+    USER_POSITION_ASSIGNMENTS {
+        uuid user_position_assignment_id PK
+        uuid user_id FK
+        uuid position_id FK
+        uuid school_id FK
+        uuid department_id FK
+        uuid subject_id FK
+        datetime effective_from
+        datetime effective_until
+        boolean is_primary
+        string status
+        uuid assigned_by_user_id FK
+        datetime assigned_at
+    }
+
+    ROLE_DEFINITIONS {
+        uuid role_id PK
+        string role_code UK
+        string name_en
+        string name_zh
+        string role_category
+        boolean assignable
+        string description_en
+        string description_zh
+        string status
+    }
+
+    USER_ROLE_ASSIGNMENTS {
+        uuid user_role_assignment_id PK
         uuid user_id FK
         uuid role_id FK
         uuid school_id FK
-        datetime starts_at
-        datetime ends_at
+        string scope_type
+        uuid scope_id
+        datetime effective_from
+        datetime effective_until
+        string status
+        uuid assigned_by_user_id FK
+        datetime assigned_at
+        string ended_reason
+    }
+
+    CAPABILITY_DEFINITIONS {
+        uuid capability_id PK
+        string capability_key UK
+        string name_en
+        string name_zh
+        string resource_type
+        boolean sensitive
+        string status
+    }
+
+    ROLE_CAPABILITIES {
+        uuid role_capability_id PK
+        uuid role_id FK
+        uuid capability_id FK
+        string effect
+        string condition_key
+        string status
+        uuid configured_by_user_id FK
+        datetime configured_at
+    }
+
+    CAPABILITY_POLICY_OVERRIDES {
+        uuid capability_policy_override_id PK
+        uuid school_id FK
+        string target_type
+        uuid target_id
+        uuid capability_id FK
+        string effect
+        string scope_type
+        uuid scope_id
+        datetime effective_from
+        datetime effective_until
+        string reason
+        uuid configured_by_user_id FK
+        datetime configured_at
+        string status
     }
 
     SCHOOLS {
@@ -767,17 +884,56 @@ erDiagram
     }
 
     ACADEMIC_PERIODS {
-        uuid academic_period_id PK
+        uuid period_id PK
         uuid school_id FK
         string name
         date starts_on
         date ends_on
     }
 
+    DEPARTMENTS {
+        uuid department_id PK
+        uuid school_id FK
+        string department_code
+        string name_en
+        string name_zh
+        uuid parent_department_id FK
+        datetime effective_from
+        datetime effective_until
+        string status
+        uuid created_by_user_id FK
+        datetime created_at
+    }
+
+    SUBJECTS {
+        uuid subject_id PK
+        uuid school_id FK
+        string subject_code
+        string name_en
+        string name_zh
+        datetime effective_from
+        datetime effective_until
+        string status
+        uuid created_by_user_id FK
+        datetime created_at
+    }
+
+    DEPARTMENT_SUBJECTS {
+        uuid department_subject_id PK
+        uuid department_id FK
+        uuid subject_id FK
+        uuid school_id FK
+        datetime effective_from
+        datetime effective_until
+        string status
+        uuid assigned_by_user_id FK
+        datetime assigned_at
+    }
+
     GROUPS {
         uuid group_id PK
         uuid school_id FK
-        uuid academic_period_id FK
+        uuid period_id FK
         string group_type
         string name
     }
@@ -791,18 +947,149 @@ erDiagram
         datetime starts_at
         datetime ends_at
     }
+
+    STAFF_GROUPS {
+        uuid staff_group_id PK
+        uuid school_id FK
+        string group_code
+        string name_en
+        string name_zh
+        string group_purpose
+        uuid department_id FK
+        uuid subject_id FK
+        datetime effective_from
+        datetime effective_until
+        string status
+        uuid created_by_user_id FK
+        datetime created_at
+    }
+
+    STAFF_GROUP_MEMBERSHIPS {
+        uuid staff_group_membership_id PK
+        uuid staff_group_id FK
+        uuid user_id FK
+        string membership_role
+        datetime effective_from
+        datetime effective_until
+        string status
+        uuid assigned_by_user_id FK
+        datetime assigned_at
+    }
 ```
 
 ### Key relationships
 
 | Relationship | Type | Explanation |
 |---|---|---|
-| Users to roles | Many-to-many | One user may be a teacher and administrator; one role belongs to many users. `user_roles` resolves the relationship. |
-| Users to groups | Many-to-many | A student can join different classes or project groups over time. `group_memberships` preserves this history. |
+| Users to positions | Many-to-many over time | A person may hold several searchable school positions. Positions describe employment/duty and grant no permission by themselves. |
+| Users to functional roles | Many-to-many and scoped | One user may be an activity creator/editor, class teacher and Portfolio reviewer at the same time. `user_role_assignments` records `scope_type`, `scope_id`, effective dates and assignment history; activity-specific teacher relationships remain in `activity_staff`. |
+| Roles to capabilities | Many-to-many | `role_capabilities` supplies product defaults. `capability_policy_overrides` applies school-, group- or user-level allow/deny policy; an applicable explicit deny wins. |
+| Users to groups | Many-to-many | A student can join different classes or project groups over time through `group_memberships`. Teachers join permission-targetable organizational groups through `staff_group_memberships`; neither membership changes a job position by itself. |
+| Departments to subjects | Many-to-many | A subject may be offered by more than one department or organizational unit; both are available as authorization and directory-filter scopes. |
 | Academic period to groups | One-to-many | One school year or term can contain many groups. |
 | School to feature definitions | Many-to-many | `school_feature_policies` records each school's audited availability override. The pair `school_id + feature_key` is unique. |
 
-`school_id` is mandatory on tenant-owned roots and must otherwise be derivable through an enforced parent relation. Repositories never accept an unscoped tenant query. A browser-supplied school ID is only a reference; the authenticated session and server policy determine the effective school.
+`school_id` is mandatory on tenant-owned roots and must otherwise be derivable through an enforced parent relation. Repositories never accept an unscoped tenant query. A browser-supplied school ID is only a reference; the authenticated session and server policy determine the effective school. `scope_type` supports `school`, `department`, `subject`, `year`, `class`, `group`, `programme`, `activity` and `student`; the referenced `scope_id` must resolve inside the same school.
+
+### Configurable approval records
+
+```mermaid
+erDiagram
+    SCHOOLS ||--o{ APPROVAL_POLICY_VERSIONS : configures
+    APPROVAL_POLICY_VERSIONS ||--|{ APPROVAL_POLICY_STEPS : contains
+    CAPABILITY_DEFINITIONS ||--o{ APPROVAL_POLICY_STEPS : requires
+    APPROVAL_POLICY_STEPS ||--o{ APPROVAL_ASSIGNMENTS : creates
+    USERS ||--o{ APPROVAL_ASSIGNMENTS : assigned_to
+    APPROVAL_ASSIGNMENTS ||--o| APPROVAL_DECISIONS : completed_by
+    USERS ||--o{ APPROVAL_DECISIONS : decides
+    APPROVAL_ASSIGNMENTS ||--o{ APPROVAL_ESCALATIONS : may_raise
+
+    APPROVAL_POLICY_VERSIONS {
+        uuid approval_policy_version_id PK
+        uuid school_id FK
+        string workflow_type
+        int policy_version
+        string mode
+        string scope_type
+        uuid scope_id
+        boolean allow_self_assignment
+        boolean allow_self_approval
+        boolean publication_separate
+        int max_human_steps
+        string default_queue_key
+        int unassigned_escalation_minutes
+        int overdue_escalation_minutes
+        datetime effective_from
+        datetime effective_until
+        string status
+        uuid configured_by_user_id FK
+        datetime configured_at
+    }
+
+    APPROVAL_POLICY_STEPS {
+        uuid approval_policy_step_id PK
+        uuid approval_policy_version_id FK
+        int step_number
+        string name_en
+        string name_zh
+        uuid required_capability_id FK
+        string assignee_strategy
+        int required_decision_count
+        boolean reason_required
+        string status
+    }
+
+    APPROVAL_ASSIGNMENTS {
+        uuid approval_assignment_id PK
+        uuid school_id FK
+        uuid approval_policy_version_id FK
+        uuid approval_policy_step_id FK
+        string target_type
+        uuid target_id
+        uuid target_version_id
+        uuid assigned_by_user_id FK
+        uuid assignee_user_id FK
+        uuid assignee_role_assignment_id FK
+        string status
+        datetime assigned_at
+        datetime accepted_at
+        datetime due_at
+        uuid delegated_from_assignment_id FK
+        datetime delegation_effective_until
+    }
+
+    APPROVAL_DECISIONS {
+        uuid approval_decision_id PK
+        uuid approval_assignment_id FK
+        uuid school_id FK
+        int step_number
+        string outcome
+        string reason
+        uuid decided_by_user_id FK
+        uuid used_capability_id FK
+        string used_scope_type
+        uuid used_scope_id
+        datetime decided_at
+    }
+
+    APPROVAL_ESCALATIONS {
+        uuid approval_escalation_id PK
+        uuid school_id FK
+        uuid approval_assignment_id FK
+        string target_type
+        uuid target_id
+        uuid target_period_id
+        string trigger_reason
+        string queue_key
+        string status
+        datetime triggered_at
+        uuid owned_by_user_id FK
+        datetime resolved_at
+        string resolution_note
+    }
+```
+
+`mode` is limited in the lean MVP to `not_required`, `automatic`, `single_reviewer` or `two_stage_sequential`. A two-stage policy contains exactly two ordered steps; each step has one decision (`required_decision_count = 1`). `assignee_user_id` may equal the author only when the active policy permits both the relevant self-assignment and self-approval action. Domain records retain their own lifecycle and publication state; the generic approval records provide eligibility, assignment, decision and escalation history rather than replacing domain meaning.
 
 ### Recommended temporal student model — school confirmation still required (H-08)
 
@@ -838,10 +1125,14 @@ This design prevents current class changes from contaminating historical activit
 erDiagram
     ACTIVITY_TYPES ||--o{ ACTIVITY_TEMPLATES : classifies
     ACTIVITY_TEMPLATES ||--o{ ACTIVITY_INSTANCES : creates
-    ACTIVITY_TYPES ||--o{ ACTIVITY_INSTANCES : classifies
-    ACADEMIC_PERIODS ||--o{ ACTIVITY_INSTANCES : schedules
+    ACTIVITY_INSTANCES ||--|{ ACTIVITY_REVISIONS : versions
+    ACTIVITY_TYPES ||--o{ ACTIVITY_REVISIONS : classifies
+    ACADEMIC_PERIODS ||--o{ ACTIVITY_REVISIONS : schedules
     GROUPS ||--o{ ACTIVITY_INSTANCES : hosts
-    USERS ||--o{ ACTIVITY_INSTANCES : leads
+    USERS ||--o{ ACTIVITY_INSTANCES : creates
+    USERS ||--o{ ACTIVITY_REVISIONS : authors
+    ACTIVITY_INSTANCES ||--o{ ACTIVITY_CHANGE_REQUESTS : receives
+    USERS ||--o{ ACTIVITY_CHANGE_REQUESTS : requests
 
     ACTIVITY_INSTANCES ||--o{ ACTIVITY_PARTICIPANTS : includes
     USERS ||--o{ ACTIVITY_PARTICIPANTS : participates
@@ -876,25 +1167,78 @@ erDiagram
     }
 
     ACTIVITY_INSTANCES {
-        uuid activity_instance_id PK
+        uuid activity_id PK
+        uuid school_id FK
+        string external_activity_id
         uuid activity_template_id FK
-        int template_version_number
-        uuid activity_type_id FK
-        uuid academic_period_id FK
         uuid group_id FK
-        uuid lead_teacher_user_id FK
-        string title
-        datetime starts_at
-        datetime ends_at
+        uuid created_by_user_id FK
+        uuid latest_revision_id FK
+        uuid current_approved_revision_id FK
+        string operational_status
+        uuid resolved_period_id FK
+        string period_resolution_status
+        datetime period_resolved_at
+        uuid period_exception_approved_by FK
+        string period_exception_reason
+        datetime created_at
+        datetime updated_at
+    }
+
+    ACTIVITY_REVISIONS {
+        uuid activity_revision_id PK
+        uuid activity_id FK
+        int revision_number
+        string title_en
+        string title_zh
+        string description_en
+        string description_zh
+        string private_context
+        string activity_type
+        uuid subject_id FK
+        uuid department_id FK
+        datetime start_at
+        datetime end_at
+        uuid owner_user_id FK
+        uuid requested_form_version_id FK
+        boolean media_capture_expected
+        string location
         datetime student_access_opens_at
         datetime student_access_closes_at
         datetime response_due_at
+        string approval_status
+        string publication_status
+        string material_change_reason
+        uuid supersedes_revision_id FK
+        uuid created_by_user_id FK
+        datetime created_at
+        datetime submitted_at
+        uuid approved_by_user_id FK
+        datetime approved_at
+    }
+
+    ACTIVITY_CHANGE_REQUESTS {
+        uuid activity_change_request_id PK
+        uuid school_id FK
+        uuid activity_id FK
+        uuid base_revision_id FK
+        uuid requested_by_user_id FK
+        uuid target_owner_user_id FK
+        string field_key
+        string current_value
+        string proposed_value
+        string reason
         string status
+        uuid resolved_by_user_id FK
+        string resolution_note
+        uuid resulting_revision_id FK
+        datetime requested_at
+        datetime resolved_at
     }
 
     ACTIVITY_PARTICIPANTS {
         uuid activity_participant_id PK
-        uuid activity_instance_id FK
+        uuid activity_id FK
         uuid user_id FK
         string participant_role
         string participation_status
@@ -903,9 +1247,13 @@ erDiagram
 
     ACTIVITY_STAFF {
         uuid activity_staff_id PK
-        uuid activity_instance_id FK
+        uuid activity_id FK
         uuid user_id FK
-        string staff_role
+        uuid role_assignment_id FK
+        string relationship
+        boolean can_edit
+        datetime starts_at
+        datetime ends_at
     }
 
     VASK_ITEMS {
@@ -926,7 +1274,7 @@ erDiagram
 
     ACTIVITY_INSTANCE_VASK_ITEMS {
         uuid activity_instance_vask_item_id PK
-        uuid activity_instance_id FK
+        uuid activity_id FK
         uuid vask_item_id FK
         int vask_item_version_number
         string priority
@@ -936,7 +1284,7 @@ erDiagram
 
     ACTIVITY_FRAMEWORK_TARGETS {
         uuid activity_framework_target_id PK
-        uuid activity_instance_id FK
+        uuid activity_id FK
         uuid framework_skill_id FK
         uuid target_step_id FK
         string priority
@@ -950,12 +1298,17 @@ erDiagram
 | Relationship | Type | Explanation |
 |---|---|---|
 | Activity template to activity instance | One-to-many | A reusable activity can be run many times. Each actual run is a separate instance. |
+| Activity instance to revisions | One-to-many | The activity ID is stable. Governed title, description, dates, type, access window and other publishable configuration live in immutable revisions. Material changes create a successor revision and approval request. |
 | Activity instance to users | Many-to-many | An activity has many participants and a user can attend many activities. `activity_participants` resolves it. |
-| Activity instance to staff | Many-to-many | An activity can have several teachers; a teacher can support many activities. `activity_staff` resolves it. |
+| Activity instance to staff | Many-to-many | An activity can have several teachers; a teacher can support many activities. `activity_staff` records the functional role assignment, relationship and whether that person is an editor. |
 | Activity template to VASK items | Many-to-many | A template can contain several default VASK items, and one VASK item can be used by many templates. |
 | Activity instance to VASK items | Many-to-many | The actual VASK selection is copied and may be modified for a particular activity run. |
 | Activity instance to framework skills | Many-to-many | An activity can target several framework skills. Each skill can be targeted by many activities. |
 | Activity framework target to framework step | Many-to-zero-or-one | A target may name an exact expected step, or only name the skill. |
+
+Evidence, media, participants, assignments and submissions reference the stable `activity_id`. Records that must prove which wording or dates were in force additionally reference `activity_revision_id`. A successor draft never moves or duplicates existing evidence. Ordinary readers resolve `current_approved_revision_id`; authors and reviewers may also see `latest_revision_id`. If the current approved revision is withdrawn for safety or privacy and no successor is approved, the activity is unavailable rather than falling back silently.
+
+Creation is capability-based: different teacher positions may receive `activity.create`. An author/editor with `activity.edit_owned` creates a successor revision and submits it for the active approval policy. An assigned teacher without edit authority uses `activity_change_requests`; the current editor or authorized administrator resolves it. The same person may be assigned to approve their own activity revision only when the school policy step explicitly permits self-approval.
 
 ---
 
@@ -1235,7 +1588,7 @@ erDiagram
 
     ASSESSMENT_ASSIGNMENTS {
         uuid assessment_assignment_id PK
-        uuid activity_instance_id FK
+        uuid activity_id FK
         uuid instrument_version_id FK
         uuid assigned_by_user_id FK
         datetime assigned_at
@@ -1331,7 +1684,7 @@ erDiagram
 
     FEEDBACK {
         uuid feedback_id PK
-        uuid activity_instance_id FK
+        uuid activity_id FK
         uuid subject_user_id FK
         uuid author_user_id FK
         uuid assessment_submission_id FK
@@ -1458,7 +1811,7 @@ erDiagram
 
     ACTIVITY_MEDIA {
         uuid activity_media_id PK
-        uuid activity_instance_id FK
+        uuid activity_id FK
         uuid media_asset_id FK
         string relationship_type
         uuid added_by_user_id FK
@@ -1492,7 +1845,7 @@ erDiagram
     MEDIA_COLLECTIONS {
         uuid media_collection_id PK
         uuid owner_user_id FK
-        uuid activity_instance_id FK
+        uuid activity_id FK
         string name
         string visibility
     }
@@ -1515,26 +1868,33 @@ Media is not proof by itself. It becomes assessment evidence only when a `feedba
 ```mermaid
 sequenceDiagram
     autonumber
-    participant Admin as Administrator
-    participant Teacher
+    participant Admin as SchoolAdmin
+    participant Teacher as Eligible teacher/author
+    participant Approver as Named approver
     participant System
     participant Student
+    participant Class as Class teacher
+    participant Publisher as Named publisher
 
-    Admin->>System: Create or version activity template
-    Admin->>System: Select default VASK items
-    Teacher->>System: Create activity instance from template
-    System->>System: Copy template VASK to instance VASK
-    Teacher->>System: Adjust instance VASK and framework targets
-    Teacher->>System: Add participants and staff
-    Teacher->>System: Assign assessment instrument
+    Admin->>System: Configure positions, functional roles, scopes and lean approval policies
+    Teacher->>System: Create stable activity and revision 1
+    Teacher->>System: Add VASK, dates, participants, staff and exact form version
+    Teacher->>System: Submit revision for configured approval
+    System->>System: Resolve eligible reviewer or default/escalation queue
+    Approver->>System: Record reasoned approval decision
+    System->>System: Set current approved revision without changing activity ID
     System->>Student: Create assignment-recipient record
     Student->>System: Submit self-reflection responses
     Teacher->>System: Submit teacher observation responses
-    Teacher->>System: Create feedback and attach evidence
-    Teacher->>System: Select supported framework step per skill
-    Teacher->>System: Record consistency and suggested next step
-    System->>System: Preserve activity, submission, feedback, observation, and evidence links
+    Teacher->>System: Create proof-linked feedback and observations
+    Student->>System: Submit Portfolio working version and memorable selections
+    Class->>System: Return or include all/subset and submit reviewed version
+    Approver->>System: Approve Portfolio working version
+    Publisher->>System: Publish snapshot from approved version
+    System->>System: Preserve activity, revision, approval, submission, proof and snapshot links
 ```
+
+The MVP complexity is one reusable approval mechanism with four modes and at most two sequential human steps. It is more flexible than a single hard-coded “staff approves everything” SRS flow, but materially simpler than parallel approval, quorum, conditional branching or school-authored workflow scripts. Each domain keeps its own lifecycle; the shared records only supply eligibility, assignment, decision and escalation history.
 
 ## 9 Integration portfolio publication and external delivery
 
@@ -1546,6 +1906,11 @@ erDiagram
     USERS ||--o{ IMPORT_BATCHES : uploads
     USERS ||--o{ IMPORT_RECORD_CORRECTIONS : records
 
+    USERS ||--o{ PORTFOLIO_WORKING_VERSIONS : owns
+    ACADEMIC_PERIODS ||--o{ PORTFOLIO_WORKING_VERSIONS : scopes
+    PORTFOLIO_WORKING_VERSIONS ||--o{ PORTFOLIO_VERSION_ITEMS : contains
+    PORTFOLIO_WORKING_VERSIONS ||--o| LEARNER_NARRATIVE_VERSIONS : may_include
+    PORTFOLIO_WORKING_VERSIONS ||--o| PORTFOLIO_SNAPSHOTS : approved_as
     USERS ||--o{ PORTFOLIO_SNAPSHOTS : owns
     ACADEMIC_PERIODS ||--o{ PORTFOLIO_SNAPSHOTS : closes
     PORTFOLIO_SNAPSHOTS ||--o{ PORTFOLIO_ITEMS : contains
@@ -1594,11 +1959,65 @@ erDiagram
         datetime corrected_at
     }
 
+    PORTFOLIO_WORKING_VERSIONS {
+        uuid portfolio_working_version_id PK
+        uuid school_id FK
+        uuid student_user_id FK
+        uuid period_id FK
+        int version_number
+        uuid supersedes_version_id FK
+        string status
+        uuid created_by_user_id FK
+        datetime created_at
+        datetime student_submitted_at
+        uuid class_teacher_user_id FK
+        datetime class_teacher_reviewed_at
+        uuid approved_by_user_id FK
+        datetime approved_at
+        uuid published_snapshot_id FK
+        boolean is_student_latest
+    }
+
+    PORTFOLIO_VERSION_ITEMS {
+        uuid portfolio_version_item_id PK
+        uuid portfolio_working_version_id FK
+        string section_key
+        string source_type
+        uuid source_id
+        boolean student_selected
+        string class_teacher_decision
+        int display_order
+        string authorship_origin
+        string student_text
+        string decision_reason
+        uuid decided_by_user_id FK
+        datetime decided_at
+    }
+
+    LEARNER_NARRATIVE_VERSIONS {
+        uuid learner_narrative_version_id PK
+        uuid portfolio_working_version_id FK
+        string narrative_kind
+        int revision_number
+        string generated_text
+        string teacher_edited_text
+        string final_approved_text
+        string prompt_version
+        uuid source_manifest_id FK
+        uuid edited_by_user_id FK
+        string edit_reason
+        string approval_status
+        uuid approved_by_user_id FK
+        datetime created_at
+        datetime approved_at
+    }
+
     PORTFOLIO_SNAPSHOTS {
         uuid portfolio_snapshot_id PK
         uuid school_id FK
         uuid student_user_id FK
-        uuid academic_period_id FK
+        uuid period_id FK
+        uuid approved_portfolio_working_version_id FK
         int version_number
         string publication_status
         uuid approved_by_user_id FK
@@ -1628,7 +2047,13 @@ erDiagram
 
 `source_systems` and import records preserve provenance and validation failures. An imported record must not overwrite reviewed platform data without an explicit reconciliation decision. Identity corrections append an `import_record_corrections` row; they never rewrite `original_payload`. The resolved identity may be used by later processing while the original student ID and every before/after value remain auditable.
 
-`portfolio_snapshots` freeze the approved content for a reporting period. The live student timeline may continue to change, while an issued SLP or period report remains reproducible. The visualization/export layer reads this approved snapshot contract; it does not call a generation provider or reinterpret raw extraction output.
+`portfolio_working_versions` preserve the student's and class teacher's latest draft/submission separately from publication. The student workspace may show the student's newest submitted content and its review state. The official Portfolio resolves the greatest approved version number for the student and period; it never overwrites that version with an unapproved successor. If no approved version exists, the official view returns `no_approved_version`, and the student appears in the staff queue filter for missing approved Portfolios.
+
+A class teacher reviews the assigned students' submitted components, may include all or only a traceable subset, returns unsuitable items, and submits the assembled version into the school's Portfolio approval workflow. The class teacher cannot rewrite student-authored introductions/reflections or another educator's observation. They may edit the controlled prompt and `teacher_edited_text` for the LLM-generated `me_as_a_learner` narrative; the original generated text, source manifest and every edit remain preserved. The edited narrative is a successor draft and still requires the configured teacher/staff approval before it can enter an approved version.
+
+Student-authored introductions, reflections and selections use `authorship_origin = student_authored`. They do not require external proof citations merely to appear as the student's own voice, but they retain their submission and revision provenance and must not be presented as verified rubric claims. LLM-generated narrative and system-generated rubric/skill summaries require source references to the frozen manifest or selected proof. A claim without its required source is blocked from approval.
+
+`portfolio_snapshots` freeze one approved Portfolio working version for a reporting period. The live student timeline and later draft may continue to change, while an issued SLP or period report remains reproducible. The visualization/export layer reads this approved snapshot contract; it does not call a generation provider or reinterpret raw extraction output.
 
 For the lean MVP, an external authority is a `recipient_category`, not an authenticated role. The platform produces a printable PDF/SLP and, where audit detail is required, an XLSX evidence register. Any later external portal requires a separate identity, consent, access, expiry, and audit design.
 
@@ -1645,7 +2070,7 @@ The following belong to the later analytics design and are not part of this core
 - statistical conversion from questionnaire totals to framework steps;
 - confidence scoring based on observation quantity or recency;
 - badges, milestones, or progression notifications.
-- automated reminder scheduling and escalation;
+- advanced reminder schedules beyond the required unassigned/declined/overdue approval-escalation queue;
 - an authenticated portal for external authorities; and
 - automatic external-authority override of a school-confirmed skill step.
 

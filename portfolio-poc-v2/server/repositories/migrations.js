@@ -1,0 +1,61 @@
+export const migrations = [
+  {
+    version: 1,
+    name: 'identity_scope_and_policy',
+    sql: `
+      CREATE TABLE schools(school_id TEXT PRIMARY KEY,name_en TEXT NOT NULL,name_zh TEXT NOT NULL,status TEXT NOT NULL);
+      CREATE TABLE users(user_id TEXT PRIMARY KEY,school_id TEXT NOT NULL REFERENCES schools(school_id),external_user_id TEXT,user_type TEXT NOT NULL,student_number TEXT,staff_number TEXT,name_en TEXT NOT NULL,name_zh TEXT,email TEXT,status TEXT NOT NULL,created_at TEXT NOT NULL);
+      CREATE TABLE staff_position_definitions(position_id TEXT PRIMARY KEY,school_id TEXT NOT NULL REFERENCES schools(school_id),position_code TEXT NOT NULL,name_en TEXT NOT NULL,name_zh TEXT NOT NULL,position_category TEXT,sort_order INTEGER,status TEXT NOT NULL,created_by_user_id TEXT,created_at TEXT);
+      CREATE TABLE departments(department_id TEXT PRIMARY KEY,school_id TEXT NOT NULL REFERENCES schools(school_id),department_code TEXT NOT NULL,name_en TEXT NOT NULL,name_zh TEXT NOT NULL,parent_department_id TEXT,effective_from TEXT,effective_until TEXT,status TEXT NOT NULL,created_by_user_id TEXT,created_at TEXT);
+      CREATE TABLE subjects(subject_id TEXT PRIMARY KEY,school_id TEXT NOT NULL REFERENCES schools(school_id),subject_code TEXT NOT NULL,name_en TEXT NOT NULL,name_zh TEXT NOT NULL,effective_from TEXT,effective_until TEXT,status TEXT NOT NULL,created_by_user_id TEXT,created_at TEXT);
+      CREATE TABLE department_subjects(department_subject_id TEXT PRIMARY KEY,department_id TEXT NOT NULL,subject_id TEXT NOT NULL,school_id TEXT NOT NULL,effective_from TEXT,effective_until TEXT,status TEXT,assigned_by_user_id TEXT,assigned_at TEXT);
+      CREATE TABLE user_position_assignments(user_position_assignment_id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(user_id),position_id TEXT NOT NULL REFERENCES staff_position_definitions(position_id),school_id TEXT NOT NULL,department_id TEXT,subject_id TEXT,effective_from TEXT,effective_until TEXT,is_primary INTEGER,status TEXT NOT NULL,assigned_by_user_id TEXT,assigned_at TEXT);
+      CREATE TABLE role_definitions(role_id TEXT PRIMARY KEY,role_code TEXT NOT NULL,name_en TEXT NOT NULL,name_zh TEXT NOT NULL,role_category TEXT NOT NULL,assignable INTEGER NOT NULL,description_en TEXT,description_zh TEXT,status TEXT NOT NULL);
+      CREATE TABLE user_role_assignments(user_role_assignment_id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(user_id),role_id TEXT NOT NULL REFERENCES role_definitions(role_id),school_id TEXT NOT NULL,scope_type TEXT NOT NULL,scope_id TEXT NOT NULL,effective_from TEXT,effective_until TEXT,status TEXT NOT NULL,assigned_by_user_id TEXT,assigned_at TEXT,ended_reason TEXT);
+      CREATE TABLE capability_definitions(capability_id TEXT PRIMARY KEY,capability_key TEXT NOT NULL UNIQUE,name_en TEXT NOT NULL,name_zh TEXT NOT NULL,resource_type TEXT NOT NULL,sensitive INTEGER NOT NULL,status TEXT NOT NULL);
+      CREATE TABLE role_capabilities(role_capability_id TEXT PRIMARY KEY,role_id TEXT NOT NULL REFERENCES role_definitions(role_id),capability_id TEXT NOT NULL REFERENCES capability_definitions(capability_id),effect TEXT NOT NULL,condition_key TEXT,status TEXT NOT NULL,configured_by_user_id TEXT,configured_at TEXT);
+      CREATE TABLE staff_groups(staff_group_id TEXT PRIMARY KEY,school_id TEXT NOT NULL,group_code TEXT NOT NULL,name_en TEXT NOT NULL,name_zh TEXT NOT NULL,group_purpose TEXT,department_id TEXT,subject_id TEXT,effective_from TEXT,effective_until TEXT,status TEXT NOT NULL,created_by_user_id TEXT,created_at TEXT);
+      CREATE TABLE staff_group_memberships(staff_group_membership_id TEXT PRIMARY KEY,staff_group_id TEXT NOT NULL REFERENCES staff_groups(staff_group_id),user_id TEXT NOT NULL REFERENCES users(user_id),membership_role TEXT,effective_from TEXT,effective_until TEXT,status TEXT NOT NULL,assigned_by_user_id TEXT,assigned_at TEXT);
+      CREATE TABLE capability_policy_overrides(capability_policy_override_id TEXT PRIMARY KEY,school_id TEXT NOT NULL,target_type TEXT NOT NULL,target_id TEXT NOT NULL,capability_id TEXT NOT NULL REFERENCES capability_definitions(capability_id),effect TEXT NOT NULL,scope_type TEXT NOT NULL,scope_id TEXT NOT NULL,effective_from TEXT,effective_until TEXT,reason TEXT NOT NULL,configured_by_user_id TEXT NOT NULL,configured_at TEXT NOT NULL,status TEXT NOT NULL);
+      CREATE TABLE student_class_memberships(student_class_membership_id TEXT PRIMARY KEY,student_user_id TEXT NOT NULL REFERENCES users(user_id),school_id TEXT NOT NULL,class_id TEXT NOT NULL,period_id TEXT NOT NULL,effective_from TEXT,effective_until TEXT,status TEXT NOT NULL);
+      CREATE TABLE seed_state(seed_key TEXT PRIMARY KEY,source_path TEXT NOT NULL,seeded_at TEXT NOT NULL);
+      CREATE TABLE audit_events(audit_event_id INTEGER PRIMARY KEY AUTOINCREMENT,school_id TEXT NOT NULL,actor_user_id TEXT NOT NULL,action_code TEXT NOT NULL,entity_type TEXT NOT NULL,entity_id TEXT NOT NULL,reason TEXT,occurred_at TEXT NOT NULL);
+      CREATE INDEX idx_user_roles_user ON user_role_assignments(user_id,status);
+      CREATE INDEX idx_overrides_target ON capability_policy_overrides(target_type,target_id,capability_id,status);
+    `,
+  },
+  {
+    version: 2,
+    name: 'lean_approval_engine',
+    sql: `
+      CREATE TABLE approval_policy_versions(approval_policy_version_id TEXT PRIMARY KEY,school_id TEXT NOT NULL,workflow_type TEXT NOT NULL,policy_version INTEGER NOT NULL,mode TEXT NOT NULL,scope_type TEXT NOT NULL,scope_id TEXT NOT NULL,allow_self_assignment INTEGER NOT NULL,allow_self_approval INTEGER NOT NULL,publication_separate INTEGER NOT NULL,max_human_steps INTEGER NOT NULL,default_queue_key TEXT,unassigned_escalation_minutes INTEGER,overdue_escalation_minutes INTEGER,status TEXT NOT NULL,effective_from TEXT,effective_until TEXT,configured_by_user_id TEXT,configured_at TEXT);
+      CREATE TABLE approval_policy_steps(approval_policy_step_id TEXT PRIMARY KEY,approval_policy_version_id TEXT NOT NULL REFERENCES approval_policy_versions(approval_policy_version_id),step_number INTEGER NOT NULL,name_en TEXT NOT NULL,name_zh TEXT NOT NULL,required_capability_id TEXT NOT NULL REFERENCES capability_definitions(capability_id),assignee_strategy TEXT NOT NULL,required_decision_count INTEGER NOT NULL,reason_required INTEGER NOT NULL,status TEXT NOT NULL);
+      CREATE TABLE approval_assignments(approval_assignment_id TEXT PRIMARY KEY,school_id TEXT NOT NULL,approval_policy_version_id TEXT NOT NULL REFERENCES approval_policy_versions(approval_policy_version_id),approval_policy_step_id TEXT NOT NULL REFERENCES approval_policy_steps(approval_policy_step_id),target_type TEXT NOT NULL,target_id TEXT NOT NULL,target_version_id TEXT,assignee_user_id TEXT,assignee_role_assignment_id TEXT,assigned_by_user_id TEXT,status TEXT NOT NULL,assigned_at TEXT NOT NULL,accepted_at TEXT,due_at TEXT,delegated_from_assignment_id TEXT,delegation_effective_until TEXT);
+      CREATE TABLE approval_decisions(approval_decision_id TEXT PRIMARY KEY,approval_assignment_id TEXT NOT NULL REFERENCES approval_assignments(approval_assignment_id),school_id TEXT NOT NULL,step_number INTEGER NOT NULL,outcome TEXT NOT NULL,reason TEXT NOT NULL,decided_by_user_id TEXT NOT NULL,used_capability_id TEXT NOT NULL,used_scope_type TEXT NOT NULL,used_scope_id TEXT NOT NULL,decided_at TEXT NOT NULL);
+      CREATE TABLE approval_escalations(approval_escalation_id TEXT PRIMARY KEY,school_id TEXT NOT NULL,approval_assignment_id TEXT,target_type TEXT NOT NULL,target_id TEXT NOT NULL,target_period_id TEXT,trigger_reason TEXT NOT NULL,queue_key TEXT NOT NULL,status TEXT NOT NULL,triggered_at TEXT NOT NULL,owned_by_user_id TEXT,resolved_at TEXT,resolution_note TEXT);
+      CREATE INDEX idx_approval_assignee ON approval_assignments(assignee_user_id,status);
+    `,
+  },
+  {
+    version: 3,
+    name: 'stable_activity_revisions',
+    sql: `
+      CREATE TABLE activities(activity_id TEXT PRIMARY KEY,school_id TEXT NOT NULL,external_activity_id TEXT,activity_template_id TEXT,group_id TEXT,created_by_user_id TEXT NOT NULL,latest_revision_id TEXT,current_approved_revision_id TEXT,operational_status TEXT NOT NULL,resolved_period_id TEXT,period_resolution_status TEXT,period_resolved_at TEXT,period_exception_approved_by TEXT,period_exception_reason TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
+      CREATE TABLE activity_revisions(activity_revision_id TEXT PRIMARY KEY,activity_id TEXT NOT NULL REFERENCES activities(activity_id),revision_number INTEGER NOT NULL,title_en TEXT NOT NULL,title_zh TEXT,description_en TEXT NOT NULL,description_zh TEXT,activity_type TEXT,subject_id TEXT,department_id TEXT,start_at TEXT,end_at TEXT,owner_user_id TEXT,requested_form_version_id TEXT,media_capture_expected INTEGER,location TEXT,approval_status TEXT NOT NULL,publication_status TEXT NOT NULL,material_change_reason TEXT,supersedes_revision_id TEXT,created_by_user_id TEXT NOT NULL,created_at TEXT NOT NULL,submitted_at TEXT,approved_by_user_id TEXT,approved_at TEXT,UNIQUE(activity_id,revision_number));
+      CREATE TABLE activity_people(activity_person_id TEXT PRIMARY KEY,activity_id TEXT NOT NULL REFERENCES activities(activity_id),user_id TEXT NOT NULL REFERENCES users(user_id),person_type TEXT NOT NULL,relationship_type TEXT NOT NULL,role_assignment_id TEXT,group_code TEXT,planned_attendance_status TEXT,actual_attendance_status TEXT,attendance_approval_status TEXT,can_edit INTEGER NOT NULL,can_view_raw_media INTEGER NOT NULL,can_submit_response INTEGER NOT NULL,effective_from TEXT,effective_until TEXT,assigned_by_user_id TEXT,assigned_at TEXT);
+      CREATE TABLE activity_change_requests(activity_change_request_id TEXT PRIMARY KEY,school_id TEXT NOT NULL,activity_id TEXT NOT NULL,base_revision_id TEXT NOT NULL,requested_by_user_id TEXT NOT NULL,target_owner_user_id TEXT NOT NULL,field_key TEXT NOT NULL,current_value TEXT,proposed_value TEXT NOT NULL,reason TEXT NOT NULL,status TEXT NOT NULL,resolved_by_user_id TEXT,resolution_note TEXT,resulting_revision_id TEXT,requested_at TEXT NOT NULL,resolved_at TEXT);
+      CREATE INDEX idx_activity_people_user ON activity_people(user_id,activity_id);
+    `,
+  },
+  {
+    version: 4,
+    name: 'portfolio_working_versions',
+    sql: `
+      CREATE TABLE portfolio_working_versions(portfolio_working_version_id TEXT PRIMARY KEY,school_id TEXT NOT NULL,student_user_id TEXT NOT NULL REFERENCES users(user_id),period_id TEXT NOT NULL,version_number INTEGER NOT NULL,supersedes_version_id TEXT,status TEXT NOT NULL,created_by_user_id TEXT NOT NULL,created_at TEXT NOT NULL,student_submitted_at TEXT,class_teacher_user_id TEXT,class_teacher_reviewed_at TEXT,approved_by_user_id TEXT,approved_at TEXT,published_snapshot_id TEXT,is_student_latest INTEGER NOT NULL,UNIQUE(student_user_id,period_id,version_number));
+      CREATE TABLE portfolio_version_items(portfolio_version_item_id TEXT PRIMARY KEY,portfolio_working_version_id TEXT NOT NULL REFERENCES portfolio_working_versions(portfolio_working_version_id),section_key TEXT NOT NULL,source_type TEXT NOT NULL,source_id TEXT,student_selected INTEGER NOT NULL,class_teacher_decision TEXT NOT NULL,display_order INTEGER NOT NULL,authorship_origin TEXT NOT NULL,student_text TEXT,decision_reason TEXT,decided_by_user_id TEXT,decided_at TEXT);
+      CREATE TABLE learner_narrative_versions(learner_narrative_version_id TEXT PRIMARY KEY,portfolio_working_version_id TEXT NOT NULL REFERENCES portfolio_working_versions(portfolio_working_version_id),narrative_kind TEXT NOT NULL,revision_number INTEGER NOT NULL,generated_text TEXT,teacher_edited_text TEXT,final_approved_text TEXT,prompt_version TEXT,source_manifest_id TEXT,edited_by_user_id TEXT,edit_reason TEXT,approval_status TEXT NOT NULL,approved_by_user_id TEXT,created_at TEXT NOT NULL,approved_at TEXT);
+      CREATE TABLE portfolio_snapshots(portfolio_snapshot_id TEXT PRIMARY KEY,school_id TEXT NOT NULL,student_user_id TEXT NOT NULL,period_id TEXT NOT NULL,approved_portfolio_working_version_id TEXT NOT NULL,version_number INTEGER NOT NULL,publication_status TEXT NOT NULL,approved_by_user_id TEXT NOT NULL,published_at TEXT NOT NULL);
+      CREATE INDEX idx_portfolio_student ON portfolio_working_versions(student_user_id,period_id,version_number DESC);
+    `,
+  },
+];

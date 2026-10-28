@@ -1,0 +1,27 @@
+{
+  "controlPort": 3000,
+  "stages": [
+    {
+      "id": "v1",
+      "label": "Playground v1",
+      "summary": "The current portfolio-poc and its original demonstration database.",
+      "summaryZh": "保留現有 portfolio-poc 及其原有示範資料庫，方便比較。",
+      "status": "preserved",
+      "url": "http://127.0.0.1:5173",
+      "apiUrl": "http://127.0.0.1:3100",
+      "cwd": "../portfolio-poc",
+      "command": ["npm", "run", "dev"]
+    },
+    {
+      "id": "v2",
+      "label": "Playground v2",
+      "summary": "Core-aligned roles, scoped capabilities, approval queues, activity revisions and Portfolio working versions.",
+      "summaryZh": "按目前 Core 實作角色、範圍權限、批核佇列、活動修訂及 Portfolio 工作版本。",
+      "status": "current",
+      "url": "http://127.0.0.1:5174",
+      "apiUrl": "http://127.0.0.1:3200",
+      "cwd": "../portfolio-poc-v2",
+      "command": ["npm", "run", "dev"]
+    }
+  ]
+}

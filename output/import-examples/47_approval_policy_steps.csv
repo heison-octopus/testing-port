@@ -1,0 +1,6 @@
+approval_policy_step_id,approval_policy_version_id,step_number,name_en,name_zh,required_capability_id,assignee_strategy,required_decision_count,reason_required,status
+ASTEP-ACT-1,APOL-ACT-v1,1,Activity approval,活動批核,CAP-ACTIVITY-APPROVE,named_or_self_if_allowed,1,true,active
+ASTEP-FORM-1,APOL-FORM-v1,1,Form review,表格覆核,CAP-FORM-REVIEW,named,1,true,active
+ASTEP-PORT-1,APOL-PORT-v1,1,Class teacher review,班主任覆核,CAP-PORTFOLIO-REVIEW,named_class_teacher,1,true,active
+ASTEP-PORT-2,APOL-PORT-v1,2,Portfolio approval,Portfolio 批核,CAP-PORTFOLIO-APPROVE,named_or_default_queue,1,true,active
+ASTEP-PUB-1,APOL-PUB-v1,1,Portfolio publication,Portfolio 發布,CAP-PORTFOLIO-PUBLISH,named_or_self_if_allowed,1,true,active

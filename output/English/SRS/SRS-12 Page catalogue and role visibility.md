@@ -9,7 +9,7 @@ Define the visible product for each role and remove the POC assumption that ever
 | Area/page | Student | Teacher | Staff | SchoolAdmin | Phase |
 |---|---|---|---|---|---|
 | Home and tasks | Own tasks/results | Assigned workload | Operations queues | School operations | P0/P1 |
-| My activities / Activities | Enrolled, published/assigned | Assigned + create draft | Delegated catalogue/approval | School metadata/policy | P0/P1 |
+| My activities / Activities | Enrolled, published/assigned | Capability-scoped view/create | Delegated catalogue/approval | School metadata/policy | P0/P1 |
 | Activity workspace | Own activity detail and response | Roster, form, VASK, evidence, assessment | Review/exception scope | Policy/admin view | P1 |
 | Students | Own profile only | Assigned students | Delegated students | Administrative directory | P0/P1 |
 | Classes | No class directory | Assigned classes | Delegated classes | Manage all | P1 |
@@ -20,11 +20,14 @@ Define the visible product for each role and remove the POC assumption that ever
 | Feedback and step confirmation | Published own result | Submit for assigned activity | Review/publish | Policy only | P1 |
 | Rubric source comparison and correction impact | Published source summary only | Assigned observations/proof | Compare types; include/exclude; resolve affected results | Policy/audit; decide only if separately assigned | P1/P2 |
 | Proud Moments | When window open | Class review if assigned | Open/review window | Configure window | P0/P1 |
-| My portfolio / Portfolio release | Own published snapshot | Assigned student review | Preview/publish/withdraw | Policy/export | P1 |
+| My portfolio / Portfolio release | Latest own draft plus approved official view | Assigned class-teacher review; all/subset selection | Approve/publish/withdraw by assignment | Policy/export | P1 |
 | Imports/data quality | No | Assigned activity imports | Resolve delegated queues | Configure/import all | P0/P1 |
 | AI drafts | Published final text only | Authorized assigned drafts | Review delegated drafts | Configure policy | P2 |
 | Decisions/TBD register | No | Read relevant prompts only | Maintain decisions | Maintain/approve policy | P0 |
-| Users, roles, periods, audit | No | No | Delegated operations only | Full administration | P1 |
+| Staff directory/search | No | Search only when capability/scoped task requires it | Delegated directory | Full school directory | P1 |
+| Positions, roles, capabilities and scopes | No | Read own effective assignments | Delegated read | Configure with affected-user preview | P1 |
+| Approval inbox/escalation | No | Named assignments | Delegated/default queue | Configure policy/queue; decide only if separately assigned | P1 |
+| Users, groups, periods, audit | No | No | Delegated operations only | Full administration | P1 |
 | School and feature availability | No | No | Read delegated status | View effective policy; change only if delegated | P1 |
 
 ## 3. Role-specific navigation
@@ -43,7 +46,7 @@ Operations dashboard; Activity catalogue/approval; Form library; Evidence modera
 
 ### SchoolAdmin
 
-Staff navigation plus Users/groups/periods; Roles/scopes; Consent/retention/upload policy; Source systems/import configuration; effective school/feature availability; Audit/sessions/security.
+Staff navigation plus Users/positions/groups/periods; Roles/capabilities/scopes; Approval policies/default and escalation queues; Consent/retention/upload policy; Source systems/import configuration; effective school/feature availability; Audit/sessions/security.
 
 ## 4. UI requirements
 
@@ -61,6 +64,12 @@ Staff navigation plus Users/groups/periods; Roles/scopes; Consent/retention/uplo
 | UI-FR-010 | The assessment review UI shall show the official selected result separately from each proof/input type's candidate maximum and included maximum, with the exact candidate/included observations, source links and decision states. | Approved System Analyst architecture decision, 27 Oct 2026 | P1 |
 | UI-FR-011 | Authorized reviewers shall have item-level include, exclude, invalidate, supersede and restore-by-new-decision actions as applicable. Before committing a correction, the UI shall preview affected observations, claims, generation runs and published snapshots and require a reason. | Approved System Analyst architecture decision, 27 Oct 2026 | P1 |
 | UI-FR-012 | Parallel LLM suggestions shall display provider, model, prompt version, frozen input manifest and human decision. The UI shall not preselect a suggestion as the official result or hide a conflicting suggestion by overwriting it. | Approved System Analyst architecture decision, 27 Oct 2026 | P2 |
+| UI-FR-013 | The first release shall use one common Teacher workspace. Navigation and actions shall be capability-driven; job title shall be displayed for context only and shall not select a hard-coded interface. | Approved System Analyst architecture decision, 28 Oct 2026 | P0/P1 |
+| UI-FR-014 | Staff/teacher search shall support combinable filters for name/identifier, active state, position, functional role, capability, department, subject, year, class, group, programme and approval eligibility, with pagination and server-side scope enforcement. | Approved System Analyst architecture decision, 28 Oct 2026 | P1 |
+| UI-FR-015 | Activity detail shall show latest and current-approved revision distinctly, material-change approval state, owner/edit authority and a change-request action where direct editing is unavailable. | Approved System Analyst architecture decision, 28 Oct 2026 | P1 |
+| UI-FR-016 | Portfolio review shall show the student's submitted version, class-teacher all/subset inclusion decision, latest approved fallback and `no_approved_version` status without presenting an unapproved draft as official. | Approved System Analyst architecture decision, 28 Oct 2026 | P1 |
+| UI-FR-017 | Approval inboxes shall filter by workflow type, school scope, assignee, unassigned/declined/overdue state, due date and escalation status. Accept, return, approve, reject and reassign actions shall require the configured reason. | Approved System Analyst architecture decision, 28 Oct 2026 | P1 |
+| UI-FR-018 | School-wide capability-policy changes shall provide a staged diff and affected-user preview before activation; an explicit deny and its source shall be visible to authorized administrators. | Approved System Analyst architecture decision, 28 Oct 2026 | P1 |
 
 ## 5. Current POC gap map
 
@@ -71,10 +80,10 @@ Staff navigation plus Users/groups/periods; Roles/scopes; Consent/retention/uplo
 | Students/classes | Partial | Remove student directory access; enforce effective assignments |
 | Questions | Partial/conflicts | Hide global bank from students; add form/version/mapping governance |
 | Media library | Partial | Add consent grants, moderation, external-achievement separation and private originals |
-| Portfolio curation | Partial | Add snapshot, class-teacher review, staff release and withdrawal |
+| Portfolio curation | Partial | Add working versions, all/subset class-teacher review, latest-approved fallback, staff release and withdrawal |
 | AI page | POC demonstration | Restrict to authorized P2 workflow; students see approved final text only |
-| Decisions/admin | Partial | Add full policy, role/scope, source, audit and security administration |
-| Missing pages | Missing | Tasks, external achievements, peer review, privacy/correction, bulk assessment, queues, exports |
+| Decisions/admin | Partial | Add position/role/capability/scope separation, approval policy, source, audit and security administration |
+| Missing pages | Missing | Tasks, staff search/filter, approval/escalation inbox, external achievements, peer review, privacy/correction, bulk assessment and exports |
 
 ## 6. Page transition overview
 
@@ -101,4 +110,7 @@ flowchart LR
 - A reviewer can compare each source type's candidate and included maximums without mistaking either for the official level, and every displayed maximum opens the exact supporting sources.
 - Excluding a used face match or proof first shows its downstream impact; after confirmation, affected published output is marked for withdrawal/reissue rather than silently recalculated.
 - Two conflicting LLM suggestions remain visible as separate candidates with their own provenance and decisions.
+- Filtering the staff directory to English-subject activity approvers returns only in-scope, currently eligible users and does not disclose out-of-scope staff.
+- A teacher with a narrower deny sees the same Teacher layout but no forbidden activity row or action.
+- When a student has a newer unapproved draft, official Portfolio preview clearly uses the prior approved version; if none exists it shows `no_approved_version` and queues the case.
 

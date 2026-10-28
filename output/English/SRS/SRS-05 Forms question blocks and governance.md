@@ -27,6 +27,9 @@
 | FRM-FR-010 | Form approval/publication and rubric observation confirmation/publication shall be separate workflows. | Confirmed Oct 26 revision | P0 |
 | FRM-FR-011 | An accepted response shall create or reference a Proof List item containing question, respondent, subject, activity, form version and provenance. | Confirmed Oct 26 revision | P0 |
 | FRM-FR-012 | An authorized reviewer may cite the Proof List item against a concrete condition in the rubric selected during Portfolio processing. | Confirmed Oct 26 revision | P0 |
+| FRM-FR-013 | Form review shall use the school's independently configured lean approval policy and named eligible reviewer assignment; reviewer eligibility shall not depend on the person's job title. | Approved System Analyst architecture decision, 28 Oct 2026 | P1 |
+| FRM-FR-014 | Form approval and publication shall remain separate capabilities even when policy assigns both to one person. Self-approval shall follow the active form policy. | Approved System Analyst architecture decision, 28 Oct 2026 | P1 |
+| FRM-FR-015 | Unassigned, declined or overdue form reviews shall enter the configured default/escalation queue with reason and audit history. | Approved System Analyst architecture decision, 28 Oct 2026 | P1 |
 
 ## 3. Question and form-definition fields
 
@@ -76,7 +79,7 @@ The response score or text is never treated as a framework level by itself. The 
 
 - Students answer assigned published blocks and see only records permitted by the relevant visibility state.
 - Teachers author within assigned activities, review responses and propose proof/rubric observations within policy.
-- Authorized staff review delegated exceptions, form versions, proof and rubric-result publication.
+- Any eligible teacher/staff member with the required capability, scope and named assignment may review delegated exceptions, form versions, proof and rubric-result publication; job title alone is insufficient.
 - SchoolAdmin configures role assignments, form-publication authority and rubric-publication authority.
 
 Role membership and a named workflow approval assignment are separate records.

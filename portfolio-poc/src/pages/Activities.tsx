@@ -50,7 +50,7 @@ export function Activities({ session, report }: { session: Session; report: (err
       {items.map(activity => <button className="activity-row" key={activity.id} onClick={() => open(activity.id)}>
         <span className="activity-index">{String(items.indexOf(activity) + 1).padStart(2, '0')}</span>
         <span className="activity-main"><b>{activity.title}</b><small>{activity.description}</small><SourceTags tags={activity.labels} /></span>
-        <span className="activity-meta"><StatusPill status={activity.status} /><small>{activity.event_count} log events</small></span>
+        <span className="activity-meta"><StatusPill status={activity.status} /><small>{activity.reporting_period?.name_en || activity.period_resolution_status || 'Period unresolved'}</small><small>{activity.event_count} log events</small></span>
         <Eye size={18} />
       </button>)}
     </div>
@@ -60,12 +60,13 @@ export function Activities({ session, report }: { session: Session; report: (err
     <PageHeader eyebrow="ACTIVITY RECORD" title={current.title} description="Participation, proof and lifecycle history stay together while each review remains separately attributed." />
     <button className="text-button back" onClick={() => setCurrent(null)}><ArrowLeft size={16} />All activities</button>
     <div className="record-banner">
-      <div><StatusPill status={current.status} /><p>{current.description}</p><SourceTags tags={current.labels} /></div>
+      <div><StatusPill status={current.status} /><p>{current.description}</p><small>{current.starts_at?.replace('T', ' ')} to {current.ends_at?.replace('T', ' ')} · {current.reporting_period?.name_en || current.period_resolution_status}</small><SourceTags tags={current.labels} /></div>
       <div className="button-row">
         {session.role === 'teacher' && ['draft', 'rejected'].includes(current.status) && <button className="primary" onClick={() => transition('submit')}><PaperPlaneTilt size={17} />Submit to staff</button>}
         {session.role === 'staff' && current.status === 'submitted' && <><button className="secondary" onClick={() => transition('reject')}><XCircle size={17} />Reject</button><button className="primary" onClick={() => transition('publish')}><CheckCircle size={17} />Publish</button></>}
       </div>
     </div>
+    {!['resolved', 'exception_approved'].includes(current.period_resolution_status || '') && <Notice>Reporting period is {current.period_resolution_status}. Submission and publication remain blocked until the dates or SchoolAdmin period configuration are corrected.</Notice>}
     {session.role === 'staff' && current.status === 'submitted' && <label>Decision note<input value={reason} onChange={event => setReason(event.target.value)} /></label>}
     <div className="two-columns wide-left">
       <section>

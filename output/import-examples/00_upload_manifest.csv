@@ -2,8 +2,8 @@ upload_batch_id,source_system,source_file,record_type,schema_version,academic_ye
 UP-2026-0001,BHSS Admin,01_users_import.csv,user_identity,2.0,2026/27,,USR-ADM-001,2026-09-01T08:30:00+08:00,true,validated,Identity only; role membership is imported separately
 UP-2026-0002,BHSS Admin,02_users_update.csv,user_identity_update,2.0,2026/27,,USR-ADM-001,2026-09-05T09:00:00+08:00,true,validated,Account and consent changes only
 UP-2026-0003,BHSS Admin,03_reporting_periods.csv,school_period,2.0,2026/27,,USR-ADM-001,2026-08-20T08:00:00+08:00,false,validated,School-defined date boundaries used for server-side period resolution
-UP-2026-0004,BHSS Platform,04_activities.csv,activity,2.0,2026/27,2026-27-P1,USR-T-001,2026-09-10T10:00:00+08:00,true,validated,Staff input dates; resolved period fields are system outputs
-UP-2026-0005,BHSS Platform,05_activity_people.csv,activity_person_assignment,2.0,2026/27,2026-27-P1,USR-T-001,2026-09-10T10:05:00+08:00,true,validated,Activity relationship is separate from global role membership
+UP-2026-0004,BHSS Platform,04_activities.csv,activity_root,3.0,2026/27,2026-27-P1,USR-T-001,2026-09-10T10:00:00+08:00,true,validated,Stable activity identity points to latest and current approved revisions
+UP-2026-0005,BHSS Platform,05_activity_people.csv,activity_person_assignment,3.0,2026/27,2026-27-P1,USR-T-001,2026-09-10T10:05:00+08:00,true,validated,Activity relationship and edit flag are separate from approval authority
 UP-2026-0006,BHSS Admin,06_form_templates.csv,form_template,2.0,2026/27,,USR-ST-001,2026-08-25T10:00:00+08:00,true,validated,Versioned form templates
 UP-2026-0007,BHSS Admin,07_form_template_items.csv,form_template_item,2.0,2026/27,,USR-ST-001,2026-08-25T10:02:00+08:00,true,validated,Questions keep their own ability and proof intent without fixed rubric mapping
 UP-2026-0008,BHSS Platform,08_media_evidence.csv,media_source_record,2.0,2026/27,2026-27-P1,USR-T-002,2026-10-09T16:30:00+08:00,true,consent_check,Media source record is registered in the shared Evidence / Proof List
@@ -11,16 +11,16 @@ UP-2026-0009,BHSS Admin,09_question_bank_example.csv,question_definition,2.0,202
 UP-2026-0010,Time Infinity,11_time_infinity_activity_export.csv,external_activity_participation,simulated-2.0,2026/27,2026-27-P1,USR-ADM-001,2026-10-01T07:30:00+08:00,true,pending_review,Fictional connector example; period is resolved after import
 UP-2026-0011,BHSS Admin,12_form_review_history.csv,form_review_event,2.0,2026/27,,USR-ST-001,2026-08-25T10:00:00+08:00,true,validated,Immutable review and publication history
 UP-2026-0012,BHSS Platform,13_activity_form_assignments.csv,activity_form_assignment,2.0,2026/27,2026-27-P1,USR-T-001,2026-09-10T10:05:00+08:00,true,validated,Only approved published versions may be assigned
-UP-2026-0013,BHSS Admin,14_enum_reference.csv,enum_reference,2.0,2026/27,,USR-ADM-001,2026-08-20T09:00:00+08:00,false,validated,Permitted values for the revised linked contracts
-UP-2026-0014,BHSS Admin,15_form_review_assignments.csv,form_review_assignment,2.0,2026/27,,USR-ADM-001,2026-08-20T09:05:00+08:00,true,validated,Workflow approval assignment remains separate from role membership
+UP-2026-0013,BHSS Admin,14_enum_reference.csv,enum_reference,3.0,2026/27,,USR-ADM-001,2026-08-20T09:00:00+08:00,false,validated,Permitted values for scoped capability approval revision and Portfolio contracts
+UP-2026-0014,BHSS Admin,15_form_review_assignments.csv,form_review_assignment,3.0,2026/27,,USR-ADM-001,2026-08-20T09:05:00+08:00,true,validated,Legacy form-specific assignment aligned to functional reviewer role; generic workflow uses file 48
 UP-2026-0015,BHSS Platform,16_student_external_achievements.csv,student_external_achievement,2.0,2026/27,2026-27-P1,USR-S-001,2026-11-12T18:00:00+08:00,true,pending_review,Achievement links to a proof item and optional labels; no automatic level
 UP-2026-0016,BHSS Platform,17_proud_moment_selections.csv,proud_moment_selection,2.0,2026/27,2026-27-P1,USR-S-001,2026-12-15T18:00:00+08:00,true,pending_review,Student curation links to proof without changing a rubric level
-UP-2026-0017,BHSS Platform,18_rubric_observations.csv,rubric_observation,2.0,2026/27,2026-27-P1,USR-T-001,2026-09-19T16:05:00+08:00,true,validated,Human-confirmed rubric observation linked to proof
-UP-2026-0018,BHSS Platform,19_peer_review_assignments.csv,peer_review_assignment,2.0,2026/27,2026-27-P1,USR-T-002,2026-10-16T16:10:00+08:00,true,validated,Named reviewer assignment
+UP-2026-0017,BHSS Platform,18_rubric_observations.csv,rubric_observation,3.0,2026/27,2026-27-P1,USR-T-001,2026-09-19T16:05:00+08:00,true,validated,Human-confirmed rubric observation records functional assessor role
+UP-2026-0018,BHSS Platform,19_peer_review_assignments.csv,peer_review_assignment,3.0,2026/27,2026-27-P1,USR-T-002,2026-10-16T16:10:00+08:00,true,validated,Named reviewer assignment uses current scoped educator assignment
 UP-2026-0019,BHSS Admin,20_activity_rubric_labels.csv,activity_rubric_label,2.0,2026/27,2026-27-P1,USR-ST-001,2026-08-25T10:10:00+08:00,true,validated,Activity labels describe intent and never award a level
 UP-2026-0020,BHSS Platform,21_review_outlook_submissions.csv,review_outlook_submission,2.0,2026/27,2026-27-P1,USR-S-001,2026-12-18T18:00:00+08:00,true,pending_review,Submission references a teacher-configured memory setting
-UP-2026-0021,BHSS Admin,22_role_definitions.csv,role_definition,2.0,2026/27,,USR-ADM-001,2026-08-20T08:30:00+08:00,false,validated,Reusable role catalogue
-UP-2026-0022,BHSS Admin,23_user_role_assignments.csv,user_role_assignment,2.0,2026/27,,USR-ADM-001,2026-08-20T08:35:00+08:00,true,validated,Effective school-scoped role memberships
+UP-2026-0021,BHSS Admin,22_role_definitions.csv,functional_role_definition,3.0,2026/27,,USR-ADM-001,2026-08-20T08:30:00+08:00,false,validated,Stackable functional roles separate from job titles
+UP-2026-0022,BHSS Admin,23_user_role_assignments.csv,user_functional_role_assignment,3.0,2026/27,,USR-ADM-001,2026-08-20T08:35:00+08:00,true,validated,Effective functional role with explicit scope
 UP-2026-0023,BHSS Admin,24_rubric_catalogues.csv,rubric_catalogue,2.0,2026/27,,USR-ST-001,2026-08-20T08:40:00+08:00,false,validated,Independent labelling and assessment capabilities
 UP-2026-0024,BHSS Admin,25_rubric_axes.csv,rubric_axis,2.0,2026/27,,USR-ST-001,2026-08-20T08:41:00+08:00,false,validated,Versioned labels and assessable axes
 UP-2026-0025,BHSS Admin,26_rubric_levels.csv,rubric_level,2.0,2026/27,,USR-ST-001,2026-08-20T08:42:00+08:00,false,validated,Ordered levels do not imply prerequisite completion
@@ -35,3 +35,23 @@ UP-2026-0033,BHSS Admin,34_media_source_definitions.csv,media_source_definition,
 UP-2026-0034,BHSS Platform,35_external_media_references.csv,external_media_reference,2.0,2026/27,2026-27-P1,USR-T-002,2026-10-09T16:31:00+08:00,true,consent_check,Opaque reference resolved server-side to metadata URL or streamed bytes
 UP-2026-0035,BHSS Platform,36_published_rubric_results.csv,published_rubric_result,2.0,2026/27,2026-27-P1,USR-ST-001,2026-12-20T15:05:00+08:00,true,validated,Highest human-confirmed satisfied level under policy MAX-CONFIRMED-v1
 UP-2026-0036,BHSS Platform,37_llm_candidate_claims.csv,llm_candidate_claim,2.0,2026/27,2026-27-P1,USR-T-001,2026-12-18T18:02:00+08:00,true,pending_review,Positive evidence-linked suggestion only; human confirmation required
+UP-2026-0037,BHSS Admin,38_staff_position_definitions.csv,staff_position_definition,3.0,2026/27,,USR-ADM-001,2026-08-20T08:40:00+08:00,false,validated,Descriptive school positions do not grant permission
+UP-2026-0038,BHSS Admin,39_user_position_assignments.csv,user_position_assignment,3.0,2026/27,,USR-ADM-001,2026-08-20T08:45:00+08:00,true,validated,Effective-dated position assignments separate from functional roles
+UP-2026-0039,BHSS Admin,40_departments.csv,department,3.0,2026/27,,USR-ADM-001,2026-08-20T08:50:00+08:00,false,validated,Department scope catalogue
+UP-2026-0040,BHSS Admin,41_subjects.csv,subject,3.0,2026/27,,USR-ADM-001,2026-08-20T08:51:00+08:00,false,validated,Subject scope catalogue
+UP-2026-0041,BHSS Admin,42_department_subjects.csv,department_subject_assignment,3.0,2026/27,,USR-ADM-001,2026-08-20T08:52:00+08:00,false,validated,Effective subject membership in departments
+UP-2026-0042,BHSS Admin,43_capability_definitions.csv,capability_definition,3.0,2026/27,,USR-ADM-001,2026-08-20T08:55:00+08:00,false,validated,Stable action catalogue used by server authorization
+UP-2026-0043,BHSS Admin,44_role_capabilities.csv,role_capability,3.0,2026/27,,USR-ADM-001,2026-08-20T09:00:00+08:00,false,validated,Role-to-capability grant separate from role membership
+UP-2026-0044,BHSS Admin,45_capability_policy_overrides.csv,capability_policy_override,3.0,2026/27,,USR-ADM-001,2026-08-20T09:10:00+08:00,true,validated,School group and user overrides with explicit deny precedence
+UP-2026-0045,BHSS Admin,46_approval_policy_versions.csv,approval_policy_version,3.0,2026/27,,USR-ADM-001,2026-08-20T09:20:00+08:00,false,validated,Per-workflow lean approval mode and escalation settings
+UP-2026-0046,BHSS Admin,47_approval_policy_steps.csv,approval_policy_step,3.0,2026/27,,USR-ADM-001,2026-08-20T09:21:00+08:00,false,validated,Maximum two sequential human steps
+UP-2026-0047,BHSS Platform,48_approval_assignments.csv,approval_assignment,3.0,2026/27,2026-27-P1,USR-ST-001,2026-12-19T10:00:00+08:00,true,validated,Named assignment separate from eligibility and role membership
+UP-2026-0048,BHSS Platform,49_approval_decisions.csv,approval_decision,3.0,2026/27,2026-27-P1,USR-ST-001,2026-12-20T15:00:00+08:00,true,validated,Immutable reasoned decision using recorded capability and scope
+UP-2026-0049,BHSS Platform,50_approval_escalations.csv,approval_escalation,3.0,2026/27,2026-27-P1,USR-ST-001,2026-12-22T09:00:00+08:00,true,pending_review,Default queue covers unassigned declined overdue and no-approved-version cases
+UP-2026-0050,BHSS Platform,51_activity_revisions.csv,activity_revision,3.0,2026/27,2026-27-P1,USR-T-001,2027-01-20T09:15:00+08:00,true,validated,Immutable governed content revisions retain stable activity ID
+UP-2026-0051,BHSS Platform,52_activity_change_requests.csv,activity_change_request,3.0,2026/27,2026-27-P1,USR-T-001,2026-09-12T14:00:00+08:00,true,validated,Assigned teacher requests owner-controlled content change
+UP-2026-0052,BHSS Platform,53_portfolio_working_versions.csv,portfolio_working_version,3.0,2026/27,2026-27-P1,USR-S-001,2026-12-21T18:00:00+08:00,true,validated,Latest student draft remains separate from latest approved official version
+UP-2026-0053,BHSS Platform,54_portfolio_version_items.csv,portfolio_version_item,3.0,2026/27,2026-27-P1,USR-T-001,2026-12-19T09:30:00+08:00,true,validated,Class teacher may include all or a subset with a reason
+UP-2026-0054,BHSS Platform,55_learner_narrative_versions.csv,learner_narrative_version,3.0,2026/27,2026-27-P1,USR-T-001,2026-12-20T14:00:00+08:00,true,validated,Generated edited and final-approved text remain separate
+UP-2026-0055,BHSS Admin,56_staff_groups.csv,staff_group,3.0,2026/27,,USR-ADM-001,2026-08-20T09:30:00+08:00,false,validated,Teacher groups support scoped policy and activity visibility
+UP-2026-0056,BHSS Admin,57_staff_group_memberships.csv,staff_group_membership,3.0,2026/27,,USR-ADM-001,2026-08-20T09:35:00+08:00,true,validated,Effective membership independent from position and functional role

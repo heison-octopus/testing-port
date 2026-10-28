@@ -59,17 +59,23 @@ flowchart LR
 | PRD-FR-017 | Portfolio visualization and export shall consume an approved frozen snapshot DTO; they shall not call an LLM or interpret raw extraction output. | Approved System Analyst architecture decision, 27 Oct 2026 | P1 |
 | PRD-FR-018 | An official rubric result shall be distinct from the candidate and included maximum supported levels shown for each proof/input type. The official result shall use only explicitly included, eligible, human-confirmed observations and retain the exact selected sources and reviewer decision. | Approved System Analyst architecture decision, 27 Oct 2026 | P1 |
 | PRD-FR-019 | A previously accepted proof, identity association, observation or AI candidate shall remain individually correctable, excludable or supersedable with reason and audit history. Dependent live results shall become `needs_review`/`stale`, and published output shall be withdrawn or replaced through a new approved snapshot rather than silently rewritten. | Approved System Analyst architecture decision, 27 Oct 2026 | P1/P2 |
+| PRD-FR-020 | School position/job title, stackable functional role/capability, assignment scope and named approval assignment shall be separate, effective-dated records. Job title shall not itself grant content permission. | Approved System Analyst architecture decision, 28 Oct 2026; not BHSS/JC approval | P0/P1 |
+| PRD-FR-021 | Effective authorization shall support school, department, subject, year, class, group, programme, activity and student scopes, with an explicit applicable deny taking precedence over an allow. | Approved System Analyst architecture decision, 28 Oct 2026; not BHSS/JC approval | P1 |
+| PRD-FR-022 | Each school shall configure activity, form, submission, Portfolio and publication approval independently using only `not_required`, `automatic`, `single_reviewer` or `two_stage_sequential` in the lean MVP. Approval and publication may be separate capabilities; self-approval is policy-controlled. | Approved System Analyst architecture decision, 28 Oct 2026; not BHSS/JC approval | P1 |
+| PRD-FR-023 | Material activity changes shall create a successor revision and reapproval without changing `activity_id` or detaching evidence/media. An unapproved Portfolio working version shall never replace the latest approved version in an official view. | Approved System Analyst architecture decision, 28 Oct 2026; not BHSS/JC approval | P1 |
+| PRD-FR-024 | Unassigned, declined, overdue and `no_approved_version` work shall be discoverable through filterable default/escalation queues with named ownership, due state and audit history. | Approved System Analyst architecture decision, 28 Oct 2026; not BHSS/JC approval | P1 |
 
 ## 5. Shared lifecycle vocabulary
 
 | Record | States |
 |---|---|
-| Activity | `draft → pending_review → approved → active → completed → archived` |
+| Activity container/revision | Stable `activity_id`; each governed revision follows `draft → pending_review → approved / changes_requested / rejected → superseded`, while operational activity follows `approved → active → completed → archived` |
 | Form content | `draft → in_review → changes_requested / approved / rejected → retired` |
 | Form publication | `unpublished → published → withdrawn` |
 | Submission content | `not_submitted → draft → submitted → in_review → changes_requested / approved / rejected` |
 | Imported response | `received → identity_matched / needs_identity_resolution → corrected → validated → included_in_assessment / excluded` |
 | Student visibility | `unpublished → published_to_portfolio → withdrawn` |
+| Portfolio working version | `draft → student_submitted → class_teacher_review → staff_review → approved / changes_requested / rejected → published / superseded` |
 
 Transitions shall be append-audited. A single generic `status` shall not replace these independent lifecycles.
 

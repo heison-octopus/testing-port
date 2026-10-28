@@ -26,7 +26,7 @@ Development bands are display groupings, not separate marks.
 | ASM-FR-004 | Self, peer, teacher and external/professional perspectives shall remain separate source records. | Confirmed M-07 direction | P1 |
 | ASM-FR-005 | Missing evidence or rating shall produce a missing/unconfirmed state, not zero. | Confirmed M-11/H-04 recommendation | P0 |
 | ASM-FR-006 | A question response, VASK selection, academic mark, certificate or AI output shall not automatically publish a step. | Confirmed working model | P0 |
-| ASM-FR-007 | Teacher/TA human confirmation is required by the current architecture before activity evidence changes a published step. | Recommended; final authority H-03/H-04 open | P1 |
+| ASM-FR-007 | Human confirmation by a user holding the effective assessor capability, matching scope and named assignment is required before activity evidence changes a published step; a Teacher or TA position alone grants no such authority. | Recommended; final authority H-03/H-04 open; aligned to H-17 | P1 |
 | ASM-FR-008 | Academic marks may be supporting evidence only and must use a named grading scheme. | Confirmed working model | P1 |
 | ASM-FR-009 | Published step decisions shall cite the evidence and authority/source instrument used. | Confirmed architecture | P1 |
 | ASM-FR-010 | The active Skills Builder policy shall select the highest human-confirmed satisfied level per axis from the observations explicitly included by an assigned authorized reviewer; levels are not prerequisites. | Confirmed M-21; clarified by System Analyst architecture decision, 27 Oct 2026 | P0 |
@@ -35,7 +35,7 @@ Development bands are display groupings, not separate marks.
 | ASM-FR-013 | Every proof item used for assessment shall retain a configurable proof/input type, perspective, provenance and declared authorship origin (`human_authored`, `ai_assisted`, `ai_generated`, `unknown`). These dimensions shall not be collapsed into one source label. | Approved System Analyst architecture decision, 27 Oct 2026; taxonomy M-25 open | P1 |
 | ASM-FR-014 | For each rubric version and axis, the authorized review view shall group all eligible human-confirmed candidate observations by proof/input type and show every item's current inclusion decision and exact supporting source links. | Approved System Analyst architecture decision, 27 Oct 2026 | P1 |
 | ASM-FR-015 | Each source-type group shall show a candidate maximum and, after decisions exist, an included maximum. Both shall be labelled as evidence support rather than an official result; either state shall show `not_enough_evidence` when its relevant set is empty. | Approved System Analyst architecture decision, 27 Oct 2026 | P1 |
-| ASM-FR-016 | An assigned SuperTeacher/authorized Staff reviewer may include or exclude an individual proof-to-observation link or whole observation, with reason, actor and time. A Teacher/TA may propose/confirm within assignment scope; SchoolAdmin has policy authority only unless separately assigned as a reviewer. | Approved System Analyst architecture decision, 27 Oct 2026; final assignment authority remains H-03/H-04 | P1 |
+| ASM-FR-016 | A named reviewer holding the required capability and matching scope may include or exclude an individual proof-to-observation link or whole observation, with reason, actor and time. A user with an effective assessor capability may propose/confirm within assignment scope; SchoolAdmin has policy authority only unless separately eligible and assigned as a reviewer. | Approved System Analyst architecture decisions, 27–28 Oct 2026; final school authority remains H-03/H-04 | P1 |
 | ASM-FR-017 | `MAX-CONFIRMED` shall operate only on included, eligible, unrevoked, human-confirmed observations using the same rubric version and axis. Raw candidates, excluded proof, AI suggestions and unlike rubrics shall not enter the calculation. | Approved System Analyst architecture decision, 27 Oct 2026 | P0/P1 |
 | ASM-FR-018 | The official result shall retain the included observation IDs, proof links, source-type breakdown, reviewer decision/rationale and complete calculation trace. | Approved System Analyst architecture decision, 27 Oct 2026 | P1 |
 | ASM-FR-019 | The system shall prohibit a source-free level override. A different level may be adopted only through inclusion/exclusion decisions or a new human-confirmed observation linked to eligible proof. | Approved System Analyst architecture decision, 27 Oct 2026 | P0/P1 |
@@ -70,7 +70,7 @@ flowchart LR
     C --> T[Assigned teacher/TA observes and cites proof]
     T --> G[Group by proof/input type]
     G --> TypeMax[Candidate maximum per type + exact sources]
-    AI[Parallel AI suggestions by provider/model/prompt] -. never evidence or final .-> R[Assigned SuperTeacher / Staff review]
+    AI[Parallel AI suggestions by provider/model/prompt] -. never evidence or final .-> R[Named capability-scoped reviewer]
     TypeMax --> R
     R --> I[Include/exclude each source or observation with reason]
     I --> IncludedMax[Included maximum per type]

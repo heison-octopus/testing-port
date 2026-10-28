@@ -1,7 +1,17 @@
 role_id,role_code,name_en,name_zh,role_category,assignable,description_en,description_zh,status
-ROLE-STUDENT,student,Student,學生,participant,true,Contributes and views records within own student scope,在自己的學生範圍內提交及查看紀錄,active
-ROLE-CLASS-TEACHER,class_teacher,Class Teacher,班主任,teaching_staff,true,Reviews assigned class learners and Portfolio items,覆核所屬班別學生及 Portfolio 項目,active
-ROLE-ACTIVITY-TEACHER,activity_teacher,Activity Teacher,活動老師,teaching_staff,true,Creates assigned activities forms feedback and observations,建立獲分派的活動表格回饋及觀察,active
-ROLE-TEACHING-ASSISTANT,teaching_assistant,Teaching Assistant,教學助理,support_staff,true,Acts only within explicit activity or review assignments,只可在獲明確分派的活動或覆核範圍內操作,active
-ROLE-SUPER-TEACHER,super_teacher,SuperTeacher / Authorized Staff,SuperTeacher／獲授權職員,approval_staff,true,Reviews and approves within delegated scope,在獲授權範圍內覆核及批核,active
-ROLE-SCHOOL-ADMIN,school_admin,School Administrator,SchoolAdmin,administration,true,Manages accounts roles periods catalogues and system policy,管理帳戶角色學段目錄及系統政策,active
+ROLE-STUDENT,student,Student,學生,learner,true,Contributes and views records within own student scope,在自己的學生範圍內提交及查看紀錄,active
+ROLE-EDUCATOR,educator,Educator,教育人員,educator_function,true,Receives basic teacher workspace capabilities within assigned scope,在獲分派範圍使用基本老師工作介面,active
+ROLE-CLASS-TEACHER,class_teacher,Class Teacher,班主任,educator_function,true,Reviews assigned class Portfolio working versions,覆核所屬班別的 Portfolio 工作版本,active
+ROLE-ACTIVITY-CREATOR,activity_creator,Activity Creator,活動建立者,educator_function,true,Creates and submits activity revisions within assigned scope,在獲分派範圍建立及提交活動修訂,active
+ROLE-ACTIVITY-EDITOR,activity_editor,Activity Editor,活動編輯者,educator_function,true,Edits governed activity content within assigned scope,在獲分派範圍修改受管制活動內容,active
+ROLE-ACTIVITY-APPROVER,activity_approver,Activity Approver,活動批核人,approval_function,true,Decides named activity approval assignments,處理具名活動批核分派,active
+ROLE-FORM-AUTHOR,form_author,Form Author,表格作者,educator_function,true,Creates form drafts without automatic approval authority,建立表格草稿但不自動取得批核權,active
+ROLE-FORM-REVIEWER,form_reviewer,Form Reviewer,表格覆核人,approval_function,true,Decides named form review assignments,處理具名表格覆核分派,active
+ROLE-ASSESSOR,assessor,Assessor,評估人,educator_function,true,Submits proof-linked observations in assigned scope,在獲分派範圍提交連繫佐證的觀察,active
+ROLE-PORTFOLIO-REVIEWER,portfolio_reviewer,Portfolio Reviewer,Portfolio 覆核人,approval_function,true,Reviews named Portfolio working versions,覆核具名 Portfolio 工作版本,active
+ROLE-PORTFOLIO-APPROVER,portfolio_approver,Portfolio Approver,Portfolio 批核人,approval_function,true,Approves named Portfolio working versions,批核具名 Portfolio 工作版本,active
+ROLE-PORTFOLIO-PUBLISHER,portfolio_publisher,Portfolio Publisher,Portfolio 發布人,publication_function,true,Publishes approved Portfolio snapshots within scope,在範圍內發布已批核 Portfolio 快照,active
+ROLE-APPROVAL-COORDINATOR,approval_coordinator,Approval Coordinator,批核統籌人,workflow_function,true,Assigns and escalates work without automatic content decision authority,分派及升級處理工作但不自動取得內容決定權,active
+ROLE-SCHOOL-ADMIN,school_admin,School Administrator,SchoolAdmin,administration,true,Manages identities positions roles scopes periods and policy,管理身份職位角色範圍學段及政策,active
+ROLE-SUPER-TEACHER,super_teacher,SuperTeacher legacy bundle,SuperTeacher 舊有組合,legacy_bundle,false,Legacy compatibility label only; use functional roles,只供舊資料兼容；新資料應使用功能角色,deprecated
+ROLE-TEACHING-ASSISTANT,teaching_assistant,Teaching Assistant legacy role,教學助理舊有角色,legacy_position,false,Teaching Assistant is now a position with separate functional roles,教學助理現屬職位；功能角色另行分派,deprecated

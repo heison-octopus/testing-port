@@ -1,0 +1,3 @@
+approval_escalation_id,school_id,approval_assignment_id,target_type,target_id,target_period_id,trigger_reason,queue_key,status,triggered_at,owned_by_user_id,resolved_at,resolution_note
+AESC-S3-NOAPP,BHSS,,portfolio_student,USR-S-003,2026-27-P1,no_approved_version,portfolio_approval,open,2026-12-20T09:00:00+08:00,USR-ST-001,,No approved Portfolio version exists for this period
+AESC-S2-OVERDUE,BHSS,AASG-PORT-S2-2,portfolio_working_version,PWV-S2-001,2026-27-P1,overdue,portfolio_approval,open,2026-12-22T09:00:00+08:00,USR-ST-001,,Assigned approval has passed its due time

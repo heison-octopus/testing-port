@@ -24,6 +24,15 @@ Publish a reproducible period view of a student's activities, feedback and evide
 | PRT-FR-014 | The published Portfolio may show the official level and privacy-filtered selected source references grouped by type. Excluded sources, rejected model alternatives and internal reasons remain visible only to authorized reviewers unless policy explicitly permits wider disclosure. | Approved System Analyst architecture decision, 27 Oct 2026 | P1 |
 | PRT-FR-015 | If a source used by the current snapshot is later excluded, corrected or invalidated, the snapshot shall become `stale`/`needs_review` and its current publication shall be withdrawn pending explicit review and successor publication. The issued version remains reproducible. | Approved System Analyst architecture decision, 27 Oct 2026 | P1 |
 | PRT-FR-016 | A successor snapshot/export shall identify the version it supersedes and the correction reason without silently altering any previously issued file. | Approved System Analyst architecture decision, 27 Oct 2026 | P1 |
+| PRT-FR-017 | The system shall maintain immutable Portfolio working versions separately from published snapshots. Student editing/submission, class-teacher review, staff approval and publication are independent states/actions. | Approved System Analyst architecture decision, 28 Oct 2026 | P1 |
+| PRT-FR-018 | A student may author self-introduction content and select all or some eligible memorable activities. Submission shall freeze the version reviewed by the class teacher. | Approved System Analyst architecture decision, 28 Oct 2026 | P1 |
+| PRT-FR-019 | The assigned class teacher may return the version, select all or a subset of submitted items, and submit a class-teacher-reviewed successor to the configured approval workflow. | Approved System Analyst architecture decision, 28 Oct 2026 | P1 |
+| PRT-FR-020 | The student workspace may show the student's latest draft/submission. Every official, staff-release or external view shall resolve the latest approved version; an unapproved version shall never overwrite it. | Approved System Analyst architecture decision, 28 Oct 2026 | P0/P1 |
+| PRT-FR-021 | If no approved version exists for a required student/period, the system shall expose `no_approved_version` in a filterable staff queue and escalation view rather than publishing the latest draft. | Approved System Analyst architecture decision, 28 Oct 2026 | P1 |
+| PRT-FR-022 | Portfolio approval shall use the school's configured lean workflow. An eligible teacher may approve where assigned; approval and publication may be separate or held by the same person. | Approved System Analyst architecture decision, 28 Oct 2026 | P1 |
+| PRT-FR-023 | Student-authored text shall retain declared human authorship and need not cite external proof merely to be displayed as the student's own statement. System/LLM/rubric-derived claims shall retain resolvable evidence/proof references. | Approved System Analyst architecture decision, 28 Oct 2026 | P1/P2 |
+| PRT-FR-024 | `Me as a learner` shall preserve generated, teacher-edited and final-approved narrative versions. An authorized class teacher/editor may change only that generated narrative/prompt content, not student text or another educator's observation. | Approved System Analyst architecture decision, 28 Oct 2026 | P1 contract/P2 generation |
+| PRT-FR-025 | A teacher-edited generated narrative shall remain a draft until the configured teacher/staff approval completes; the editor, reason, source manifest and text diff shall be audited. | Approved System Analyst architecture decision, 28 Oct 2026 | P1/P2 |
 
 ## 3. Suggested portfolio sections
 
@@ -53,10 +62,10 @@ The official output combination remains Policy TBD H-01.
 flowchart LR
     Eligible[Kernel-accepted eligible records] --> Generate[Optional Portfolio generator]
     Generate --> Claims[Structured draft claims + source references]
-    Claims --> Student[Student reviews/selects]
-    Student --> ClassTeacher[Class teacher reviews inclusion]
+    Claims --> Student[Student edits/selects and submits working version]
+    Student --> ClassTeacher[Class teacher returns or selects all/subset]
     ClassTeacher -->|Return| Student
-    ClassTeacher -->|Approve| Staff[Staff period review]
+    ClassTeacher -->|Submit reviewed version| Staff[Configured teacher/staff approval]
     Staff --> Breakdown[Official level + source-type support + selected sources]
     Breakdown --> Snapshot[Frozen snapshot version]
     Snapshot --> Publish[Publish to student]
@@ -88,4 +97,7 @@ Each export records snapshot version, generator, recipient category, filter/scop
 - Replacing the Portfolio generator does not change the approved snapshot DTO consumed by the web view and exports.
 - The Portfolio shows that an official level came from selected sources and can separately show, for example, teacher-observation and student-reflection maximum support without treating both as official levels.
 - Invalidating one selected source withdraws the affected current publication for review; it does not rewrite the issued snapshot or silently fall back to another level.
+- A student can continue editing a new working version while the official view still shows the latest approved version.
+- A class teacher can submit 25 reviewed students and leave the remainder in a filterable incomplete/no-approved-version queue.
+- Editing `Me as a learner` preserves the generated wording, sources, teacher-edited wording and final approval; it does not permit editing the student's self-introduction.
 

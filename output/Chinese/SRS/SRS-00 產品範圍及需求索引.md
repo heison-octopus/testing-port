@@ -59,17 +59,23 @@ flowchart LR
 | PRD-FR-017 | Portfolio 視覺化及匯出只可讀取已批核及已凍結的快照 DTO，不可自行呼叫 LLM 或解讀未經覆核的擷取結果。 | 系統分析架構決定已批准（2026-10-27） | P1 |
 | PRD-FR-018 | 正式 Rubric 結果須與各輸入／佐證類型的候選最高支持階段及已選用最高支持階段分開。正式結果只可採用已明確納入、合資格並經人員確認的觀察，並保留實際選用來源及覆核決定。 | 系統分析架構決定已批准（2026-10-27） | P1 |
 | PRD-FR-019 | 先前已接納的佐證、身份關聯、觀察或 AI 候選，日後仍可逐項更正、排除或由新紀錄取代，並保留原因及審計歷史。受影響的即時結果轉為 `needs_review`／`stale`；已發布內容須撤回或由新批核快照取代，不得暗中改寫。 | 系統分析架構決定已批准（2026-10-27） | P1/P2 |
+| PRD-FR-020 | 校內職位／職銜、可疊加功能角色／權限、分派範圍及具名批核分派須分開保存，並設生效日期。職銜本身不可直接授予內容權限。 | 系統分析架構決定已批准（2026-10-28）；並非 BHSS／JC 批准 | P0/P1 |
+| PRD-FR-021 | 有效授權須支援全校、部門、科目、級別、班別、群組、課程、活動及學生範圍；同一情況下，適用的明確拒絕優先於允許。 | 系統分析架構決定已批准（2026-10-28）；並非 BHSS／JC 批准 | P1 |
+| PRD-FR-022 | 每間學校須分別設定活動、表格、提交、Portfolio 及發布批核；精簡 MVP 只採用 `not_required`、`automatic`、`single_reviewer` 或 `two_stage_sequential`。批核與發布可分屬不同權限；自行批核由政策控制。 | 系統分析架構決定已批准（2026-10-28）；並非 BHSS／JC 批准 | P1 |
+| PRD-FR-023 | 活動作重大修改時須建立後繼修訂及重新批核，但不更改 `activity_id`，亦不會令佐證／媒體脫離活動。Portfolio 未批核工作版本不得在正式畫面取代最新已批核版本。 | 系統分析架構決定已批准（2026-10-28）；並非 BHSS／JC 批准 | P1 |
+| PRD-FR-024 | 未分派、被拒接、逾期及 `no_approved_version` 工作須進入可篩選的預設／升級處理佇列，並保存負責人、到期狀態及審計歷史。 | 系統分析架構決定已批准（2026-10-28）；並非 BHSS／JC 批准 | P1 |
 
 ## 5. 共通生命週期
 
 | 紀錄 | 狀態 |
 |---|---|
-| 活動 | `draft → pending_review → approved → active → completed → archived` |
+| 活動容器／修訂 | 穩定 `activity_id`；每個受管制修訂按 `draft → pending_review → approved / changes_requested / rejected → superseded`，活動運作狀態則按 `approved → active → completed → archived` |
 | 表格內容 | `draft → in_review → changes_requested / approved / rejected → retired` |
 | 表格發布 | `unpublished → published → withdrawn` |
 | 提交內容 | `not_submitted → draft → submitted → in_review → changes_requested / approved / rejected` |
 | 匯入回應 | `received → identity_matched / needs_identity_resolution → corrected → validated → included_in_assessment / excluded` |
 | 學生可見狀態 | `unpublished → published_to_portfolio → withdrawn` |
+| Portfolio 工作版本 | `draft → student_submitted → class_teacher_review → staff_review → approved / changes_requested / rejected → published / superseded` |
 
 所有狀態轉換均須以追加方式記錄。不可用一個籠統的 `status` 取代以上各條生命週期。
 

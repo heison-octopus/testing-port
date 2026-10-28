@@ -23,6 +23,11 @@ Maintain a stable school boundary and student identity while classes, grades, sc
 | SCH-FR-013 | Development, pilot and unknown feature keys shall be unavailable by default unless an authorized platform policy explicitly permits them for that school. | Approved System Analyst architecture decision, 27 Oct 2026 | P1 |
 | SCH-FR-014 | Feature policy shall support demo schools selectively testing ready features while withholding unfinished features; it shall never bypass role, scope, lifecycle, consent or approval controls. | Approved System Analyst architecture decision, 27 Oct 2026 | P1 |
 | SCH-FR-015 | `SchoolId` shall be an opaque, immutable domain identifier persisted as `school_id`; it shall not be derived from a mutable school name/code and shall be carried in session, job and audit context. | Approved System Analyst architecture decision, 27 Oct 2026 | P0 |
+| SCH-FR-016 | A school shall maintain versionable department and subject definitions; subjects may belong to one or more departments through effective-dated relationships. | Approved System Analyst architecture decision, 28 Oct 2026 | P1 |
+| SCH-FR-017 | Staff groups shall support effective membership independent of position and functional-role assignment, so a school can target policies or activity visibility to a teacher group. | Approved System Analyst architecture decision, 28 Oct 2026 | P1 |
+| SCH-FR-018 | Staff position definitions and user-position assignments shall be school-owned, effective-dated and searchable, but shall not directly authorize content actions. | Approved System Analyst architecture decision, 28 Oct 2026 | P1 |
+| SCH-FR-019 | Staff functional assignments may refer to department, subject, year, class, group, programme, activity or student scope; a later scope change shall not rewrite historical actions. | Approved System Analyst architecture decision, 28 Oct 2026 | P1 |
+| SCH-FR-020 | SchoolAdmin shall be able to apply an audited school-wide capability-policy revision and preview affected users before activation. | Approved System Analyst architecture decision, 28 Oct 2026 | P1 |
 
 ## 3. Core entities
 
@@ -39,6 +44,12 @@ Maintain a stable school boundary and student identity while classes, grades, sc
 | Membership | Student, class, effective start/end, change reason, source, actor |
 | School-status history | Student, enrolled/left/returned/suspended state, effective dates and reason |
 | Staff assignment | User, class/activity/programme, responsibility, effective dates |
+| Department | School, stable code/name, status, effective dates |
+| Subject | School, stable code/name, status, effective dates |
+| Department-subject link | Department, subject, effective dates |
+| Staff group/membership | Group, user, membership responsibility, effective dates |
+| Staff position assignment | User, position definition, effective dates; descriptive only |
+| Functional role assignment | User, functional role, scope type/ID, effective dates and assigning actor |
 
 ## 4. Field rules
 
@@ -75,9 +86,9 @@ flowchart LR
 ## 6. Access
 
 - Students see their current class and relevant historical labels, not the class directory.
-- Teachers see classes/students covered by an effective assignment.
-- Staff see delegated year/programme scope and rollover queues.
-- SchoolAdmin manages years, periods, classes, memberships and rollover.
+- Teachers see classes/students covered by an effective functional assignment and applicable capability policy.
+- Staff see delegated department/subject/year/class/group/programme scope and rollover queues.
+- SchoolAdmin manages years, periods, departments, subjects, classes, staff groups, memberships and rollover.
 - SchoolAdmin may view effective feature availability and request/configure changes only within delegated policy. Re-enabling a disabled school requires platform-operations authority, not the ordinary SchoolAdmin role alone.
 
 ## 7. Acceptance scenarios
@@ -91,4 +102,6 @@ flowchart LR
 - An activity crossing P1 and P2 is blocked until it is split or its exception is explicitly approved and audited.
 - A local deployment and a hosted deployment enforce the same `school_id` relationship even if the local deployment contains only one school.
 - A demo school can use one explicitly enabled pilot feature while another development feature remains unavailable.
+- Changing a teacher's job title does not grant or remove content access until the corresponding functional-role/capability assignment changes.
+- Removing a teacher from the English department ends future department-scoped access on the effective date without rewriting their previous audited actions.
 

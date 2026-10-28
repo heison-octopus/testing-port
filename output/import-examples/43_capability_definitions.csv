@@ -1,0 +1,21 @@
+capability_id,capability_key,name_en,name_zh,resource_type,sensitive,status
+CAP-STAFF-SEARCH,staff.directory.search,Search staff directory,搜尋教職員名錄,staff_directory,true,active
+CAP-ACTIVITY-VIEW,activity.view,View activities,查看活動,activity,false,active
+CAP-ACTIVITY-CREATE,activity.create,Create activity drafts,建立活動草稿,activity,false,active
+CAP-ACTIVITY-EDIT,activity.edit,Edit activity revisions,修改活動修訂,activity,true,active
+CAP-ACTIVITY-CHANGE-REQUEST,activity.change_request,Request activity changes,要求修改活動,activity,false,active
+CAP-ACTIVITY-SUBMIT,activity.submit_for_approval,Submit activity for approval,提交活動批核,activity,false,active
+CAP-ACTIVITY-APPROVE,activity.approve,Approve activity revisions,批核活動修訂,activity,true,active
+CAP-ACTIVITY-PUBLISH,activity.publish,Publish approved activities,發布已批核活動,activity,true,active
+CAP-FORM-AUTHOR,form.author,Author form drafts,建立表格草稿,form,false,active
+CAP-FORM-REVIEW,form.review,Review form versions,覆核表格版本,form,true,active
+CAP-FORM-PUBLISH,form.publish,Publish approved forms,發布已批核表格,form,true,active
+CAP-EVIDENCE-REVIEW,evidence.review,Review evidence,覆核佐證,evidence,true,active
+CAP-ASSESSMENT-SUBMIT,assessment.submit,Submit observations,提交觀察,assessment,true,active
+CAP-PORTFOLIO-REVIEW,portfolio.review,Review Portfolio working versions,覆核 Portfolio 工作版本,portfolio,true,active
+CAP-PORTFOLIO-APPROVE,portfolio.approve,Approve Portfolio working versions,批核 Portfolio 工作版本,portfolio,true,active
+CAP-PORTFOLIO-PUBLISH,portfolio.publish,Publish Portfolio snapshots,發布 Portfolio 快照,portfolio,true,active
+CAP-NARRATIVE-EDIT,portfolio.generated_narrative.edit,Edit generated learner narrative,修改生成學習者敘述,portfolio,true,active
+CAP-APPROVAL-COORDINATE,approval.coordinate,Coordinate approval queues,統籌批核佇列,approval,true,active
+CAP-MEDIA-RAW-VIEW,media.raw.view,View permitted raw media,查看獲准原始媒體,media,true,active
+CAP-POLICY-MANAGE,policy.manage,Manage school policies,管理校本政策,policy,true,active

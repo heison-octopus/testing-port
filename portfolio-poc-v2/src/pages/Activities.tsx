@@ -1,0 +1,45 @@
+import { useEffect, useState } from 'react';
+import { ArrowClockwise, NotePencil, Plus, Stamp } from '@phosphor-icons/react';
+import { api } from '../api/client';
+import type { Activity, ReferenceData, Staff } from '../../shared/types';
+import { Field, Notice, PageHeader, Status } from '../components/Layout';
+import { useI18n } from '../i18n';
+
+const emptyCreate = { titleEn: '', titleZh: '', descriptionEn: '', descriptionZh: '', activityType: 'project', subjectId: 'SUB-ENG', departmentId: 'DEPT-LANG', groupId: 'S1A-2026-27', periodId: '2026-27-P1', startAt: '2027-02-15T09:00', endAt: '2027-02-15T10:00', location: '', mediaExpected: false };
+
+export function Activities({ report }: { report: (error: unknown) => void }) {
+  const { isChinese, text, codeLabel } = useI18n();
+  const [activities, setActivities] = useState<Activity[]>([]), [selected, setSelected] = useState<Activity | null>(null), [reference, setReference] = useState<ReferenceData | null>(null), [reviewers, setReviewers] = useState<Staff[]>([]);
+  const [showCreate, setShowCreate] = useState(false), [create, setCreate] = useState(emptyCreate), [reason, setReason] = useState(''), [proposal, setProposal] = useState(''), [reviewerId, setReviewerId] = useState('USR-ST-001');
+  async function load(selectId?: string) { try { const list = await api.activities(); setActivities(list); if (selectId || selected) setSelected(list.find(item => item.activity_id === (selectId || selected?.activity_id)) || null); } catch (error) { report(error); } }
+  useEffect(() => { load(); api.referenceData().then(setReference).catch(() => undefined); api.staff(new URLSearchParams({ capabilityId: 'CAP-ACTIVITY-APPROVE' })).then(setReviewers).catch(() => undefined); }, []);
+  async function createActivity(event: React.FormEvent) { event.preventDefault(); try { const item = await api.createActivity(create); setShowCreate(false); setCreate(emptyCreate); await load(item.activity_id); } catch (error) { report(error); } }
+  async function revise() { if (!selected) return; try { await api.reviseActivity(selected.activity_id, isChinese ? { descriptionZh: proposal || selected.latestRevision.description_zh, reason } : { descriptionEn: proposal || selected.latestRevision.description_en, reason }); setReason(''); setProposal(''); await load(); } catch (error) { report(error); } }
+  async function requestChange() { if (!selected) return; try { await api.requestActivityChange(selected.activity_id, { fieldKey: isChinese ? 'description_zh' : 'description_en', proposedValue: proposal, reason }); setReason(''); setProposal(''); await load(); } catch (error) { report(error); } }
+  async function submit() { if (!selected) return; try { await api.submitActivity(selected.activity_id, reviewerId); await load(); } catch (error) { report(error); } }
+  return <>
+    <PageHeader kicker={text('STABLE ID · IMMUTABLE REVISIONS', '穩定 ID · 不可改寫修訂')} title={text('Activities', '活動')} description={text('The current approved revision stays usable while a material successor waits for review.', '後續實質修訂等待覆核期間，現行已批核修訂仍可繼續使用。')} action={<button className="primary" onClick={() => setShowCreate(value => !value)}><Plus size={17} />{text('New activity', '新增活動')}</button>} />
+    {showCreate && <form className="editor-grid" onSubmit={createActivity}>
+      <h2>{text('Create revision 1', '建立修訂 1')}</h2>
+      <Field label={text('English title', '英文標題')}><input required value={create.titleEn} onChange={event => setCreate({ ...create, titleEn: event.target.value })} /></Field>
+      <Field label={text('Chinese title', '中文標題')}><input value={create.titleZh} onChange={event => setCreate({ ...create, titleZh: event.target.value })} /></Field>
+      <Field label={text('English description', '英文說明')}><textarea required value={create.descriptionEn} onChange={event => setCreate({ ...create, descriptionEn: event.target.value })} /></Field>
+      <Field label={text('Subject', '科目')}><select value={create.subjectId} onChange={event => setCreate({ ...create, subjectId: event.target.value })}>{reference?.subjects.map(item => <option value={item.subject_id} key={item.subject_id}>{isChinese ? item.name_zh : item.name_en}</option>)}</select></Field>
+      <Field label={text('Start', '開始時間')}><input type="datetime-local" value={create.startAt} onChange={event => setCreate({ ...create, startAt: event.target.value })} /></Field>
+      <Field label={text('End', '結束時間')}><input type="datetime-local" value={create.endAt} onChange={event => setCreate({ ...create, endAt: event.target.value })} /></Field>
+      <div className="form-actions"><button className="primary">{text('Create draft', '建立草稿')}</button><button type="button" onClick={() => setShowCreate(false)}>{text('Cancel', '取消')}</button></div>
+    </form>}
+    <div className="split-view">
+      <section className="list-panel">{activities.map(item => <button className={selected?.activity_id === item.activity_id ? 'list-row selected' : 'list-row'} key={item.activity_id} onClick={() => setSelected(item)}><span><b>{isChinese ? item.latestRevision.title_zh || item.latestRevision.title_en : item.latestRevision.title_en}</b><small>{item.activity_id} · {text('revision', '修訂')} {item.latestRevision.revision_number}</small></span><Status value={item.latestRevision.approval_status} /></button>)}</section>
+      <section className="detail-panel">{selected ? <>
+        <div className="detail-heading"><div><p className="mono">{selected.activity_id}</p><h2>{isChinese ? selected.latestRevision.title_zh || selected.latestRevision.title_en : selected.latestRevision.title_en}</h2><span>{isChinese ? selected.latestRevision.description_zh || selected.latestRevision.description_en : selected.latestRevision.description_en}</span></div><Status value={selected.operational_status} /></div>
+        <div className="revision-compare"><article><p>{text('Current approved', '現行已批核修訂')}</p>{selected.currentApprovedRevision ? <><b>{text('Revision', '修訂')} {selected.currentApprovedRevision.revision_number}</b><span>{isChinese ? selected.currentApprovedRevision.description_zh || selected.currentApprovedRevision.description_en : selected.currentApprovedRevision.description_en}</span><Status value={selected.currentApprovedRevision.publication_status} /></> : <Notice tone="warning">{text('No approved revision yet.', '尚未有已批核修訂。')}</Notice>}</article><article><p>{text('Latest working revision', '最新工作修訂')}</p><b>{text('Revision', '修訂')} {selected.latestRevision.revision_number}</b><span>{isChinese ? selected.latestRevision.description_zh || selected.latestRevision.description_en : selected.latestRevision.description_en}</span><div><Status value={selected.latestRevision.approval_status} /> <Status value={selected.latestRevision.publication_status} /></div></article></div>
+        <h3>{text('People and edit relationship', '人員及編輯關係')}</h3><div className="tag-row">{selected.people.filter(item => item.relationship_type !== 'participant').map(item => <span className="tag role" key={item.user_id}>{isChinese ? item.name_zh : item.name_en}<em>{codeLabel(item.relationship_type)} · {item.can_edit ? text('editor', '可編輯') : text('change request only', '只可提出修改要求')}</em></span>)}</div>
+        <h3>{selected.access.canEdit ? text('Create successor revision', '建立後續修訂') : text('Request a correction', '提出修改要求')}</h3>
+        <div className="inline-form"><Field label={text('Proposed description', '建議說明')}><textarea value={proposal} onChange={event => setProposal(event.target.value)} placeholder={text('Describe the corrected activity', '輸入修訂後的活動說明')} /></Field><Field label={text('Reason', '原因')}><input value={reason} onChange={event => setReason(event.target.value)} placeholder={text('Why this material change is needed', '說明為何需要這項實質修改')} /></Field><button disabled={!proposal || !reason} onClick={selected.access.canEdit ? revise : requestChange}>{selected.access.canEdit ? <><ArrowClockwise size={16} />{text('Create revision', '建立修訂')}</> : <><NotePencil size={16} />{text('Send request', '送出要求')}</>}</button></div>
+        {selected.changeRequests.length > 0 && <div className="history"><h3>{text('Change requests', '修改要求')}</h3>{selected.changeRequests.map(item => <div key={item.activity_change_request_id}><b>{item.requester_name}</b><span>{codeLabel(item.field_key)}: {item.proposed_value}</span><Status value={item.status} /></div>)}</div>}
+        {selected.access.canSubmit && ['draft','changes_requested'].includes(selected.latestRevision.approval_status) && <div className="submit-strip"><Field label={text('Named reviewer', '具名覆核人')}><select value={reviewerId} onChange={event => setReviewerId(event.target.value)}>{reviewers.map(item => <option key={item.id} value={item.id}>{isChinese ? item.nameZh : item.name} · {item.roles.find(role => role.role_code === 'activity_approver')?.scope_id}</option>)}</select></Field><button className="primary" onClick={submit}><Stamp size={17} />{text('Submit revision', '提交修訂')}</button></div>}
+      </> : <Notice>{text('Select an activity to inspect its stable identity, revisions and assignments.', '選擇活動以查看其穩定身份、修訂及分派紀錄。')}</Notice>}</section>
+    </div>
+  </>;
+}

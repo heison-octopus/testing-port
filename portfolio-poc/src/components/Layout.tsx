@@ -64,7 +64,7 @@ export function PageHeader({ eyebrow, title, description, action }: { eyebrow: s
   return <div className="page-header"><div><div className="eyebrow">{eyebrow}</div><h1>{title}</h1><p>{description}</p></div>{action}</div>;
 }
 
-export function Notice({ children, tone = 'open' }: { children: React.ReactNode; tone?: 'open' | 'ai' | 'info' }) {
+export function Notice({ children, tone = 'open' }: { children: React.ReactNode; tone?: 'open' | 'ai' | 'info' | 'warning' }) {
   return <div className={`notice ${tone}`}>{children}</div>;
 }
 

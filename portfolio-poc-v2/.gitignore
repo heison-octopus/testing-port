@@ -1,0 +1,5 @@
+node_modules/
+dist/
+playground-v2.sqlite
+playground-v2.sqlite-wal
+playground-v2.sqlite-shm

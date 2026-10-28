@@ -2,6 +2,7 @@ import { service } from '../services/portfolio.js';
 
 export const controller = {
   session: (req, res) => res.json(service.session(req.user)),
+  academicContext: (req, res) => res.json(service.academicContext(req.user)),
   activities: (req, res) => res.json(service.activities(req.user)),
   activity: (req, res) => res.json(service.activity(req.user, req.params.id)),
   createActivity: (req, res) => res.status(201).json(service.createActivity(req.user, req.body)),
@@ -10,6 +11,8 @@ export const controller = {
   forms: (req, res) => res.json(service.forms(req.user)),
   draftForm: (req, res) => res.status(201).json(service.draftForm(req.user, req.body)),
   publishForm: (req, res) => { service.publishForm(req.user, req.params.id); res.json({ ok: true }); },
+  stageFormImport: (req, res) => res.status(201).json(service.stageFormImport(req.user, req.body)),
+  applyFormImport: (req, res) => res.status(201).json(service.applyFormImport(req.user, req.params.id)),
   catalogues: (req, res) => res.json(service.catalogues(req.user)),
   attendance: (req, res) => { service.attendance(req.user, req.params.id, req.params.student, req.body.attendance); res.json({ ok: true }); },
   approveAttendance: (req, res) => { service.approveAttendance(req.user, req.params.id, req.params.student); res.json({ ok: true }); },
@@ -33,6 +36,9 @@ export const controller = {
   generate: (req, res) => res.status(201).json(service.generate(req.user, req.params.student, req.body)),
   selectAttempt: (req, res) => { service.selectAttempt(req.user, req.params.id); res.json({ ok: true }); },
   privacyContract: (req, res) => res.json(service.privacyContract(req.user)),
+  createAcademicYear: (req, res) => res.status(201).json(service.createAcademicYear(req.user, req.body)),
+  createReportingPeriod: (req, res) => res.status(201).json(service.createReportingPeriod(req.user, req.body)),
+  updateReportingPeriodStatus: (req, res) => { service.updateReportingPeriodStatus(req.user, req.params.id, req.body.status); res.json({ ok: true }); },
   updatePolicy: (req, res) => { service.updatePolicy(req.user, req.body.key, req.body.value); res.json({ ok: true }); },
   admin: (req, res) => res.json(service.admin(req.user)),
 };

@@ -17,6 +17,8 @@ Allocate the correct versioned form to a named respondent and subject, preserve 
 | SUB-FR-007 | Negative or sensitive peer content shall be held for moderation when policy requires. | Recommended; peer policy open | P1 |
 | SUB-FR-008 | Missing submissions shall remain missing and be surfaced to the responsible teacher. | Confirmed M-11 | P0 |
 | SUB-FR-009 | Returned work shall create a new submission revision without erasing the prior submitted version. | Recommended architecture | P1 |
+| SUB-FR-010 | Submission review shall use the school's independently configured lean workflow; automatic review may be used where policy conditions are satisfied and every exception shall enter a human queue. | Approved System Analyst architecture decision, 28 Oct 2026 | P1 |
+| SUB-FR-011 | A human submission decision shall require a named eligible assignment and recorded reason; unassigned, declined or overdue work shall enter the configured escalation queue. | Approved System Analyst architecture decision, 28 Oct 2026 | P1 |
 
 ## 3. Lifecycle
 

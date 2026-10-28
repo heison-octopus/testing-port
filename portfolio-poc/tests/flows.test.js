@@ -113,4 +113,86 @@ test('activity, peer, media, prompt and policy workflows are auditable', async (
   assert.equal(contract.data.mode, 'global_identifier_replacement');
 });
 
+test('school periods and both reflection-question paths preserve source and publication boundaries', async () => {
+  const teacher = await login('teacher-1');
+  const staff = await login('staff-1');
+  const student = await login('student-1');
+  const admin = await login('admin-1');
+
+  const context = await request(teacher, '/academic-context');
+  assert.equal(context.status, 200);
+  assert.equal(context.data.school.id, 'school-1');
+  assert.ok(context.data.reportingPeriods.find(period => period.id === '2026-27-P1' && period.status === 'open'));
+
+  const manual = await request(teacher, '/activities', 'POST', {
+    schoolId: 'school-2',
+    title: 'Period-scoped manual reflection',
+    description: 'A school-scoped activity created through the manual reflection path.',
+    labels: ['Planning'],
+    startsAt: '2026-11-03T09:00',
+    endsAt: '2026-11-03T10:00',
+    reflectionMode: 'manual',
+    question: 'What did you plan and what changed?',
+  });
+  assert.equal(manual.status, 201);
+  assert.equal(manual.data.periodResolutionStatus, 'resolved');
+  assert.equal(manual.data.reportingPeriod.id, '2026-27-P1');
+  const manualRecord = await request(teacher, `/activities/${manual.data.id}`);
+  assert.equal(manualRecord.data.school_id, 'school-1');
+  assert.equal(manualRecord.data.reporting_period_id, '2026-27-P1');
+
+  const crossPeriod = await request(teacher, '/activities', 'POST', {
+    title: 'Cross-period activity',
+    description: 'An activity deliberately crossing configured reporting periods.',
+    labels: [],
+    startsAt: '2026-12-18T09:00',
+    endsAt: '2027-01-04T10:00',
+    reflectionMode: 'manual',
+    question: 'What happened?',
+  });
+  assert.equal(crossPeriod.status, 201);
+  assert.equal(crossPeriod.data.status, 'draft');
+  assert.equal(crossPeriod.data.periodResolutionStatus, 'cross_period_exception');
+  assert.equal((await request(teacher, `/activities/${crossPeriod.data.id}/transition`, 'POST', { action: 'submit' })).status, 400);
+
+  const forms = await request(teacher, '/forms');
+  const source = forms.data.sources.find(item => item.source_type === 'supplied_instrument');
+  const candidates = forms.data.questionLibrary.filter(item => item.source_id === source.id).slice(0, 2);
+  assert.equal(candidates.length, 2);
+  const stageBody = {
+    activityId: 'activity-1',
+    sourceId: source.id,
+    fileName: 'teacher-form-definition.xlsx',
+    rows: candidates.map((item, index) => ({ questionId: item.id, audience: 'student', position: index + 1, required: true })),
+  };
+  const staged = await request(teacher, '/form-imports/stage', 'POST', stageBody);
+  assert.equal(staged.status, 201);
+  assert.equal(staged.data.status, 'validated');
+  assert.equal(staged.data.summary.valid, 2);
+  const stagedAgain = await request(teacher, '/form-imports/stage', 'POST', stageBody);
+  assert.equal(stagedAgain.data.id, staged.data.id);
+  assert.equal(stagedAgain.data.idempotent, true);
+
+  const before = await request(student, '/activities/activity-1');
+  const beforeQuestionIds = before.data.questions.map(question => question.id);
+  const importedDraft = await request(teacher, `/form-imports/${staged.data.id}/apply`, 'POST');
+  assert.equal(importedDraft.status, 201);
+  const stillPublished = await request(student, '/activities/activity-1');
+  assert.deepEqual(stillPublished.data.questions.map(question => question.id), beforeQuestionIds);
+
+  assert.equal((await request(staff, `/forms/${importedDraft.data.id}/publish`, 'POST')).status, 200);
+  const after = await request(student, '/activities/activity-1');
+  assert.equal(after.data.questions.length, 2);
+  assert.equal(after.data.questions[0].input_type, 'scale');
+  assert.equal(after.data.questions[0].ability_code, candidates[0].ability_code);
+  assert.match(after.data.questions[0].source, /row/);
+  assert.equal((await request(student, '/activities/activity-1/responses', 'POST', { questionId: after.data.questions[0].id, answer: '4' })).status, 201);
+  const withScaleProof = await request(teacher, '/activities/activity-1');
+  assert.ok(withScaleProof.data.proof.some(item => item.content.includes('—')));
+
+  assert.equal((await request(admin, '/admin/reporting-periods/2026-27-P2/status', 'POST', { status: 'open' })).status, 200);
+  const adminContext = await request(admin, '/admin');
+  assert.equal(adminContext.data.reportingPeriods.find(period => period.id === '2026-27-P2').status, 'open');
+});
+
 test.after(() => { proc.kill(); rmSync(dir, { recursive: true, force: true }); });

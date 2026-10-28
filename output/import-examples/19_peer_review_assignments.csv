@@ -1,3 +1,3 @@
 peer_assignment_id,activity_id,subject_student_id,peer_reviewer_student_id,assigned_by_user_id,assigner_role_assignment_id,assigned_at,due_at,status,form_version_id,moderation_required,notes
-PRA-001,ACT-SPORT-001,USR-S-001,USR-S-002,USR-T-002,URA-T-002,2026-10-16T16:05:00+08:00,2026-10-23T17:00:00+08:00,assigned,FV-CORE-001,true,Teacher selected peer within the same activity group
-PRA-002,ACT-SPORT-001,USR-S-002,USR-S-001,USR-T-002,URA-T-002,2026-10-16T16:05:00+08:00,2026-10-23T17:00:00+08:00,assigned,FV-CORE-001,true,Reciprocal assignment is explicit rather than automatic
+PRA-001,ACT-SPORT-001,USR-S-001,USR-S-002,USR-T-002,URA-T-002-EDU,2026-10-16T16:05:00+08:00,2026-10-23T17:00:00+08:00,assigned,FV-CORE-001,true,Teacher selected peer within the same activity group
+PRA-002,ACT-SPORT-001,USR-S-002,USR-S-001,USR-T-002,URA-T-002-EDU,2026-10-16T16:05:00+08:00,2026-10-23T17:00:00+08:00,assigned,FV-CORE-001,true,Reciprocal assignment is explicit rather than automatic

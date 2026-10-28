@@ -130,6 +130,21 @@
   .workflow-steps span { @apply text-sm; }
   .editor-grid { @apply grid grid-cols-[1fr_0.75fr] gap-10 mt-7; }
   .editor-grid.compact { @apply max-w-5xl; }
+  .context-line { @apply grid grid-cols-3 border-y border-stone-200 mb-6; }
+  .context-line > span { @apply p-3 border-r border-stone-200 min-w-0; }
+  .context-line > span:last-child { @apply border-r-0; }
+  .context-line small { @apply mt-0 text-[9px] tracking-[0.12em]; }
+  .context-line b { @apply block text-xs text-brand-teal-dark mt-1 truncate; }
+  .field-pair { @apply grid grid-cols-2 gap-4; }
+  .field-label { @apply block text-sm font-semibold text-stone-700 mt-4 mb-2; }
+  .question-picker { @apply border-y border-stone-200 max-h-80 overflow-y-auto; }
+  .question-picker label { @apply my-0 flex gap-3 p-3 border-b border-stone-200 cursor-pointer font-normal; }
+  .question-picker label:last-child { @apply border-b-0; }
+  .question-picker label.selected { @apply bg-[#edf6f4]; }
+  .question-picker input { @apply w-auto mt-1 shrink-0; }
+  .question-picker span { @apply min-w-0; }
+  .question-picker b { @apply block text-sm text-stone-800; }
+  .compact-picker { @apply max-h-96; }
   .preview-panel { @apply bg-[#edf6f4] p-7 self-start sticky top-24; }
   .preview-panel h2 { @apply text-2xl text-brand-teal-dark; }
   .preview-question { @apply bg-white border-t-4 border-brand-teal mt-6 p-5; }
@@ -140,13 +155,27 @@
   .tab-strip { @apply flex gap-0 overflow-x-auto border-b border-stone-300 mb-7; }
   .tab-strip button { @apply shrink-0 border-0 bg-white py-3 px-4 text-sm text-stone-600 border-b-2 border-transparent; }
   .tab-strip button.active { @apply border-brand-orange text-brand-teal-dark font-semibold; }
+  .compact-tabs { @apply max-w-5xl mt-7; }
   .response-panel { @apply bg-[#edf6f4] p-6; }
+  .response-question { @apply bg-white border-t-2 border-brand-teal p-5 mt-5; }
+  .response-question > small:first-child { @apply text-brand-orange font-bold tracking-[0.08em]; }
+  .response-question h3 { @apply mt-2 mb-4; }
+  .question-source { @apply mt-3; }
+  .scale-options { @apply grid grid-cols-3 gap-2; }
+  .scale-options label { @apply my-0 border border-stone-200 bg-white p-2 cursor-pointer; }
+  .scale-options label.selected { @apply border-brand-teal bg-brand-mint; }
+  .scale-options input { @apply sr-only; }
+  .scale-options span { @apply flex gap-2 items-center text-xs font-normal; }
+  .scale-options b { @apply text-brand-teal-dark; }
 
   .metric-strip { @apply grid grid-cols-4 border-y border-stone-200 my-7; }
   .metric-strip > div { @apply p-4 border-r border-stone-200; }
   .metric-strip > div:last-child { @apply border-r-0; }
   .metric-strip b { @apply block text-2xl text-brand-teal-dark; }
   .metric-strip span { @apply text-xs text-stone-500; }
+  .metric-strip.mini { @apply my-5; }
+  .metric-strip.mini > div { @apply p-2; }
+  .metric-strip.mini b { @apply text-lg; }
   .review-group { @apply mb-10; }
   .peer-card { @apply border-b border-stone-200 py-5; }
   .peer-card-head { @apply flex items-start justify-between gap-3; }
@@ -259,6 +288,13 @@
   .template-strip span { @apply block text-sm text-stone-600 mt-1; }
   .admin-grid { @apply grid grid-cols-2 gap-8 mb-9; }
   .admin-grid > section { @apply border-t-4 border-brand-teal pt-4; }
+  .admin-context { @apply max-w-4xl mt-7; }
+  .wide-admin { @apply col-span-2; }
+  .period-list { @apply grid grid-cols-2 gap-x-8; }
+  .period-list select { @apply w-auto mt-0; }
+  .period-editor { @apply grid grid-cols-4 gap-x-4 items-end mt-4 bg-stone-50 px-4 py-2; }
+  .period-editor label { @apply my-2; }
+  .period-editor button { @apply mb-2; }
   .contract-list > div { @apply grid grid-cols-[90px_1fr] gap-4 py-2 border-b border-stone-200 text-sm; }
   .contract-list dt { @apply text-stone-500; }
   .contract-list dd { @apply m-0 font-medium; }
@@ -286,7 +322,8 @@
   .topbar { @apply static px-4 flex-wrap py-3; }
   .content { @apply px-4 py-6; }
   .page-header { @apply items-start flex-col; }
-  .home-hero, .editor-grid, .portfolio-sheet, .two-columns, .two-columns.wide-left, .review-workbench, .prompt-layout, .admin-grid { @apply grid-cols-1; }
+  .home-hero, .editor-grid, .portfolio-sheet, .two-columns, .two-columns.wide-left, .review-workbench, .prompt-layout, .admin-grid, .context-line, .field-pair, .period-list, .period-editor { @apply grid-cols-1; }
+  .wide-admin { @apply col-span-1; }
   .home-hero img { @apply h-52; }
   .ipo-grid, .home-status, .metric-strip, .pipeline, .workflow-steps { @apply grid-cols-2; }
   .media-grid, .skill-grid { @apply grid-cols-1; }
@@ -294,6 +331,7 @@
   .trace-list article { @apply border-r-0; }
   .upload-bar { @apply grid-cols-1; }
   .moderation-controls, .observation-row { @apply grid-cols-1; }
+  .scale-options { @apply grid-cols-1; }
   .profile-rail { @apply border-r-0 border-b border-stone-200; }
   .portfolio-widget.half { @apply block w-full mx-0; }
   .login { @apply grid-cols-1; }

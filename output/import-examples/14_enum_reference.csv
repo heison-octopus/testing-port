@@ -1,12 +1,19 @@
 enum_name,enum_value,meaning_zh,assignable_or_effect
 user_type,student,學生身份,Identity category only; permissions come from active role assignments
 user_type,staff,教職員身份,Identity category only; one person may hold several roles
-role_code,ROLE-STUDENT,學生,May view and contribute within own scope
-role_code,ROLE-CLASS-TEACHER,班主任,May review assigned class Portfolio records
-role_code,ROLE-ACTIVITY-TEACHER,活動老師,May manage assigned activities and submit observations
-role_code,ROLE-TEACHING-ASSISTANT,教學助理,May act only within an explicit activity or review assignment
-role_code,ROLE-SUPER-TEACHER,SuperTeacher／獲授權職員,May review or approve within assigned scope
-role_code,ROLE-SCHOOL-ADMIN,SchoolAdmin,May manage users periods catalogues and system policy
+role_code,student,學生,May view and contribute within own scope
+role_code,educator,教育人員,Uses the common Teacher workspace within assigned scope
+role_code,class_teacher,班主任,May review assigned class Portfolio working versions
+role_code,activity_creator,活動建立者,May create and submit activity revisions within scope
+role_code,activity_editor,活動編輯者,May edit governed activity content within scope
+role_code,activity_approver,活動批核人,May decide a named approval when scope matches
+role_code,form_reviewer,表格覆核人,May decide a named form review when scope matches
+role_code,assessor,評估人,May submit proof-linked observations within scope
+role_code,portfolio_reviewer,Portfolio 覆核人,May review named Portfolio working versions
+role_code,portfolio_approver,Portfolio 批核人,May approve named Portfolio working versions
+role_code,portfolio_publisher,Portfolio 發布人,May publish an approved snapshot when assigned
+role_code,approval_coordinator,批核統籌人,May assign and escalate without automatic content decision authority
+role_code,school_admin,SchoolAdmin,May manage users positions roles scopes periods and policy
 role_assignment_status,active,有效,Role may be used within its scope and effective dates
 role_assignment_status,suspended,暫停,Role cannot be used while the assignment is suspended
 role_assignment_status,ended,已完結,Historical membership only
@@ -56,3 +63,53 @@ memory_source_kind,activity_description,活動說明,Teacher may include activit
 memory_source_kind,activity_outcome,活動整理結果,Teacher may include reviewed or distilled activity outcomes
 memory_source_kind,proof_summary,佐證摘要,Teacher may include accepted proof summaries without raw media
 memory_source_kind,published_rubric_result,已發布評估結果,Teacher may include published results from one selected rubric version
+scope_type,school,全校,All records in one school subject to separate sensitive-data controls
+scope_type,department,部門,One effective school department
+scope_type,subject,科目,One effective school subject
+scope_type,year,級別,One school year level
+scope_type,class,班別,One effective class
+scope_type,group,群組,One staff or learner group
+scope_type,programme,課程／計劃,One configured programme
+scope_type,activity,活動,One stable activity
+scope_type,student,學生,One student record scope
+capability_effect,allow,允許,Grants the capability when every other condition matches
+capability_effect,deny,拒絕,Overrides an applicable allow at the same request context
+approval_mode,not_required,毋須批核,Workflow records no human approval step
+approval_mode,automatic,自動批核,Policy rules decide without a human step and retain audit output
+approval_mode,single_reviewer,一名覆核人,Exactly one human decision is required
+approval_mode,two_stage_sequential,兩階段順序批核,At most two ordered human decisions are required
+approval_assignment_status,unassigned,未分派,Eligible work is waiting in the default queue
+approval_assignment_status,assigned,已分派,A named eligible reviewer has not accepted yet
+approval_assignment_status,in_review,覆核中,The assignee accepted and is reviewing
+approval_assignment_status,approved,已批核,The assigned step was approved
+approval_assignment_status,changes_requested,要求修改,The target was returned for correction
+approval_assignment_status,rejected,已拒絕,The assigned step was rejected
+approval_assignment_status,declined,拒接,The assignee declined and the work must be reassigned or escalated
+approval_assignment_status,expired,已過期,The effective assignment ended before a decision
+approval_assignment_status,cancelled,已取消,The assignment was withdrawn with audit history
+activity_revision_status,draft,草稿,Editable governed content before submission
+activity_revision_status,pending_review,待覆核,Submitted successor awaiting the configured approval
+activity_revision_status,approved,已批核,May become the activity current approved revision
+activity_revision_status,changes_requested,要求修改,Returned to an authorized editor
+activity_revision_status,rejected,已拒絕,Retained but cannot become official
+activity_revision_status,superseded,已取代,Historical approved revision replaced by an approved successor
+portfolio_working_status,draft,草稿,Student may continue editing
+portfolio_working_status,student_submitted,學生已提交,Frozen for class-teacher review
+portfolio_working_status,class_teacher_review,班主任覆核中,All or a subset is being reviewed
+portfolio_working_status,staff_review,職員批核中,Class-teacher-reviewed version awaits configured approval
+portfolio_working_status,approved,已批核,Eligible for publication
+portfolio_working_status,published,已發布,An immutable snapshot references this approved version
+portfolio_working_status,changes_requested,要求修改,Returned without replacing the latest approved version
+portfolio_working_status,rejected,已拒絕,Retained without becoming official
+portfolio_working_status,superseded,已取代,A later approved version is now official
+portfolio_coverage_status,no_approved_version,沒有已批核版本,No official fallback exists and the student-period enters the exception queue
+escalation_reason,unassigned,未分派,No eligible named assignee accepted the work
+escalation_reason,declined,被拒接,The named assignee declined the assignment
+escalation_reason,overdue,逾期,The due time passed without a completed decision
+escalation_reason,no_approved_version,沒有已批核版本,A required Portfolio period has no approved working version
+position_code,subject_teacher,科任老師,Descriptive position only; permissions are separate
+position_code,mentoring_teacher,導師,Descriptive position only; class-teacher function is separate
+position_code,subject_leader,科主任,Descriptive leadership position only
+position_code,principal,校長,Descriptive leadership position only
+position_code,vice_principal,副校長,Descriptive leadership position only
+position_code,teaching_assistant,教學助理,Descriptive support position only

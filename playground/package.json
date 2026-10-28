@@ -1,0 +1,10 @@
+{
+  "name": "bhss-playground-control",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node start.mjs",
+    "start": "node start.mjs",
+    "selector": "node start.mjs --selector-only"
+  }
+}
