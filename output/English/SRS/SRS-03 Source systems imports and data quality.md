@@ -31,6 +31,8 @@ Inclusion does not publish the result to a student.
 | IMP-FR-010 | A school-scoped source connector shall use a configured, allow-listed endpoint or root and a server-held authentication reference. | Partly addressed L-08; Discussed on Meeting Oct 26 - kickstart | P1 |
 | IMP-FR-011 | Connector results shall preserve the source record key, opaque media reference, retrieval method, observed metadata, retrieval time and validation outcome. | Recommended architecture | P1 |
 | IMP-FR-012 | A connector may return metadata, a short-lived authorized URL or media bytes; the API shall normalize these modes without exposing credentials or raw server paths. | Partly addressed L-08; Discussed on Meeting Oct 26 - kickstart | P1 |
+| IMP-FR-013 | Every import batch and connector request shall be bound to one `school_id`; any row that resolves to an identifier owned by another school shall be rejected and audited without exposing that record. | Approved System Analyst architecture decision, 27 Oct 2026 | P0 |
+| IMP-FR-014 | If a previously included imported row is later found duplicated, misidentified or unsuitable, staff shall exclude, correct or supersede that row while preserving the immutable original payload; every dependent observation, claim and current snapshot shall enter impact review. | Approved System Analyst architecture decision, 27 Oct 2026 | P1 |
 
 ## 4. Supported contracts
 
@@ -77,4 +79,5 @@ The P0 form-definition contract accepts `.xlsx` only, maximum 4 MiB and 200 ques
 - A missing response appears in the responsible teacher's exception list and contributes no zero.
 - An out-of-range mark is rejected using the named grading scheme's min/max.
 - Uploading the same batch twice does not duplicate included records.
+- Excluding a previously used incorrect row does not silently substitute another row or result; dependent items are marked for review.
 

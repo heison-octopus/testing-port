@@ -22,6 +22,12 @@ Preserve evidence safely while keeping ownership, assessment use, portfolio disp
 | EVD-FR-012 | External retrieval shall re-check role/assignment scope, consent, lifecycle state and connector availability on every access. | Recommended architecture | P1 |
 | EVD-FR-013 | Connector responses may provide metadata, a short-lived authorized URL or streamed bytes; browser responses shall never contain raw server paths or storage credentials. | Partly addressed L-08; Discussed on Meeting Oct 26 - kickstart | P1 |
 | EVD-FR-014 | If an external source is unavailable or revoked, historical evidence linkage and provenance shall remain, while original-media access is marked unavailable. | Recommended architecture | P1 |
+| EVD-FR-015 | An extraction provider result shall be stored as an unaccepted candidate linked to the original asset and processing job; it cannot directly create accepted proof, a student identity link or a published assessment. | Approved System Analyst architecture decision, 27 Oct 2026 | P1/P2 |
+| EVD-FR-016 | Every asset, external connector, extraction job and derived result shall be school-scoped, and access shall fail if the active `school_id` does not match. | Approved System Analyst architecture decision, 27 Oct 2026 | P0/P1 |
+| EVD-FR-017 | Each Proof List item shall use a configurable `proof_type_definition` and retain perspective, source provenance and declared authorship/AI-assistance origin separately. AI analysis output shall be marked derived and shall not become a proof type merely because it suggests a rubric level. | Approved System Analyst architecture decision, 27 Oct 2026 | P1 |
+| EVD-FR-018 | An assigned authorized reviewer shall be able to create a target-specific proof-use decision (`included`, `excluded`, `invalidated`, `superseded`) for an observation, Portfolio claim or generation manifest, with reason, actor and time, without deleting the original proof. | Approved System Analyst architecture decision, 27 Oct 2026 | P1 |
+| EVD-FR-019 | A globally false identity/evidence association, including an incorrect face match, shall be corrected or invalidated at the association itself; the original candidate and decision history shall remain auditable. | Approved System Analyst architecture decision, 27 Oct 2026 | P1/P2 |
+| EVD-FR-020 | Excluding, correcting or invalidating used proof shall trigger a dependency impact check and mark affected suggestions, observations, claims and current snapshots `needs_review` or `stale`; no alternative source or result is selected automatically. | Approved System Analyst architecture decision, 27 Oct 2026 | P1 |
 
 ## 3. Evidence and visibility model
 
@@ -31,7 +37,9 @@ flowchart LR
     Validate --> Moderate[Moderation / consent check]
     Moderate --> Link[Link to activity, submission or achievement]
     Link --> Cite[Reviewer cites as evidence]
-    Cite --> Assess[Observation may use it]
+    Cite --> Use{Target-specific use decision}
+    Use -->|included| Assess[Observation may use it]
+    Use -->|excluded / invalidated / superseded| Impact[Dependency impact review]
     Link --> Portfolio[May be included by reference]
     Portfolio --> Summary[Portfolio hides original by default]
 ```
@@ -70,6 +78,8 @@ The UI shall show the active type and maximum before file selection and beside a
 - SchoolAdmin: metadata and policy; original access requires a grant.
 - Disable requires a 1–4,000 character reason and records `disabled_by`, `disabled_at`; restoration is audited.
 
+The same control surface shall offer only the manual actions valid for the record: exclude one use, correct extracted text/speaker, correct or reject identity association, disable/restrict media, supersede an observation, or request withdrawal/reissue of affected publication. These actions preserve the original record and append a decision; “remove” shall not imply hard deletion.
+
 ## 7. Acceptance scenarios
 
 - A renamed executable pretending to be PNG is rejected.
@@ -77,4 +87,6 @@ The UI shall show the active type and maximum before file selection and beside a
 - A teacher deleting media causes soft disable, with reason and actor visible in audit.
 - A piano certificate remains student-owned evidence and does not infer a 1–16 step.
 - Withdrawing consent blocks future original-media reads without erasing the historical assessment reference; the exact downstream publication response remains Policy TBD H-07.
+- Excluding a proof from one rubric observation does not remove it from unrelated valid uses.
+- Rejecting a previously confirmed false face match removes the student's derived activity/evidence association and places dependent results in impact review.
 

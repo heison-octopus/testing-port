@@ -25,3 +25,5 @@ This folder contains the current English architecture, planning, and stakeholder
 When the language versions differ, resolve the difference against the original evidence and record the confirmed decision in both architecture sets.
 
 The linked-data revision tagged `Discussed on Meeting Oct 26 - kickstart` is now reflected across both editions: date-resolved school periods, effective role assignments, question-owned abilities, interchangeable rubric capability, a typed Evidence / Proof List, `MAX-CONFIRMED` progression, positive-only AI candidates, and frozen review/outlook memory inputs.
+
+The System Analyst architecture decision approved on 27 October 2026 is also synchronized: immutable `SchoolId` isolation, `schools.is_disabled`, deny-by-default per-school feature availability, provider-neutral `ExtractionProvider` / `PortfolioGenerator` contracts in P1, production provider implementations in P2, and visualization from an approved frozen snapshot only. This is an internal architecture decision, not a BHSS or JC policy approval.

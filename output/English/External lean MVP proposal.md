@@ -103,6 +103,6 @@ The MVP uses one approved default activity form. It uses CSV/XLSX import before 
 
 ## Estimated delivery effort
 
-The expected effort is **95–130 mandays**, subject to confirmation of the default form, source data, approval roles, consent policy, official report layout, and hosting environment.
+The expected effort for the lean MVP described in this proposal, without production AI-provider implementations, is **95–130 mandays**. If the pilot must also prove selected real AI extraction, evidence/rubric suggestions and source-linked Portfolio generation, allow **125–175 mandays** for a controlled AI-enabled pre-Easter 2027 pilot, including at least one month of UAT.
 
-The estimate includes discovery confirmation, implementation, testing, security checks, user acceptance fixes, deployment, and handover. It excludes school decision waiting time, hardware procurement, historical data cleansing, and legal review.
+The AI-enabled range assumes one school, one primary Skills Builder path, one controlled AI provider, human approval of every formal outcome, and later delivery of generalized form/rubric/provider flexibility. The estimates are subject to confirmation of the default form, source data, approval roles, consent policy, official report layout, AI-provider terms and hosting environment. They include discovery confirmation, implementation, testing, security checks, user acceptance fixes, deployment, and handover. They exclude school decision waiting time, hardware procurement, historical data cleansing, and legal review.

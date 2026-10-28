@@ -34,10 +34,37 @@ The POC may use school-supplied isolated test photos to demonstrate face confirm
 - **School periods:** staff enter activity start and end dates. The server resolves the single containing period, such as `2025-26-P1`. A cross-period range creates an exception that must be split or explicitly approved; staff do not silently choose a convenient period.
 - **Questions:** every question preserves its source, wording, meaning and a valid ability definition. There is no fixed Question → VASK, RC360 or Skills Builder mapping and no normalized mapping weight. The Portfolio cites the question, response, respondent, activity and linked proof, then applies the chosen rubric during authorized review.
 - **Rubrics:** one catalogue may be usable for labelling, assessment, both, or neither. Assessment and radar output require versioned axes, ordered levels and concrete level conditions. A vocabulary such as VASK may provide LLM context without becoming a score.
-- **Progression rule:** the active Skills Builder policy uses the highest human-confirmed satisfied level for each axis. A learner may satisfy step 8 without satisfying every earlier step. Alternative rules such as an average must be stored as separately versioned policies and are not active by default.
-- **Proof List:** responses, teacher/peer/self feedback, observations, platform media, external references and certificates are normalized through `proof_type_definitions`, `proof_items` and `proof_links`. Adding a source type does not require rewriting the rubric algorithm.
-- **AI boundary:** an LLM may draft positive, source-linked candidate statements only. It cannot downgrade a learner, accept proof, or publish a rubric level. Human confirmation remains mandatory.
+- **Progression rule:** the active Skills Builder policy uses the highest human-confirmed satisfied level among the observations that an assigned authorized reviewer has explicitly included for that rubric version and axis. A learner may satisfy step 8 without satisfying every earlier step. Alternative rules such as an average must be stored as separately versioned policies and are not active by default.
+- **Proof List:** responses, teacher/peer/self feedback, observations, platform media, external references and certificates are normalized through `proof_type_definitions`, `proof_items` and `proof_links`. Each item retains its proof/input type, perspective, provenance and declared authorship/AI-assistance origin. Adding a source type does not require rewriting the rubric algorithm.
+- **AI boundary:** an LLM may draft positive, source-linked candidate statements or rubric suggestions only. Results from different provider/model/prompt versions remain parallel candidates and cannot overwrite each other. An LLM cannot downgrade a learner, accept proof, choose the included evidence set or publish a rubric level. Human confirmation remains mandatory.
 - **Review / outlook memory:** a teacher selects the school-period range and which source classes are remembered: activity descriptions, confirmed/distilled outcomes, accepted proof summaries and published rubric results. Each generated review/outlook record freezes the exact source items and prompt version used.
+
+### Approved school boundary and processing contracts
+
+**Status: approved System Analyst architecture decision on 27 October 2026; this refines the direction tagged `Discussed on Meeting Oct 26 - kickstart` and is not recorded as a BHSS or JC policy approval.**
+
+- **Stable school boundary:** every deployment has a `schools` record and stable `SchoolId`, persisted as `school_id`. It is opaque, immutable and not derived from a school name/code. A local single-school installation uses one configured school row; it does not remove the boundary. A hosted service uses the same key to isolate each school's records, connectors, jobs, policies and snapshots.
+- **Whole-school control:** `schools.is_disabled` is an operational stop, with reason, actor and timestamp. It blocks new sessions, protected actions and newly claimed/committed jobs while retaining data, history and audit records. Re-enablement requires platform-operations authority rather than the ordinary SchoolAdmin role alone.
+- **Selective feature availability:** `feature_definitions` is the product registry; `school_feature_policies` records `school_id + feature_key + availability`. Development, pilot and unknown features are unavailable by default unless explicitly enabled. A demo school can therefore test selected ready functions without seeing unfinished ones.
+- **Availability is not authorization:** the kernel checks active school and effective feature policy before the use-case, then still applies role, assignment scope, lifecycle, consent and approval rules. APIs and workers repeat the authoritative check; the UI may reflect the result but is not the enforcement point.
+- **Extraction contract:** the kernel calls an `ExtractionProvider` port with a minimal authorized request. The adapter returns normalized extracted text, ordered chunks/candidates, language/confidence where available, provider/version, warnings and timestamps. It cannot write platform records, accept proof, confirm identity or publish an assessment.
+- **Portfolio-generation contract:** the kernel sends `PortfolioGenerator` a frozen manifest containing only accepted, Portfolio-eligible evidence for one school, student and period/range. The generator returns structured draft sections/claims with ordered source references and generation metadata. The kernel rejects any unknown, cross-school, ineligible or out-of-manifest reference.
+- **Human and presentation boundary:** generated content remains a draft until authorized human approval. The kernel then freezes the approved snapshot DTO; web Portfolio, radar/presentation and export components read that DTO and do not know the extraction provider, LLM provider, prompt or generation method.
+- **Delivery phase:** the provider-neutral contracts, validation and test doubles belong to P1. Production OCR/transcription and LLM-provider implementations remain P2 and depend on H-07/H-10 policy decisions.
+
+```mermaid
+flowchart LR
+    Source[Authorized source/media] --> Kernel[Kernel: school, feature, access and consent checks]
+    Kernel --> Extract[ExtractionProvider adapter]
+    Extract --> Candidate[Normalized extracted text/candidates]
+    Candidate --> Review[Human review and accepted eligible evidence]
+    Review --> Manifest[Frozen Portfolio input manifest]
+    Manifest --> Generator[PortfolioGenerator adapter]
+    Generator --> Claims[Structured draft claims + source references]
+    Claims --> Validate[Kernel validation + human approval]
+    Validate --> Snapshot[Approved frozen snapshot DTO]
+    Snapshot --> View[Visualization / export]
+```
 
 ### Product boundary and intended outcome
 
@@ -163,6 +190,49 @@ The RC360 image states that the Skills component is partially assessed or valida
 5. a missing-rating state rather than a calculated zero.
 
 If the required human rating is missing, student self-review and peer review remain visible as unconfirmed evidence. They do not independently set the published 1–16 step. This prevents the AI layer or a respondent from becoming the final assessor by default.
+
+### Source-type comparison, reviewer selection and later invalidation
+
+**Status: approved System Analyst architecture decision on 27 October 2026. This is an internal architecture rule and is not recorded as BHSS or JC assessment-policy approval.**
+
+For each rubric version and axis, the authorized review screen groups eligible human-confirmed candidate observations by configurable `proof_type_definition`. Each group shows its **candidate maximum supported level** and, after review decisions exist, the **included maximum supported level** that enters the active policy, together with exact proof links, perspective, dates, reviewer state and any authorship/AI-assistance declaration. Both source-type maximums are evidence summaries, not official results. AI suggestions are derived analysis and remain outside the proof-type calculation.
+
+An assigned SuperTeacher/authorized Staff reviewer decides which observations and proof links are included in the official calculation. A Teacher/TA may propose or confirm an observation within assignment scope; SchoolAdmin configures policy but receives no assessment authority merely from that role. Under `MAX-CONFIRMED`, the published level is the highest level among the included, eligible, unrevoked and human-confirmed observations for the same rubric version and axis. The reviewer may exclude an unsuitable candidate with a recorded reason, but cannot enter a source-free override. Selecting a higher level requires a human-confirmed observation linked to eligible proof.
+
+Multiple LLM/provider suggestions for the same frozen evidence manifest are stored and shown side by side with provider, model, prompt version, input manifest and warnings. A reviewer may reject or ignore each suggestion independently. Accepting a suggestion creates or updates a human-reviewed observation; it never turns the model output into proof and never overwrites a different suggestion.
+
+An earlier acceptance is reversible at the **use** level. `proof_use_decisions` records the proof, target observation/claim/generation run, decision (`included`, `excluded`, `invalidated`, `superseded`), reason, actor and time. This permits one proof to be excluded from one rubric decision while remaining valid elsewhere. A globally false association—such as a face match assigning a student to an activity they never joined—invalidates or corrects the identity/evidence link itself.
+
+When a used source or association is later excluded, corrected or invalidated, the system follows its dependency links and marks affected extraction results, LLM suggestions, observations, claims and current snapshots `needs_review` or `stale`. It does not automatically substitute another source or silently lower/raise the level. If the affected result is published, the current publication is withdrawn and an authorized reviewer must approve and publish a successor snapshot; the earlier version remains auditable.
+
+Manual correction/exclusion actions that must be available where applicable are:
+
+1. exclude one proof link from a particular observation, Portfolio claim or generation manifest;
+2. correct/reject a face or other identity association and remove the false student/activity link;
+3. correct speaker attribution, transcript/OCR text or extracted metadata;
+4. correct actual attendance/participation without rewriting the planned roster;
+5. exclude, correct or supersede an imported row while retaining the original payload;
+6. restrict/disable media or consent-dependent use without hard-deleting historical provenance;
+7. reject an individual LLM claim or rubric suggestion;
+8. supersede or withdraw a human rubric observation/published result;
+9. withdraw and reissue an affected Portfolio snapshot/export after impact review; and
+10. restore a wrongly excluded use through a new audited decision rather than erasing the exclusion history.
+
+```mermaid
+flowchart LR
+    Proof[Accepted typed proof] --> Candidate[Human-confirmed candidate observations]
+    Candidate --> Group[Group by proof/input type]
+    Group --> Max[Candidate maximum per type + exact sources]
+    Models[Parallel LLM suggestions] -. advisory .-> Review[Assigned SuperTeacher / Staff review]
+    Max --> Review
+    Review --> Included[Included observations and proof links]
+    Included --> IncludedMax[Included maximum per type]
+    IncludedMax --> Policy[MAX-CONFIRMED within included set]
+    Policy --> Result[Official level + selected sources + rationale]
+    Bad[Later source/identity problem] --> Decision[Exclude / correct / invalidate with reason]
+    Decision --> Impact[Dependency impact: needs_review / stale]
+    Impact --> Reissue[Withdraw and reissue if published]
+```
 
 ### Peer-review assignment
 
@@ -506,12 +576,15 @@ In the diagrams below, many-to-many relationships are made explicit using juncti
 ```mermaid
 flowchart LR
     subgraph Identity[Identity and school structure]
+        S[Schools]
         U[Users]
         UR[User roles]
         R[Roles]
         GM[Group memberships]
         G[Groups]
         AP[Academic periods]
+        FD[Feature definitions]
+        SFP[School feature policies]
     end
 
     subgraph Activity[Activity context]
@@ -564,9 +637,13 @@ flowchart LR
         EP[Export packages]
     end
 
+    S --> UR
     U --> UR --> R
     U --> GM --> G
+    S --> AP
     AP --> G
+    S --> SFP
+    FD --> SFP
 
     AT --> AI
     AP --> AI
@@ -624,8 +701,12 @@ erDiagram
     USERS ||--o{ USER_ROLES : receives
     ROLES ||--o{ USER_ROLES : classifies
     SCHOOLS ||--o{ USER_ROLES : scopes
+    SCHOOLS ||--o{ SCHOOL_FEATURE_POLICIES : configures
+    FEATURE_DEFINITIONS ||--o{ SCHOOL_FEATURE_POLICIES : controls
+    USERS ||--o{ SCHOOL_FEATURE_POLICIES : changes
 
     SCHOOLS ||--o{ GROUPS : contains
+    SCHOOLS ||--o{ ACADEMIC_PERIODS : defines
     ACADEMIC_PERIODS ||--o{ GROUPS : organises
     USERS ||--o{ GROUP_MEMBERSHIPS : joins
     GROUPS ||--o{ GROUP_MEMBERSHIPS : contains
@@ -657,8 +738,32 @@ erDiagram
 
     SCHOOLS {
         uuid school_id PK
+        string school_code UK
         string name
-        string status
+        string operating_mode
+        boolean is_disabled
+        string disabled_reason
+        uuid disabled_by_user_id FK
+        datetime disabled_at
+    }
+
+    FEATURE_DEFINITIONS {
+        string feature_key PK
+        string description
+        string lifecycle
+        string default_availability
+    }
+
+    SCHOOL_FEATURE_POLICIES {
+        uuid school_feature_policy_id PK
+        uuid school_id FK
+        string feature_key FK
+        string availability
+        string reason
+        datetime starts_at
+        datetime ends_at
+        uuid configured_by_user_id FK
+        datetime configured_at
     }
 
     ACADEMIC_PERIODS {
@@ -695,6 +800,9 @@ erDiagram
 | Users to roles | Many-to-many | One user may be a teacher and administrator; one role belongs to many users. `user_roles` resolves the relationship. |
 | Users to groups | Many-to-many | A student can join different classes or project groups over time. `group_memberships` preserves this history. |
 | Academic period to groups | One-to-many | One school year or term can contain many groups. |
+| School to feature definitions | Many-to-many | `school_feature_policies` records each school's audited availability override. The pair `school_id + feature_key` is unique. |
+
+`school_id` is mandatory on tenant-owned roots and must otherwise be derivable through an enforced parent relation. Repositories never accept an unscoped tenant query. A browser-supplied school ID is only a reference; the authenticated session and server policy determine the effective school.
 
 ### Recommended temporal student model — school confirmation still required (H-08)
 
@@ -913,6 +1021,7 @@ erDiagram
     PROOF_TYPE_DEFINITIONS ||--o{ PROOF_ITEMS : types
     QUESTION_RESPONSES ||--o| PROOF_ITEMS : accepted_as
     PROOF_ITEMS ||--o{ PROOF_LINKS : cited_through
+    PROOF_ITEMS ||--o{ PROOF_USE_DECISIONS : governed_by
 
     ASSESSMENT_INSTRUMENTS {
         uuid assessment_instrument_id PK
@@ -992,6 +1101,8 @@ erDiagram
         uuid activity_id FK
         string source_entity_type
         uuid source_entity_id
+        string perspective
+        string authorship_origin
         string review_status
         string visibility_status
     }
@@ -1002,6 +1113,17 @@ erDiagram
         string target_entity_type
         uuid target_entity_id
         string support_role
+    }
+
+    PROOF_USE_DECISIONS {
+        uuid proof_use_decision_id PK
+        uuid proof_item_id FK
+        string target_entity_type
+        uuid target_entity_id
+        string decision
+        string reason
+        uuid decided_by_user_id FK
+        datetime decided_at
     }
 ```
 
@@ -1017,6 +1139,7 @@ erDiagram
 | `proof_type_definitions` | Extensible source classes for responses, feedback, observations, media, certificates and external records. |
 | `proof_items` | Source-linked evidence with provenance, review and visibility state. |
 | `proof_links` | Typed links from proof to rubric observations, Portfolio claims or other reviewed targets. |
+| `proof_use_decisions` | Target-specific inclusion, exclusion, invalidation or supersession without deleting the original proof. |
 
 ### Many-to-many relationships
 
@@ -1241,6 +1364,10 @@ erDiagram
         string confidence_level
         string comment
         uuid next_step_id FK
+        string review_status
+        boolean included_in_aggregation
+        uuid inclusion_decided_by_user_id FK
+        string inclusion_reason
     }
 
     OBSERVATION_EVIDENCE {
@@ -1270,6 +1397,8 @@ erDiagram
 5. One evidence item may support several observations.
 6. One observation may rely on several evidence items.
 7. `observed_step_id` and `consistency_rating` remain separate values.
+8. `included_in_aggregation` is an authorized reviewer decision, not an AI decision; exclusion requires a reason and retains the original observation.
+9. The per-source-type maximum is derived from included, eligible, unrevoked, human-confirmed observations using the same rubric version and axis. It is not stored as an independent assessment.
 
 ### Example
 
@@ -1425,6 +1554,7 @@ erDiagram
 
     SOURCE_SYSTEMS {
         uuid source_system_id PK
+        uuid school_id FK
         string code UK
         string name
         string authority_scope
@@ -1433,6 +1563,7 @@ erDiagram
 
     IMPORT_BATCHES {
         uuid import_batch_id PK
+        uuid school_id FK
         uuid source_system_id FK
         uuid uploaded_by_user_id FK
         string file_name
@@ -1465,6 +1596,7 @@ erDiagram
 
     PORTFOLIO_SNAPSHOTS {
         uuid portfolio_snapshot_id PK
+        uuid school_id FK
         uuid student_user_id FK
         uuid academic_period_id FK
         int version_number
@@ -1496,7 +1628,7 @@ erDiagram
 
 `source_systems` and import records preserve provenance and validation failures. An imported record must not overwrite reviewed platform data without an explicit reconciliation decision. Identity corrections append an `import_record_corrections` row; they never rewrite `original_payload`. The resolved identity may be used by later processing while the original student ID and every before/after value remain auditable.
 
-`portfolio_snapshots` freeze the approved content for a reporting period. The live student timeline may continue to change, while an issued SLP or period report remains reproducible.
+`portfolio_snapshots` freeze the approved content for a reporting period. The live student timeline may continue to change, while an issued SLP or period report remains reproducible. The visualization/export layer reads this approved snapshot contract; it does not call a generation provider or reinterpret raw extraction output.
 
 For the lean MVP, an external authority is a `recipient_category`, not an authenticated role. The platform produces a printable PDF/SLP and, where audit detail is required, an XLSX evidence register. Any later external portal requires a separate identity, consent, access, expiry, and audit design.
 

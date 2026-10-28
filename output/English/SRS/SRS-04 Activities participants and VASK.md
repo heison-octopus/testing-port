@@ -18,6 +18,7 @@ Define a school-owned activity as the main container connecting context, student
 | ACT-FR-008 | Risk flags shall determine whether human activity approval is required. | Recommended architecture; M-14 open | P1 |
 | ACT-FR-009 | Student access opening, closing and due times shall be configurable per activity. | Confirmed structural need | P1 |
 | ACT-FR-010 | Academic/non-academic classification shall remain configurable pending M-08. | Policy TBD | P1 |
+| ACT-FR-011 | Authorized staff shall be able to correct a previously confirmed attendance/participation or student-activity association with before/after values, reason, actor and time; the planned roster remains immutable and affected proof/results enter impact review. | Approved System Analyst architecture decision, 27 Oct 2026 | P1 |
 
 ## 3. Activity data package
 
@@ -77,4 +78,5 @@ Routine use of the approved default form with no new sensitive media may follow 
 - A participant may be absent yet still retain a separate submission status.
 - Adding video collection raises a review requirement even for an otherwise routine activity.
 - An activity can target skills but cannot directly promote a student step.
+- Correcting a false student/activity association removes it from current assessment use without deleting the original roster, attendance decision or audit trail.
 

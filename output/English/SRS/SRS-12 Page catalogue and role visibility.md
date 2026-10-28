@@ -18,12 +18,14 @@ Define the visible product for each role and remove the POC assumption that ever
 | External achievement | Create/view own | Review assigned student | Moderation | Policy/admin | P1 |
 | Peer review | Named task only | Assign/monitor | Moderate | Policy only | P1 |
 | Feedback and step confirmation | Published own result | Submit for assigned activity | Review/publish | Policy only | P1 |
+| Rubric source comparison and correction impact | Published source summary only | Assigned observations/proof | Compare types; include/exclude; resolve affected results | Policy/audit; decide only if separately assigned | P1/P2 |
 | Proud Moments | When window open | Class review if assigned | Open/review window | Configure window | P0/P1 |
 | My portfolio / Portfolio release | Own published snapshot | Assigned student review | Preview/publish/withdraw | Policy/export | P1 |
 | Imports/data quality | No | Assigned activity imports | Resolve delegated queues | Configure/import all | P0/P1 |
 | AI drafts | Published final text only | Authorized assigned drafts | Review delegated drafts | Configure policy | P2 |
 | Decisions/TBD register | No | Read relevant prompts only | Maintain decisions | Maintain/approve policy | P0 |
 | Users, roles, periods, audit | No | No | Delegated operations only | Full administration | P1 |
+| School and feature availability | No | No | Read delegated status | View effective policy; change only if delegated | P1 |
 
 ## 3. Role-specific navigation
 
@@ -41,7 +43,7 @@ Operations dashboard; Activity catalogue/approval; Form library; Evidence modera
 
 ### SchoolAdmin
 
-Staff navigation plus Users/groups/periods; Roles/scopes; Consent/retention/upload policy; Source systems/import configuration; Audit/sessions/security.
+Staff navigation plus Users/groups/periods; Roles/scopes; Consent/retention/upload policy; Source systems/import configuration; effective school/feature availability; Audit/sessions/security.
 
 ## 4. UI requirements
 
@@ -55,6 +57,10 @@ Staff navigation plus Users/groups/periods; Roles/scopes; Consent/retention/uplo
 | UI-FR-006 | AI-generated content shall use a brown-toned background and show source/provenance. | Confirmed design convention | P0/P2 |
 | UI-FR-007 | Input/file errors shall appear beside the initiating control; system-wide failures may use a top overlay. | Confirmed design convention | P0 |
 | UI-FR-008 | Tables/lists shall use line separators and bounded scrolling where needed instead of layers of matching rounded boxes. | Confirmed design convention | P0 |
+| UI-FR-009 | When a server feature policy blocks a page or action, the UI shall hide or disable the entry as appropriate and handle `FEATURE_NOT_AVAILABLE` with a clear non-failure explanation; it shall not imply that hiding is the security control. | Approved System Analyst architecture decision, 27 Oct 2026 | P0/P1 |
+| UI-FR-010 | The assessment review UI shall show the official selected result separately from each proof/input type's candidate maximum and included maximum, with the exact candidate/included observations, source links and decision states. | Approved System Analyst architecture decision, 27 Oct 2026 | P1 |
+| UI-FR-011 | Authorized reviewers shall have item-level include, exclude, invalidate, supersede and restore-by-new-decision actions as applicable. Before committing a correction, the UI shall preview affected observations, claims, generation runs and published snapshots and require a reason. | Approved System Analyst architecture decision, 27 Oct 2026 | P1 |
+| UI-FR-012 | Parallel LLM suggestions shall display provider, model, prompt version, frozen input manifest and human decision. The UI shall not preselect a suggestion as the official result or hide a conflicting suggestion by overwriting it. | Approved System Analyst architecture decision, 27 Oct 2026 | P2 |
 
 ## 5. Current POC gap map
 
@@ -91,4 +97,8 @@ flowchart LR
 - Returning a published record for modification immediately removes the current published state while preserving history.
 - Every visible number field includes a displayed range or configured scale.
 - Direct navigation to a hidden page is denied consistently by route guard and API.
+- A demo school sees only its server-enabled pilot/released features, and a copied URL cannot open a disabled feature.
+- A reviewer can compare each source type's candidate and included maximums without mistaking either for the official level, and every displayed maximum opens the exact supporting sources.
+- Excluding a used face match or proof first shows its downstream impact; after confirmation, affected published output is marked for withdrawal/reissue rather than silently recalculated.
+- Two conflicting LLM suggestions remain visible as separate candidates with their own provenance and decisions.
 

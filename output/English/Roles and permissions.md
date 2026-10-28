@@ -44,6 +44,8 @@ A teacher is assigned to specific activities or students as an owner, supporting
 - Publish an approved form version within an authorized internal scope when school policy delegates this permission.
 - Retire or withdraw a form version within assigned scope without deleting historical assignments.
 - Review question ability definitions, Proof List items and human rubric observations within the assigned scope.
+- Compare the maximum level supported by each proof/input type and include or exclude individual proof links or observations with a recorded reason when assigned as the assessment reviewer.
+- Correct or supersede false identity/evidence associations and resolve the resulting dependency-review queue within delegated scope; this never permits a source-free level override.
 - Review conflicting evidence, identity uncertainty, and requested corrections.
 - View published student summaries across their assigned scope.
 - Reopen or return an assessment to a teacher for clarification.
@@ -63,8 +65,20 @@ A SchoolAdmin manages the school tenant, account identities, reusable role defin
 - Configure consent categories, media access scopes, retention periods, and deletion workflows.
 - Review import batches, Time Infinity staging records, audit logs, and failed validations.
 - Revoke sessions and reset account access.
+- View the school's effective feature availability and request/configure changes only within delegated policy; the ordinary SchoolAdmin role cannot re-enable a disabled hosted-service school.
 - View school-wide administrative metadata and published summaries.
 - Raw media access is still policy-controlled and should not be assumed merely because the user is an administrator.
+- SchoolAdmin configures assessment authority and audit policy but does not choose a student's level merely by holding the administrator role; a separate reviewer assignment is required.
+
+### Platform operations administrator
+
+A platform operations administrator is a service-level authority, not a school assessment role. It exists for a hosted multi-school service; a local deployment may perform the same actions through controlled deployment configuration.
+
+- Disable or re-enable a school through an audited operation.
+- Configure time-bounded availability for a stable `feature_key` by school.
+- See service-level school and feature-policy metadata needed for that operation.
+- Does not receive school content, raw-media, teaching, proof-acceptance or assessment authority by default.
+- Cannot use a feature flag to bypass role, scope, lifecycle, consent or approval rules.
 
 ### External authority or report recipient
 
@@ -142,6 +156,8 @@ Access to a published summary does not imply access to its original photograph, 
 
 ## Permission matrix
 
+The matrix covers school roles. Platform operations is deliberately excluded because it controls tenant/feature availability only and does not inherit school-content permissions.
+
 | Capability | Student | Teacher | SuperTeacher (staff) | SchoolAdmin |
 | --- | --- | --- | --- | --- |
 | View own portfolio | Yes | Assigned students | Assigned scope | Policy-controlled |
@@ -162,6 +178,8 @@ Access to a published summary does not imply access to its original photograph, 
 | Assign published form to activity | No | Assigned activities | Assigned scope | Yes |
 | Confirm evidence identity | Request correction | When directly responsible | Review/escalation | Administrative correction |
 | Confirm skill-step evidence | No | Propose/confirm within policy | Review and approve | Configure policy |
+| Include/exclude proof for a rubric result | Request correction | Propose within assigned scope | Decide when assigned; reason required | Policy only unless separately assigned |
+| Correct a false identity/evidence link | Request correction | Propose/confirm when directly responsible | Decide and resolve impact within assigned scope | Administrative correction; assessment decision only if assigned |
 | Manage users and periods | No | No | No by default | Yes |
 | View audit logs | Own submissions only | Own actions | Assigned review scope | Yes |
 
@@ -202,3 +220,4 @@ Form governance is separate from activity approval:
 - Log sign-in, import, role change, activity approval, media access, evidence correction, assessment publication, and deletion actions.
 - Apply least privilege. Permissions should be scoped by activity, class, programme, and media-access purpose.
 - Treat speaker identification, student images, recordings, transcripts, and AI-derived claims as sensitive data requiring explicit policy and auditability.
+- Resolve an immutable `SchoolId` for every protected request and worker job. Deny cross-school identifiers, disabled schools and unavailable features on the server; UI visibility is not enforcement.

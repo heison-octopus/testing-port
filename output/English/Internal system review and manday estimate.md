@@ -347,6 +347,51 @@ Every run must retain the prompt/profile version and separate `generated_text`, 
 | Recommended lean MVP | 95–130 | Usable teacher/student/staff workflow with human-reviewed steps and official exports |
 | Full interpretation of both documents | 180–260 | Live integration, flexible form builder, granular access, notifications, OCR/audio, advanced approvals and wider reporting |
 
+### Revised AI-enabled pilot plan to Easter 2027
+
+This scenario was added on 28 October 2026 after the SRS introduced school isolation, school feature-policy enforcement, provider-neutral extraction and Portfolio-generation contracts, independently reviewable AI candidates, and dependency review after source correction. It addresses a different delivery objective from the 95–130 manday lean MVP above: selected AI features must use a real provider and be proven end to end, rather than remaining deterministic POC output or P1 contracts and test doubles.
+
+The delivery principle is to implement the BHSS pilot workflow first while retaining versioned records, stable provider contracts, feature controls and human-review boundaries for later extension. The pilot does not need a general-purpose configuration interface for every future form, rubric, provider, approval chain or school workflow.
+
+#### Staged delivery and cumulative planning range
+
+| Target outcome | Intended timing | Cumulative mandays | Acceptance boundary |
+|---|---|---:|---|
+| Scope lock and POC technical audit | 27 October–13 November 2026 | 8–12 | Pilot scenario, real-AI feature set, sample data, provider and acceptance matrix agreed. |
+| Secure kernel and December survival slice | By 11 December 2026 | 42–60 | One end-to-end path from activity/evidence through real AI output, human review, one confirmed skill observation and one cited Portfolio draft. |
+| Limited AI-enabled MVP | By 22 January 2027 | 75–105 | BHSS staff can operate the selected activity, evidence, assessment, AI review and frozen-Portfolio workflow without direct database intervention. |
+| Feature-complete pilot candidate | By 19 February 2027 | 100–140 | All agreed pilot-critical functions are complete; generalized flexibility remains deferred. |
+| UAT-hardened pre-Easter release | 19–22 March 2027 | **125–175** | At least one month of scenario-based UAT, AI evaluation, security checks, fixes, deployment rehearsal, training and handover completed. |
+
+The ranges are cumulative and shall not be added together. They assume useful POC code is retained only after technical audit, one school, one primary Skills Builder path, one controlled production AI-provider choice, HTML/XLSX as the initial verified outputs, and prompt decisions plus representative BHSS samples being available on time.
+
+#### Component planning range for the AI-enabled pilot
+
+| Component | Mandays |
+|---|---:|
+| Requirements lock, POC audit and acceptance design | 8–12 |
+| Platform kernel, sessions, school isolation and feature policy | 14–20 |
+| School structure, users, periods and imports | 8–12 |
+| Activities, roster, attendance and VASK | 10–14 |
+| Forms, questions, versions and publication | 10–14 |
+| Assignments, submissions and peer workflow | 9–13 |
+| Evidence, media, consent, Proof List and correction | 12–17 |
+| Rubrics, observations and official-result review | 11–16 |
+| AI job framework and provider adapters | 15–22 |
+| AI extraction, suggestion and review UI | 12–18 |
+| AI Portfolio generation and claim provenance | 10–15 |
+| Learner profile, snapshot, HTML and XLSX output | 10–15 |
+| Staff queues and operational pages | 7–11 |
+| Deployment, monitoring, backup and security hardening | 8–12 |
+| UAT support, fixes, training and handover | 20–30 |
+| **Component-by-component planning total before overlap/reuse adjustment** | **164–239** |
+
+The component total is deliberately conservative and includes shared foundations from more than one view. For schedule and commercial planning, overlap, reuse and controlled scope reduce the recommended pre-Easter AI-enabled pilot range to **125–175 mandays**. A broader production interpretation with face/speaker processing, multiple providers, local high-volume media processing or generalized flexibility remains **180–250+ mandays**.
+
+The minimum real-AI proof should include one extraction route, source-linked evidence or rubric candidates, source-linked Portfolio generation, provider/prompt provenance, human correction and approval, and manual fallback. Production face matching and speaker identification remain outside the committed pilot unless privacy authority, provider terms, production-data permission and acceptance samples are confirmed.
+
+With approximately sixteen to seventeen effective build weeks before a one-month UAT period, the 125–175 manday plan normally requires two productive developers plus part-time analyst/QA support; a third AI/integration specialist materially reduces the December/January acceleration risk. One developer may produce the controlled demonstration but makes the pre-Easter pilot target high risk.
+
 ## 7 Architecture reconciliation completed
 
 `output/English/Core data relationships.md` has been updated to include:

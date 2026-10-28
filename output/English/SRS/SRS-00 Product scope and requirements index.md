@@ -6,13 +6,19 @@ The platform records academic and non-academic activities, preserves evidence an
 
 Product direction: BHSS is the lead solution proposer/reference school, JC may approve and fund programme operation or adoption, and Octopus Infotech intends to own and supply the reusable product. Ownership, licensing and branding remain subject to written agreement. **Discussed on Meeting Oct 26 - kickstart.**
 
+### 1.1 Requirements authority and validation warning
+
+**This SRS is not a validated market specification.** Except for the current internal direction that Octopus Infotech Limited intends to develop a reusable product, with JC or one or more schools participating in a JC programme as the expected first customer/adoption context, the present product definition, scope, phase plan, priorities, workflows, architecture and cross-school assumptions have been produced through independent internal analysis. No supplied market-research report, interview sample, findings register, validation result, business case, or written BHSS/JC approval currently substantiates those assumptions.
+
+The post-meeting transcript includes an unverified statement that market research had already been done, but it does not identify a responsible owner or a research deliverable. It later discusses obtaining wider school input through JC, a lead school, Victor and Principal Fung; this describes a possible discovery channel and does not prove that a formal study was completed. Until traceable evidence is received, all affected SRS content remains `assumption`, `recommended`, or `open`, as marked, and shall not be represented as a BHSS requirement, JC requirement, validated market need, purchase commitment, or approved product baseline. **Discussed on Meeting Oct 26 - kickstart.**
+
 ## 2. Scope by phase
 
 | Phase | Included outcome |
 |---|---|
 | P0 — POC hardening | Correct navigation and server authorization; explicit field constraints; activity roster and questionnaire imports; JPG/PNG upload and preview; audit of sensitive actions. |
-| P1 — Lean MVP | Full activity/form/submission/evidence/assessment lifecycles; scoped review queues; portfolio snapshots; HTML and controlled XLSX export; period rollover; policy configuration. |
-| P2 — Later | Production OCR/transcription, controlled LLM assistance, PDF/SLP layout, audio/video processing, external portal, guardian workflows and analytics. |
+| P1 — Lean MVP | Full activity/form/submission/evidence/assessment lifecycles; scoped review queues; portfolio snapshots; HTML and controlled XLSX export; period rollover; school isolation and feature-policy control; provider-neutral extraction and Portfolio-generation contracts. |
+| P2 — Later | Production OCR/transcription and LLM-provider implementations behind the P1 contracts; PDF/SLP layout, audio/video processing, external portal, guardian workflows and analytics. |
 
 ## 3. System boundary
 
@@ -47,6 +53,12 @@ flowchart LR
 | PRD-FR-011 | Model-assisted processing shall produce review candidates with provenance, never an automatically published identity, evidence claim, or skill step. | Approved POC interpretation V2-B05–B08 | P0 |
 | PRD-FR-012 | The Portfolio shall consolidate school, teacher, student and authorized-staff evidence so non-academic participation and demonstrated abilities remain visible and traceable. | Discussed on Meeting Oct 26 - kickstart | P1 |
 | PRD-FR-013 | Media may be resolved from school-approved external stores through server-side connectors; raw paths and storage credentials shall not be exposed to browser clients. | Partly addressed L-08; Discussed on Meeting Oct 26 - kickstart | P1 |
+| PRD-FR-014 | Every school-owned record shall be bound to a `school_id`, directly or through an enforced parent relation; identifiers from another school shall be rejected without disclosing the record. | Approved System Analyst architecture decision, 27 Oct 2026 | P0 |
+| PRD-FR-015 | A disabled school and a disabled/unreleased school feature shall be blocked by server-side policy before its service/use-case runs; hiding a UI control is not enforcement. | Approved System Analyst architecture decision, 27 Oct 2026 | P0/P1 |
+| PRD-FR-016 | The kernel shall depend on provider-neutral extraction and Portfolio-generation contracts. It shall validate normalized inputs/outputs, provenance, school scope and human-review state without depending on a provider's internal AI implementation. | Approved System Analyst architecture decision, 27 Oct 2026; follows Discussed on Meeting Oct 26 - kickstart | P1 |
+| PRD-FR-017 | Portfolio visualization and export shall consume an approved frozen snapshot DTO; they shall not call an LLM or interpret raw extraction output. | Approved System Analyst architecture decision, 27 Oct 2026 | P1 |
+| PRD-FR-018 | An official rubric result shall be distinct from the candidate and included maximum supported levels shown for each proof/input type. The official result shall use only explicitly included, eligible, human-confirmed observations and retain the exact selected sources and reviewer decision. | Approved System Analyst architecture decision, 27 Oct 2026 | P1 |
+| PRD-FR-019 | A previously accepted proof, identity association, observation or AI candidate shall remain individually correctable, excludable or supersedable with reason and audit history. Dependent live results shall become `needs_review`/`stale`, and published output shall be withdrawn or replaced through a new approved snapshot rather than silently rewritten. | Approved System Analyst architecture decision, 27 Oct 2026 | P1/P2 |
 
 ## 5. Shared lifecycle vocabulary
 
@@ -142,6 +154,7 @@ The API validation error envelope shall be:
 | AI boundary | H-10 |
 | Activity, classification and locking | M-08, M-12, M-14, L-01, L-04 |
 | Missing states and notifications | M-13, L-05 |
+| Proof/input type catalogue and rubric eligibility | M-25 |
 | Identifiers and import contracts | L-03, L-06 |
 
 ## 10. Acceptance criteria
@@ -152,4 +165,8 @@ The API validation error envelope shall be:
 - A temporary cap is never labelled as an approved school policy.
 - All unresolved requirements link to a stable question ID.
 - Historical submissions, mappings and published snapshots remain reproducible after later edits.
+- Cross-school identifiers, disabled schools and disabled features are rejected consistently by interactive APIs and background workers.
+- Contract tests can replace each extraction or Portfolio-generation provider without changing the kernel workflow or visualization DTO.
+- A source-type maximum cannot be mistaken for or copied into the official step without the selected human-confirmed observations and source trace.
+- Correcting a false face/student association preserves the original decision, identifies every dependant, and requires withdrawal or successor approval for affected published output.
 

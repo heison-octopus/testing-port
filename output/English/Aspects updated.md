@@ -301,25 +301,54 @@ MediaExtract
 
 ### After
 
+#### `processing_jobs`
+
+| Field | Type | Notes |
+|---|---|---|
+| `processing_job_id` | UUID | Primary key |
+| `school_id` | UUID | Required tenant boundary |
+| `job_type` | enum | For example `ocr`, `transcription`, `portfolio_generation` |
+| `feature_key` | text | Checked at create, claim and commit |
+| `source_type` / `source_id` | text / UUID | Platform-owned input reference |
+| `provider_key` | text, nullable | Adapter selection, not provider credentials |
+| `status` | enum | `queued`, `processing`, `retry_wait`, `needs_review`, `completed`, `failed_terminal`, `cancelled` |
+| `progress_percent` | integer | 0–100 |
+| `retry_count` | integer | 0–3 temporary cap |
+| `input_manifest_json` | json | Minimal authorized inputs and references |
+| `input_hash` | text | Idempotency and stale-result check |
+| `idempotency_key` | text | Unique within school/job type |
+| `requested_by_user_id` | UUID | Initiating actor |
+| `created_at` / `started_at` / `finished_at` | timestamp | Lifecycle timestamps |
+| `error_code` / `error_message` | text, nullable | Sanitized failure details |
+
+Workers re-check the school's active state, effective feature policy, consent and input hash when claiming the job and again before committing output.
+
 #### `media_extractions`
 
 | Field | Type | Notes |
 |---|---|---|
 | `media_extraction_id` | UUID | Primary key |
+| `school_id` | UUID | Worker/query isolation context; must match the media asset's school |
 | `media_asset_id` | UUID | References `media_assets` |
+| `processing_job_id` | UUID | References `processing_jobs` |
+| `feature_key` | text | Feature policy checked at create, claim and commit |
 | `extraction_type` | enum | `ocr`, `transcription`, `summary`, `tagging`, `other` |
 | `content_text` | text, nullable | Extracted or generated text |
 | `content_json` | json, nullable | Timecodes, regions, labels, or structured output |
+| `input_hash` | text | Detects stale or changed input |
 | `language_code` | text, nullable | For example `zh-Hant` |
 | `source_type` | enum | `system`, `teacher`, `student`, `import` |
 | `processor_name` | text, nullable | Service or model name |
 | `processor_version` | text, nullable | Reproducibility |
 | `confidence_score` | decimal, nullable | Only when supplied by the processor |
-| `status` | enum | `queued`, `processing`, `completed`, `failed`, `reviewed` |
+| `status` | enum | `queued`, `processing`, `retry_wait`, `needs_review`, `completed`, `failed_terminal`, `cancelled` |
+| `review_status` | enum | `pending`, `accepted`, `corrected`, `rejected` |
 | `error_message` | text, nullable | Processing failure details |
 | `created_by_user_id` | UUID, nullable | Null for automated system jobs |
 | `created_at` | timestamp | Required |
 | `updated_at` | timestamp | Required |
+
+`media_extractions` stores the normalized `ExtractionProvider` result as a candidate. The adapter cannot write this table directly; the kernel validates school/feature/access/consent, input hash, schema and provenance before persistence. Only an accepted/corrected result may become Portfolio-eligible proof.
 
 ---
 
@@ -834,7 +863,7 @@ Changing an activity template or VASK reference record must not retroactively ch
 
 ---
 
-## 12 Users and school membership
+## 12 Schools, feature availability, users and membership
 
 ### Before
 
@@ -855,6 +884,46 @@ User
 - External Time Infinity identifiers need their own namespace and provenance.
 
 ### After
+
+#### `schools`
+
+| Field | Type | Notes |
+|---|---|---|
+| `school_id` | UUID | Primary key; opaque immutable `SchoolId` |
+| `school_code` | text | Unique operational code; changing it does not change `school_id` |
+| `name` | text | Display name |
+| `operating_mode` | enum | `production`, `demo`, `test` |
+| `is_disabled` | boolean | Whole-school operational stop; default `false` |
+| `disabled_reason` | text, nullable | Required when disabled |
+| `disabled_by_user_id` | UUID, nullable | Platform-operations actor |
+| `disabled_at` | timestamp, nullable | Required when disabled |
+| `created_at` | timestamp | Required |
+| `updated_at` | timestamp | Required |
+
+#### `feature_definitions`
+
+| Field | Type | Notes |
+|---|---|---|
+| `feature_key` | text | Primary key; stable machine-readable name |
+| `description` | text | Product-owned explanation |
+| `lifecycle` | enum | `development`, `pilot`, `released`, `retired` |
+| `default_availability` | enum | `disabled`, `pilot`, `enabled` |
+
+#### `school_feature_policies`
+
+| Field | Type | Notes |
+|---|---|---|
+| `school_feature_policy_id` | UUID | Primary key |
+| `school_id` | UUID | References `schools` |
+| `feature_key` | text | References `feature_definitions` |
+| `availability` | enum | `disabled`, `pilot`, `enabled` |
+| `reason` | text, nullable | Change rationale |
+| `starts_at` | timestamp, nullable | Optional activation time |
+| `ends_at` | timestamp, nullable | Optional expiry |
+| `configured_by_user_id` | UUID | Authorized platform-operations actor |
+| `configured_at` | timestamp | Required |
+
+The pair `school_id + feature_key` is unique. A disabled school, retired/unknown feature, or explicit school-level `disabled` is denied. Development/pilot features require an explicit school policy. Feature availability never replaces role, scope, lifecycle, consent or approval checks. A local single-school installation still seeds one `schools` row and uses the same scoped queries.
 
 #### `users`
 
@@ -879,7 +948,7 @@ Examples: `student`, `teacher`, `administrator`, `guardian`.
 |---|---|
 | `user_id` | UUID |
 | `role_id` | UUID |
-| `school_id` | UUID, nullable |
+| `school_id` | UUID | Required for school-scoped roles; nullable only for a separately controlled platform-operations role |
 | `starts_at` | timestamp |
 | `ends_at` | timestamp, nullable |
 
@@ -920,6 +989,7 @@ Not defined in the original file, but identified as a requirement.
 | Field | Type | Notes |
 |---|---|---|
 | `login_event_id` | UUID | Primary key |
+| `school_id` | UUID, nullable | Requested/resolved school context where available |
 | `user_id` | UUID, nullable | May be null for unknown login attempt |
 | `occurred_at` | timestamp | Required |
 | `result` | enum | `success`, `failure`, `locked`, `logout` |
@@ -932,6 +1002,7 @@ Not defined in the original file, but identified as a requirement.
 | Field | Type | Notes |
 |---|---|---|
 | `audit_event_id` | UUID | Primary key |
+| `school_id` | UUID, nullable | Tenant context; null only for platform-global operations |
 | `actor_user_id` | UUID, nullable | Null for system actions |
 | `action_code` | text | For example `feedback.submitted` |
 | `entity_type` | text | For example `feedback` |
@@ -1020,6 +1091,8 @@ flowchart LR
     AM --> PI
     PI --> PL[proof_links]
     PL --> RO[rubric_observations]
+    PI --> PUD[proof_use_decisions]
+    PUD --> RO
     RO --> FS[framework_skills]
     RO --> FST[framework_steps]
 
@@ -1028,7 +1101,7 @@ flowchart LR
     AFA --> F
 ```
 
-The diagram shows storage relationships, not automatic scoring. A response, feedback record or media reference first becomes a typed Proof List item. It affects a framework result only after an authorized human cites it, confirms a rubric condition and completes the separate publication workflow.
+The diagram shows storage relationships, not automatic scoring. A response, feedback record or media reference first becomes a typed Proof List item. It affects a framework result only after an authorized human cites it, confirms a rubric condition, explicitly includes it for that use and completes the separate publication workflow. A target-specific `proof_use_decision` can later exclude, invalidate or supersede the use without deleting the original proof.
 
 ## 15A Student achievements Proud Moments and human review
 
@@ -1062,9 +1135,11 @@ Questionnaire responses, student reflection, and `回顧與展望` share respons
 
 ### Teacher and teaching-assistant initial ratings
 
-`rubric_observations` records the activity, student, rubric/version, axis, satisfied level condition, observer, evidence summary, Proof List links and confirmation status. When an activity is intended to contribute to the published 1–16 skill state, the current scope requires a confirmed observation from an authorized person.
+`rubric_observations` records the activity, student, rubric/version, axis, satisfied level condition, observer, evidence summary, Proof List links, confirmation status and inclusion decision. Proof items separately retain configurable proof/input type, perspective, provenance and declared authorship origin. When an activity is intended to contribute to the published 1–16 skill state, the current scope requires a confirmed observation from an authorized person.
 
-If human confirmation is missing, keep the value missing. Do not convert it to zero and do not let self-review, peer review, or AI inference set the published step. Under the active `MAX-CONFIRMED` policy, the published result is the highest human-confirmed satisfied level for that axis; earlier levels are not prerequisites.
+If human confirmation is missing, keep the value missing. Do not convert it to zero and do not let self-review, peer review, or AI inference set the published step. Under the active `MAX-CONFIRMED` policy, the published result is the highest included, eligible, unrevoked, human-confirmed satisfied level for that rubric version and axis; earlier levels are not prerequisites. Per-proof-type maximums are comparison summaries with exact sources, not official results. A different official level must arise from audited inclusion/exclusion decisions or a new proof-linked human observation, never a source-free override.
+
+`proof_use_decisions` records target type/ID, proof or proof-link ID, decision (`included`, `excluded`, `invalidated`, `superseded`), reason, actor and time. If a used source or identity association is later invalidated, linked observations, claims, generation runs and current snapshots become `needs_review`/`stale`; published output is withdrawn or replaced through a successor snapshot, while history remains reproducible.
 
 ### `peer_review_assignments`
 
@@ -1074,45 +1149,71 @@ Peer review requires an explicit assignment containing the subject student, peer
 
 For AI-assisted summaries and report drafts, retain the selected profile and prompt version together with separate `generated_text`, `teacher_edited_text`, and `final_published_text`. The POC profiles are academic learning and reasoning; non-academic participation and personal growth; and interpersonal collaboration and intrapersonal development. Teacher editing never erases the original generated draft.
 
+The kernel uses two separate provider-neutral ports. `ExtractionProvider` returns normalized text/chunks/candidates and provenance only. `PortfolioGenerator` receives a frozen manifest of accepted, Portfolio-eligible evidence for one `school_id`, student and period/range, and returns structured draft claims with one or more ordered source references per evidence-based claim. The kernel rejects unknown, cross-school, ineligible and out-of-manifest references. Visualization and export receive only the human-approved frozen Portfolio snapshot DTO.
+
+#### `portfolio_generation_runs`
+
+| Field | Type | Notes |
+|---|---|---|
+| `portfolio_generation_run_id` | UUID | Primary key |
+| `school_id` | UUID | Required tenant boundary |
+| `student_user_id` | UUID | Portfolio subject |
+| `period_from_id` / `period_to_id` | UUID | Approved memory range |
+| `feature_key` | text | School feature policy checked at create, claim and commit |
+| `input_manifest_json` | json | Frozen ordered accepted/eligible source items |
+| `input_manifest_hash` | text | Detects later mutation |
+| `profile_key` | text | Approved controlled profile |
+| `generator_name` / `generator_version` | text | Adapter provenance |
+| `prompt_version` | text | Reproducibility |
+| `generated_claims_json` | json | Structured draft sections, claims, ordered source references and warnings |
+| `status` | enum | `queued`, `processing`, `needs_review`, `approved`, `rejected`, `failed_terminal`, `cancelled` |
+| `approved_by_user_id` / `approved_at` | nullable | Human gate |
+
+Production provider ownership and vendor choice remain a P2 delivery decision. P1 defines these contracts, validation and test doubles without requiring the kernel to know how extraction or LLM generation works.
+
 ## 16 Minimum viable implementation
 
 The first database release does not need every optional table. A workable minimum is:
 
-1. `users`
-2. `roles`
-3. `user_roles`
-4. `groups`
-5. `group_memberships`
-6. `activity_templates`
-7. `activity_instances`
-8. `activity_participants`
-9. `frameworks`
-10. `framework_skills`
-11. `framework_steps`
-12. `forms`
-13. `questions`
-14. `form_questions`
-15. `activity_form_assignments`
-16. `form_assignment_recipients`
-17. `form_submissions`
-18. `question_responses`
-19. `feedback`
-20. `feedback_evidence`
-21. `feedback_skill_observations`
-22. `questionnaire_constructs`
-23. `role_definitions`
-24. `user_role_assignments`
-25. `rubric_catalogues`, axes, levels and level conditions
-26. `rubric_aggregation_policies`
-27. `proof_type_definitions`
-28. `proof_items`
-29. `proof_links`
-30. `rubric_observations`
-31. `published_rubric_results`
-32. `review_outlook_memory_settings` and frozen memory items
-33. `source_systems`, import batches, import records and correction history
+1. `schools`
+2. `feature_definitions`
+3. `school_feature_policies`
+4. `users`
+5. `roles`
+6. `user_roles`
+7. `groups`
+8. `group_memberships`
+9. `activity_templates`
+10. `activity_instances`
+11. `activity_participants`
+12. `frameworks`
+13. `framework_skills`
+14. `framework_steps`
+15. `forms`
+16. `questions`
+17. `form_questions`
+18. `activity_form_assignments`
+19. `form_assignment_recipients`
+20. `form_submissions`
+21. `question_responses`
+22. `feedback`
+23. `feedback_evidence`
+24. `feedback_skill_observations`
+25. `questionnaire_constructs`
+26. `role_definitions`
+27. `user_role_assignments`
+28. `rubric_catalogues`, axes, levels and level conditions
+29. `rubric_aggregation_policies`
+30. `proof_type_definitions`
+31. `proof_items`
+32. `proof_links`
+33. `proof_use_decisions`
+34. `rubric_observations`
+35. `published_rubric_results`
+36. `review_outlook_memory_settings` and frozen memory items
+37. `source_systems`, import batches, import records and correction history
 
-Add media processing, shared collections, detailed access grants, VASK tables, cached radar snapshots, and advanced audit data as the corresponding product features are implemented.
+The provider-neutral extraction and Portfolio-generation contracts, validation and test doubles are also P1 requirements; production provider adapters remain P2. Add media processing, shared collections, detailed access grants, VASK tables, cached radar snapshots, and advanced audit data as the corresponding product features are implemented.
 
 ## 17 Decisions that should remain configurable
 

@@ -12,9 +12,12 @@ Define who may see or change each record. Authorization is not role-only: every 
 | Teacher | Activities or students assigned as owner, supporting teacher, TA, assessor or class teacher |
 | SuperTeacher/Staff | Delegated programme, class, year level, review queue or school operation |
 | SchoolAdmin | School-wide administrative scope; raw media remains separately controlled |
+| Platform operations administrator | Hosted-service school availability and feature-policy operation only; no school content, media or assessment access by default |
 | External recipient | No account in P1; receives approved export only |
 
 Account identity, reusable role definitions, effective user-role assignments and named workflow approval assignments are separate records. `class_teacher`, `activity_teacher`, `TA` and `assessor` may be effective-dated role/scope assignments; `reviewer` and `approver` additionally require a named workflow assignment for the record being decided. One user may hold several roles, but every sensitive action records the active role and scope used. **Discussed on Meeting Oct 26 - kickstart.**
+
+The school-role matrix below excludes the platform operations administrator. That authority is limited to hosted-service school availability and feature policy, is separately audited, and does not confer school-content access.
 
 ## 3. Functional requirements
 
@@ -33,6 +36,9 @@ Account identity, reusable role definitions, effective user-role assignments and
 | IAM-FR-011 | Sign-in, sign-out, failed login, role/scope changes, sensitive reads, approvals, imports, exports, corrections and soft deletion shall be audited. | Source-aligned | P0/P1 |
 | IAM-FR-012 | Imported users shall receive activation/invitation records; import files shall not contain plaintext passwords. | Source-aligned | P1 |
 | IAM-FR-013 | Role definitions, effective role assignments and form/proof/rubric approval assignments shall be stored and audited separately. | Confirmed Oct 26 revision | P0 |
+| IAM-FR-014 | Each authenticated request shall resolve exactly one active `school_id`; requested records and referenced identifiers must belong to that school. | Approved System Analyst architecture decision, 27 Oct 2026 | P0 |
+| IAM-FR-015 | When `schools.is_disabled = true`, the server shall reject new sessions, protected requests and new background work for that school while retaining data and audit history. | Approved System Analyst architecture decision, 27 Oct 2026 | P0 |
+| IAM-FR-016 | Feature availability shall be checked in addition to authorization. A feature enabled for a school does not grant any user permission. | Approved System Analyst architecture decision, 27 Oct 2026 | P0/P1 |
 
 ## 4. Capability matrix
 
@@ -59,7 +65,11 @@ Account identity, reusable role definitions, effective user-role assignments and
 flowchart TD
     R[Request] --> S{Valid session and request protection?}
     S -->|No| U[401]
-    S -->|Yes| Role{Role permits record type/action?}
+    S -->|Yes| School{Active school and matching school_id?}
+    School -->|No| X[403/404; audit]
+    School -->|Yes| Feature{Feature available for this school?}
+    Feature -->|No| F[FEATURE_NOT_AVAILABLE; audit]
+    Feature -->|Yes| Role{Role permits record type/action?}
     Role -->|No| D[403]
     Role -->|Yes| Scope{Assignment or delegated scope matches?}
     Scope -->|No| N[404]
@@ -88,6 +98,7 @@ The POC demo account switching mechanism is development-only and shall not exist
 ## 7. Interface requirements
 
 - The authenticated-session response shall return user ID, school ID, active role, effective scopes and capabilities, but no sensitive permission internals.
+- The response may include effective feature availability for presentation, but the API and workers shall re-evaluate the authoritative policy on use.
 - The frontend shall build navigation from capabilities and still handle `403/404` responses.
 - Role and scope changes shall invalidate or refresh affected sessions.
 - Raw-media endpoints shall check a media-specific permission at read time; URLs shall be short-lived and non-guessable.
@@ -101,4 +112,6 @@ The POC demo account switching mechanism is development-only and shall not exist
 5. A form author cannot approve their own version under the default separation rule.
 6. Revoking a session blocks the next protected request.
 7. Every sensitive allow/deny action creates an appropriately minimised audit record.
+8. Disabling a school blocks the next protected request and newly claimed job without deleting any school record.
+9. Enabling a feature for a demo school does not let an otherwise unauthorized user call it.
 

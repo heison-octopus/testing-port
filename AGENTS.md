@@ -42,6 +42,14 @@ Temporary Office lock files beginning with `~$` are not sources.
 - `output/English/Internal system review and manday estimate.md` / `output/Chinese/內部系統檢視及人日估算.md` — source comparison, component/page inventory, lean workflow, and internal effort ranges.
 - `output/English/External lean MVP proposal.md` / `output/Chinese/對外精簡MVP方案.md` — stakeholder-facing recommended scope optimized for fewer mandays.
 
+### Meeting records and follow-up documents
+
+- `output/Chinese/BHSS 啟動會議摘要及待確認事項.docx` — current Chinese BHSS-facing summary of the 26 October 2026 kickstart discussion, including the latest school confirmation questions and requested source materials.
+- `output/BHSS meeting agreements and outstanding inputs 26 October 2026.docx` — current English counterpart to the BHSS-facing meeting summary. Keep its decisions, question IDs, and uncertainty aligned with the current Chinese version even though the filenames are not parallel.
+- `output/BHSS 2026年10月26日會議及內部產品方向紀錄 中英雙語.docx` — unified bilingual internal record. It preserves the BHSS-attended discussion and separately records the post-meeting internal product direction, transcript excerpts attributed to Hillman by the project owner, the multi-school common-core/modular approach, and the product proposition `讓每一位學生被看見` / `Make every student visible`. Post-meeting content in this file is internal direction only and must not be presented as BHSS or JC approval.
+
+Files with an added `_modified` suffix are working copies unless they are explicitly promoted into the list above. Temporary Office lock files beginning with `~$` are never documentation sources.
+
 Start with the English or Chinese `README.md`, then read the architecture, roles, agenda, and data-field documents before changing the domain model. Keep both language sets aligned when a confirmed decision changes their assumptions.
 
 ## Key working model
@@ -56,7 +64,10 @@ Start with the English or Chinese `README.md`, then read the architecture, roles
 - Each question owns a source, meaning and valid ability definition. There is no fixed Question → VASK, RC360 or Skills Builder mapping and no normalized question-to-skill weight. A questionnaire source is the supplied whole instrument, not a database child of a form.
 - Accepted question responses first become source-linked Proof List items. An authorized reviewer may interpret the question, answer, activity context and linked proof against the rubric selected at Portfolio review time.
 - Rubric catalogues declare labelling and assessment capabilities independently. Radar output requires versioned axes, ordered levels and concrete conditions; a vocabulary-only catalogue remains useful context but cannot assess.
-- The active Skills Builder working policy takes the highest human-confirmed satisfied level for each axis. Levels are not prerequisites; another aggregation rule must be separately versioned before use.
+- The active Skills Builder working policy takes the highest included, eligible, unrevoked and human-confirmed satisfied level for each rubric version and axis. Levels are not prerequisites; another aggregation rule must be separately versioned before use.
+- Preserve proof/input type, perspective, provenance and declared authorship origin separately. Show the maximum supported level per proof type as an evidence summary, never as the official result; the official result retains the exact selected observations, proof links and reviewer decision.
+- An assigned SuperTeacher/authorized Staff reviewer may include or exclude proof/observations with reason, but cannot enter a source-free level override. SchoolAdmin has policy authority only unless separately assigned as the reviewer.
+- Parallel LLM/provider suggestions never overwrite each other or the official result. Later source or identity invalidation marks dependants `needs_review`/`stale`; published output is withdrawn or reissued through an audited successor rather than silently recalculated.
 - A review/outlook memory setting selects the school-period range and whether to include activity descriptions, confirmed outcomes, accepted proof summaries and published rubric results. Generated outputs freeze the exact inputs used.
 - Activity targets, responses, feedback, media, and observations are evidence. They do not automatically promote a student to a framework step.
 - Teacher/TA review is the human gate when evidence affects a published 1–16 skill step.

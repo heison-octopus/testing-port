@@ -31,18 +31,18 @@ The matching Hong Kong Traditional Chinese edition is in [`../../Chinese/SRS/`](
 |---|---|
 | [SRS-00](SRS-00%20Product%20scope%20and%20requirements%20index.md) | Scope, phases, shared rules, validation catalogue and traceability |
 | [SRS-01](SRS-01%20Identity%20sessions%20and%20access%20control.md) | Authentication, roles, scopes, permissions and audit |
-| [SRS-02](SRS-02%20School%20structure%20and%20academic%20periods.md) | Students, classes, membership history and rollover |
+| [SRS-02](SRS-02%20School%20structure%20and%20academic%20periods.md) | School isolation, feature availability, students, membership history and rollover |
 | [SRS-03](SRS-03%20Source%20systems%20imports%20and%20data%20quality.md) | CSV/XLSX imports, matching, correction and reconciliation |
 | [SRS-04](SRS-04%20Activities%20participants%20and%20VASK.md) | Activities, staff, students, VASK and approval |
 | [SRS-05](SRS-05%20Forms%20question%20blocks%20and%20governance.md) | Forms, question-owned abilities, Proof List registration, versions and approval |
 | [SRS-06](SRS-06%20Assignments%20submissions%20and%20peer%20review.md) | Assignments, responses, review and peer allocation |
-| [SRS-07](SRS-07%20Evidence%20media%20consent%20and%20external%20achievements.md) | Uploads, consent, moderation and certificates |
-| [SRS-08](SRS-08%20Assessment%20eight%20skills%20and%20sixteen%20steps.md) | Evidence-backed observations and 1–16 steps |
-| [SRS-09](SRS-09%20Portfolio%20Proud%20Moments%20and%20exports.md) | Portfolio snapshots, publication and external delivery |
-| [SRS-10](SRS-10%20AI-assisted%20processing%20and%20provenance.md) | OCR, transcription and controlled drafting |
-| [SRS-11](SRS-11%20Infrastructure%20security%20and%20operations.md) | Deployment, storage, jobs, backup and monitoring |
-| [SRS-12](SRS-12%20Page%20catalogue%20and%20role%20visibility.md) | Pages, navigation and role-specific visibility |
-| [SRS-13](SRS-13%20Scope%20v2%20rubric%20processing%20and%20learner%20profile.md) | Core input, attendance, rubric catalogues, observable processing and learner-profile provenance |
+| [SRS-07](SRS-07%20Evidence%20media%20consent%20and%20external%20achievements.md) | Uploads, consent, moderation, source-level exclusion and certificates |
+| [SRS-08](SRS-08%20Assessment%20eight%20skills%20and%20sixteen%20steps.md) | Source-type comparison, selected evidence and 1–16 steps |
+| [SRS-09](SRS-09%20Portfolio%20Proud%20Moments%20and%20exports.md) | Portfolio snapshots, source trace, withdrawal and external delivery |
+| [SRS-10](SRS-10%20AI-assisted%20processing%20and%20provenance.md) | Provider-neutral contracts, parallel AI candidates, provenance and human review |
+| [SRS-11](SRS-11%20Infrastructure%20security%20and%20operations.md) | Deployment, dependency cascades, storage, jobs, backup and monitoring |
+| [SRS-12](SRS-12%20Page%20catalogue%20and%20role%20visibility.md) | Pages, source-comparison controls, navigation and role-specific visibility |
+| [SRS-13](SRS-13%20Scope%20v2%20rubric%20processing%20and%20learner%20profile.md) | Core input, attendance, observable processing, manual correction and learner-profile provenance |
 
 ## Shared interpretation rule
 
