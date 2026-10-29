@@ -8,7 +8,7 @@ const groups = [
   { label: '', pages: [{ id: 'overview', label: ['Overview', '概覽'], icon: House, visible: () => true }] },
   { label: 'INPUT', pages: [
     { id: 'activities', label: ['Activities', '活動'], icon: CalendarDots, visible: (session: Session) => session.pageAccess.activities },
-    { id: 'imports', label: ['Data imports', '數據匯入'], icon: Database, visible: (session: Session) => session.pageAccess.imports },
+    { id: 'imports', label: ['Data operations', '數據操作'], icon: Database, visible: (session: Session) => session.pageAccess.imports },
     { id: 'responses', label: ['Activity responses', '活動回應'], icon: ChatCircleText, visible: (session: Session) => session.pageAccess.responses },
     { id: 'staff', label: ['Staff directory', '教職員名錄'], icon: AddressBook, visible: (session: Session) => session.pageAccess.staff },
   ] },
@@ -25,7 +25,7 @@ const groups = [
     { id: 'portfolios', label: ['Published Portfolio', '已發布 Portfolio'], icon: Eye, visible: (session: Session) => session.pageAccess.portfolios },
   ] },
   { label: 'SYSTEM', pages: [
-    { id: 'policy', label: ['Policy controls', '權限政策'], icon: SlidersHorizontal, visible: (session: Session) => session.pageAccess.policy },
+    { id: 'policy', label: ['School controls', '校本控制'], icon: SlidersHorizontal, visible: (session: Session) => session.pageAccess.policy },
     { id: 'catalogue', label: ['POC page catalogue', 'POC 頁面目錄'], icon: ListChecks, visible: (session: Session) => session.pageAccess.catalogue },
   ] },
 ] as const;

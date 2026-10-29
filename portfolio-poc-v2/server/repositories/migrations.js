@@ -612,4 +612,70 @@ export const migrations = [
       CREATE INDEX idx_activity_dependency_impacts ON activity_dependency_impacts(activity_id,impact_status,dependency_type);
     `,
   },
+  {
+    version: 10,
+    name: 'versioned_rubric_packages_and_portfolio_pinning',
+    sql: `
+      ALTER TABLE rubric_catalogues ADD COLUMN selection_mode TEXT NOT NULL DEFAULT 'definition_only';
+      ALTER TABLE rubric_catalogues ADD COLUMN score_out_of REAL;
+      ALTER TABLE rubric_catalogues ADD COLUMN supersedes_rubric_catalogue_id TEXT;
+      ALTER TABLE rubric_catalogues ADD COLUMN activated_by_user_id TEXT;
+      ALTER TABLE rubric_catalogues ADD COLUMN activated_at TEXT;
+      ALTER TABLE rubric_catalogues ADD COLUMN disabled_reason TEXT;
+      ALTER TABLE rubric_catalogues ADD COLUMN disabled_by_user_id TEXT;
+      ALTER TABLE rubric_catalogues ADD COLUMN disabled_at TEXT;
+      CREATE TABLE rubric_groups(
+        rubric_group_id TEXT PRIMARY KEY,
+        rubric_catalogue_id TEXT NOT NULL REFERENCES rubric_catalogues(rubric_catalogue_id),
+        group_code TEXT NOT NULL,
+        name_en TEXT NOT NULL,
+        name_zh TEXT NOT NULL,
+        display_order INTEGER NOT NULL,
+        status TEXT NOT NULL,
+        disabled INTEGER NOT NULL DEFAULT 0
+      );
+      ALTER TABLE rubric_axes ADD COLUMN rubric_group_id TEXT;
+      CREATE TABLE rubric_step_definitions(
+        step_definition_id TEXT PRIMARY KEY,
+        rubric_catalogue_id TEXT NOT NULL REFERENCES rubric_catalogues(rubric_catalogue_id),
+        rubric_group_id TEXT NOT NULL REFERENCES rubric_groups(rubric_group_id),
+        axis_id TEXT NOT NULL REFERENCES rubric_axes(axis_id),
+        level_id TEXT NOT NULL REFERENCES rubric_levels(level_id),
+        step_number INTEGER NOT NULL,
+        step_name_en TEXT,
+        step_name_zh TEXT NOT NULL,
+        definition_en TEXT,
+        definition_zh TEXT NOT NULL,
+        score_min REAL,
+        score_max REAL,
+        score_out_of REAL,
+        source_reference TEXT NOT NULL,
+        status TEXT NOT NULL,
+        disabled INTEGER NOT NULL DEFAULT 0,
+        UNIQUE(rubric_catalogue_id,axis_id,step_number)
+      );
+      CREATE TABLE rubric_import_drafts(
+        rubric_import_draft_id TEXT PRIMARY KEY,
+        school_id TEXT NOT NULL,
+        source_file_name TEXT NOT NULL,
+        source_sha256 TEXT NOT NULL,
+        uploaded_by_user_id TEXT NOT NULL,
+        uploaded_at TEXT NOT NULL,
+        validation_status TEXT NOT NULL,
+        validation_errors_json TEXT NOT NULL,
+        workbook_json TEXT NOT NULL,
+        successor_rubric_catalogue_id TEXT,
+        committed_at TEXT
+      );
+      ALTER TABLE portfolio_working_versions ADD COLUMN rubric_catalogue_id TEXT REFERENCES rubric_catalogues(rubric_catalogue_id);
+      ALTER TABLE portfolio_snapshots ADD COLUMN rubric_catalogue_id TEXT REFERENCES rubric_catalogues(rubric_catalogue_id);
+      UPDATE rubric_catalogues SET selection_mode='definition_only',score_out_of=NULL,activated_by_user_id='USR-ADM-001',activated_at='2026-08-20T08:00:00+08:00' WHERE rubric_catalogue_id='RUB-SB-UF2';
+      UPDATE rubric_catalogues SET selection_mode='definition_only',score_out_of=NULL WHERE rubric_catalogue_id<>'RUB-SB-UF2';
+      UPDATE portfolio_working_versions SET rubric_catalogue_id='RUB-SB-UF2' WHERE rubric_catalogue_id IS NULL;
+      UPDATE portfolio_snapshots SET rubric_catalogue_id='RUB-SB-UF2' WHERE rubric_catalogue_id IS NULL;
+      CREATE INDEX idx_rubric_groups_catalogue ON rubric_groups(rubric_catalogue_id,display_order);
+      CREATE INDEX idx_rubric_steps_axis ON rubric_step_definitions(rubric_catalogue_id,axis_id,step_number);
+      CREATE INDEX idx_portfolio_rubric ON portfolio_working_versions(rubric_catalogue_id,student_user_id,period_id);
+    `,
+  },
 ];

@@ -245,6 +245,11 @@ Each school configures activity approval independently from form, submission, Po
 5. If no approved version exists, the Portfolio is marked `no_approved_version` and appears in a filterable staff queue and escalation view.
 6. Student-authored text retains declared authorship and does not need external proof merely to be shown as the student's own statement. LLM/system-generated claims and rubric-derived statements require resolvable sources/proof and versioned provenance.
 7. For `Me as a learner`, preserve generated, teacher-edited and final-approved versions. A class teacher or other authorized editor may edit only that generated narrative field, and the final text still requires the configured teacher/staff approval.
+8. The working version pins the SchoolAdmin-active rubric ID/version when it is generated. Review, approval and publication cannot silently switch that version; activating a successor affects only later generated working versions.
+
+## Rubric catalogue authority
+
+**Confirmed System Analyst direction, 29 Oct 2026; not BHSS/JC approval.** An import operator with `import.export` may download the real four-sheet rubric package or a separate new-record template. `import.run` may stage and validate a package; `import.commit` may create a successor draft. None of these capabilities activates the rubric or grants assessment authority. SchoolAdmin with `policy.manage` may activate only a validated successor and must record a reason. An assigned reviewer with assessment-review capability selects evidence/steps for a particular learner; SchoolAdmin does not receive that learner-assessment power merely by managing the active catalogue.
 
 ## Form authority and publication rule
 

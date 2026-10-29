@@ -1,9 +1,16 @@
-import type { ActivityCatalogueExport, ImportBatchDetail, ImportWorkspace } from '../../shared/types';
+import type { ActivityCatalogueExport, ImportBatchDetail, ImportWorkspace, RubricImportPreview, RubricPackage, RubricWorkbookDownload, RubricWorkspace } from '../../shared/types';
 import { call } from './transport';
 
 export const importsApi = {
   imports: () => call<ImportWorkspace>('/imports'),
   exportActivityCatalogue: () => call<ActivityCatalogueExport>('/imports/activity-catalogue/export'),
+  rubrics: () => call<RubricWorkspace>('/imports/rubrics'),
+  rubricPackage: (rubricId: string) => call<RubricPackage>(`/imports/rubrics/${rubricId}`),
+  exportRubrics: () => call<RubricWorkbookDownload>('/imports/rubrics/export'),
+  rubricTemplate: () => call<RubricWorkbookDownload>('/imports/rubrics/template'),
+  previewRubrics: (file: File) => { const body = new FormData(); body.set('file', file); return call<RubricImportPreview>('/imports/rubrics/preview', { method: 'POST', body }); },
+  commitRubricSuccessor: (draftId: string, sourceRubricCatalogueId: string) => call<RubricPackage>(`/imports/rubrics/drafts/${draftId}/commit`, { method: 'POST', body: JSON.stringify({ sourceRubricCatalogueId }) }),
+  activateRubric: (rubricId: string, reason: string) => call<RubricWorkspace>(`/imports/rubrics/${rubricId}/activate`, { method: 'POST', body: JSON.stringify({ reason }) }),
   uploadActivityCatalogue: (file: File) => {
     const body = new FormData();
     body.set('file', file);

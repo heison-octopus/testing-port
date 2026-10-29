@@ -1,0 +1,2 @@
+external_user_id,staff_number,name_en,name_zh,position_code,staff_group_code,effective_from,status,disabled
+EXT-T-NEW,T999,Example Teacher,示例老師,TEACHER,ENG_TEACHERS,2026-09-01,active,false

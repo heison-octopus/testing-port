@@ -7,6 +7,7 @@ import { llmPlaygroundService } from '../services/llmPlaygroundService.js';
 import { assessmentService } from '../services/assessmentService.js';
 import { memorableService } from '../services/memorableService.js';
 import { importService } from '../services/importService.js';
+import { rubricService } from '../services/rubricService.js';
 import { openAiCompatibleChat } from '../adapters/openAiCompatibleChat.js';
 
 const response = (status, work) => async (req, res, next) => { try { res.status(status).json(await work(req)); } catch (error) { next(error); } };
@@ -22,6 +23,13 @@ export const controller = {
   applyPolicy: created(req => identityService.applyPolicy(req.user, req.body)),
   imports: ok(req => importService.workspace(req.user)),
   exportActivityCatalogue: ok(req => importService.exportActivityCatalogue(req.user)),
+  rubrics: ok(req => rubricService.workspace(req.user)),
+  rubricPackage: ok(req => rubricService.package(req.user, req.params.rubricId)),
+  exportRubrics: ok(req => rubricService.export(req.user)),
+  rubricTemplate: ok(req => rubricService.template(req.user)),
+  previewRubrics: created(req => rubricService.preview(req.user, req.file)),
+  commitRubricSuccessor: created(req => rubricService.commit(req.user, req.params.draftId, req.body)),
+  activateRubric: ok(req => rubricService.activate(req.user, req.params.rubricId, req.body)),
   uploadActivityCatalogue: created(req => importService.uploadActivityCatalogue(req.user, req.file)),
   importDetail: ok(req => importService.detail(req.user, req.params.batchId)),
   uploadImport: created(req => importService.upload(req.user, req.file, req.body)),

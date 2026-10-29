@@ -1,0 +1,2 @@
+activity_id,title_en,title_zh,activity_type,start_at,end_at,owner_staff_number,operational_status,disabled
+,Example activity,示例活動,project,2026-11-01T09:00:00+08:00,2026-11-01T10:00:00+08:00,T001,planned,false

@@ -84,6 +84,7 @@ function validatePackage(user, input) {
   const participantIds = [...new Set((input.participantIds || []).filter(Boolean))];
   const vaskItemIds = [...new Set((input.vaskItemIds || []).filter(Boolean))];
   const riskFlags = [...new Set((input.riskFlags || []).filter(Boolean))];
+  const teacherGroupIds = [...new Set((input.teacherGroupIds || []).filter(Boolean))];
   if (!participantIds.length) fail(400, 'Select at least one participant');
   if (!vaskItemIds.length) fail(400, 'Select at least one VASK intention');
   if (!riskFlags.length || riskFlags.some(flag => !allowedRiskFlags.has(flag)) || (riskFlags.includes('none') && riskFlags.length > 1)) fail(400, 'Select valid activity risk flags; “none” cannot be combined with another flag');
@@ -94,7 +95,14 @@ function validatePackage(user, input) {
   if (vaskItemIds.some(id => !validVask.has(id))) fail(400, 'Select VASK items from the active catalogue');
   const form = activityRepository.formVersion(input.formVersionId);
   if (!form || form.review_status !== 'approved' || form.publication_status !== 'published') fail(400, 'Select one approved and published form version');
-  return { participantIds, vaskItemIds, riskFlags };
+  const supportingStaff = activityRepository.activeStaffGroupMembers(user.school_id, teacherGroupIds);
+  if (teacherGroupIds.length && !supportingStaff.length) fail(400, 'Select active teacher groups with at least one member');
+  const questionnaire = Array.isArray(input.questionnaire) ? input.questionnaire : [];
+  if (questionnaire.length > 50) fail(400, 'An activity questionnaire may contain at most 50 questions');
+  questionnaire.forEach((question, index) => {
+    if (!question?.promptEn?.trim() || question.promptEn.trim().length > 2_000 || String(question.promptZh || '').length > 2_000) fail(400, `Question ${index + 1} requires valid text within 2,000 characters`);
+  });
+  return { participantIds, vaskItemIds, riskFlags, teacherGroupIds, supportingStaff, questionnaire, form };
 }
 
 export const activityService = {
@@ -131,15 +139,36 @@ export const activityService = {
     const activityPackage = validatePackage(user, input);
     const stamp = new Date().toISOString();
     const id = `ACT-DEMO-${randomUUID()}`, revisionId = `AREV-DEMO-${randomUUID()}`;
+    const formDraftId = activityPackage.questionnaire.length ? `FV-ACT-${randomUUID()}` : null;
     activityRepository.create({
       activity: { id, schoolId: user.school_id, groupId: input.groupId || null, createdBy: user.user_id, periodId: period.period_id, createdAt: stamp },
-      revision: { id: revisionId, titleEn: input.titleEn.trim(), titleZh: input.titleZh?.trim() || '', descriptionEn: input.descriptionEn.trim(), descriptionZh: input.descriptionZh?.trim() || '', activityType: input.activityType || 'project', subjectId: input.subjectId || null, departmentId: input.departmentId || null, startAt: input.startAt, endAt: input.endAt, ownerId: user.user_id, formVersionId: input.formVersionId, mediaExpected: input.mediaExpected ? 1 : 0, location: input.location?.trim() || '', publisherId: null },
+      revision: { id: revisionId, titleEn: input.titleEn.trim(), titleZh: input.titleZh?.trim() || '', descriptionEn: input.descriptionEn.trim(), descriptionZh: input.descriptionZh?.trim() || '', activityType: `${input.activityNature || 'academic'}:${input.activitySetting || 'in_class'}`, subjectId: input.subjectId || null, departmentId: input.departmentId || null, startAt: input.startAt, endAt: input.endAt, ownerId: user.user_id, formVersionId: formDraftId || input.formVersionId, mediaExpected: input.mediaExpected ? 1 : 0, location: input.location?.trim() || '', publisherId: null },
       owner: { id: `AP-DEMO-${randomUUID()}`, userId: user.user_id, roleAssignmentId: decision.roleAssignmentId || null },
       participants: activityPackage.participantIds.map(userId => ({ id: `AP-DEMO-${randomUUID()}`, userId })),
+      supportingStaff: [...new Map(activityPackage.supportingStaff.filter(item => item.user_id !== user.user_id).map(item => [item.user_id, item])).values()].map(item => ({ id: `AP-DEMO-${randomUUID()}`, userId: item.user_id, groupId: item.staff_group_id })),
       vaskItemIds: activityPackage.vaskItemIds,
       riskFlags: activityPackage.riskFlags,
+      formDraft: formDraftId ? {
+        id: formDraftId,
+        templateId: `AF-ACT-${id}`,
+        nameEn: `${input.titleEn.trim()} questionnaire`,
+        nameZh: `${input.titleZh?.trim() || input.titleEn.trim()}問卷`,
+        version: '1.0-draft',
+        supersedesId: activityPackage.form.form_version_id,
+        notes: 'Activity-specific successor draft created from the active question bank; requires separate form approval and publication before activity activation.',
+        questions: activityPackage.questionnaire.map((question, index) => ({
+          itemKey: `activity_question_${String(index + 1).padStart(2, '0')}`,
+          questionId: question.bankItemId || null,
+          promptEn: question.promptEn.trim(),
+          promptZh: question.promptZh?.trim() || question.promptEn.trim(),
+          required: Boolean(question.required),
+          abilityCode: question.abilityCode || null,
+          abilityNameEn: question.abilityNameEn || null,
+          abilityNameZh: question.abilityNameZh || null,
+        })),
+      } : null,
     });
-    identityRepository.audit(user.school_id, user.user_id, 'activity.created', 'activity', id, `Period resolved by server: ${period.period_id}`);
+    identityRepository.audit(user.school_id, user.user_id, 'activity.created', 'activity', id, `Period resolved by server: ${period.period_id}; active VASK labels: ${activityPackage.vaskItemIds.join(',')}; teacher groups: ${activityPackage.teacherGroupIds.join(',') || 'owner only'}; questionnaire: ${formDraftId || input.formVersionId}`);
     return this.one(user, id);
   },
   revise(user, activityId, input) {

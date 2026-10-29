@@ -40,6 +40,9 @@ Development bands are display groupings, not separate marks.
 | ASM-FR-018 | The official result shall retain the included observation IDs, proof links, source-type breakdown, reviewer decision/rationale and complete calculation trace. | Approved System Analyst architecture decision, 27 Oct 2026 | P1 |
 | ASM-FR-019 | The system shall prohibit a source-free level override. A different level may be adopted only through inclusion/exclusion decisions or a new human-confirmed observation linked to eligible proof. | Approved System Analyst architecture decision, 27 Oct 2026 | P0/P1 |
 | ASM-FR-020 | If a used proof, identity association or observation is later excluded, corrected, invalidated or superseded, dependent results shall become `needs_review`/`stale`; the system shall not automatically choose a replacement level. | Approved System Analyst architecture decision, 27 Oct 2026 | P1 |
+| ASM-FR-021 | SchoolAdmin shall select the school-active assessment-capable rubric version from validated catalogues. A newly uploaded rubric remains draft/unavailable until axes, ordered levels, concrete conditions and publication capability pass validation and explicit activation. | Confirmed System Analyst direction, 29 Oct 2026; not BHSS/JC approval | P0/P1 |
+| ASM-FR-022 | The active skill rubric and the active activity-ability labelling set shall be separately configured and visibly identified. Changing either shall not silently re-interpret historical observations, labels or published results. | Confirmed System Analyst direction, 29 Oct 2026; not BHSS/JC approval | P0/P1 |
+| ASM-FR-023 | SchoolAdmin reference configuration shall expose two independent user-manageable slots: `activity_labelling` and `assessment_rubric`. Every uploaded catalogue shall declare which capability it supplies, and activation in one slot shall not activate or replace the other. Skills Builder 1–16 and a future validated RC360 catalogue are assessment-rubric candidates only; unresolved RC360 content shall remain unavailable for assessment activation. | Confirmed System Analyst direction, 29 Oct 2026; not BHSS/JC approval | P0/P1 |
 
 ## 4. Observation field contract
 
@@ -99,4 +102,15 @@ flowchart LR
 - If level 8 is excluded with a recorded reason and level 4 remains included, `MAX-CONFIRMED` publishes 4; it does not store an arbitrary manual override.
 - A media/face association later proven to refer to another student marks every dependent observation and current snapshot for review and does not automatically select the next available level.
 - Two LLMs may return different suggestions for the same frozen input; both remain visible with provenance and neither overwrites the other or the official result.
+
+## 8. Rubric step-selection modes and lifecycle
+
+**Confirmed System Analyst direction, 29 Oct 2026; not BHSS/JC approval.** Each immutable rubric version declares one mode:
+
+- `definition_only`: the assigned authorized reviewer uses the ordered step definitions and cited eligible evidence; no numerical score is required.
+- `score_range`: every active skill has complete, valid and non-overlapping bands covering 0 to `score_out_of`. If the scale is omitted, it defaults to 10. The selected step, definition and exact score remain in the decision trace.
+
+An active version cannot be edited directly. Import or in-platform amendment creates a validated successor draft; authorized SchoolAdmin activation supersedes the old active version for future use. Previously confirmed observations and published results retain their exact rubric catalogue/version and are not converted automatically.
+
+Acceptance: definition-only review succeeds without a score; score-mode activation fails when a band is missing, overlaps, has a gap, begins above 0 or ends below the declared scale; changing the active rubric cannot alter a historical result.
 

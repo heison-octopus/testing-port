@@ -3,6 +3,7 @@ import { portfolioRepository } from '../repositories/portfolioRepository.js';
 import { approvalRepository } from '../repositories/approvalRepository.js';
 import { identityRepository } from '../repositories/identityRepository.js';
 import { memorableRepository } from '../repositories/memorableRepository.js';
+import { rubricRepository } from '../repositories/rubricRepository.js';
 import { capabilityDecision, fail, requireCapability, sessionProfile } from './access.js';
 
 function accessResource(studentId, periodId) {
@@ -27,7 +28,9 @@ export const portfolioService = {
     if (!canSee(user, studentId, periodId)) fail(404, 'Portfolio not found');
     const student = identityRepository.user(studentId);
     if (!student) fail(404, 'Student not found');
-    return { student: { id: student.user_id, name: student.name_en, nameZh: student.name_zh }, periodId, skillSummary: portfolioRepository.skillSummary(studentId, periodId), versions: portfolioRepository.versions(studentId, periodId).map(item => portfolioRepository.version(item.portfolio_working_version_id)), official: portfolioRepository.official(studentId, periodId) };
+    const versions = portfolioRepository.versions(studentId, periodId).map(item => portfolioRepository.version(item.portfolio_working_version_id));
+    const official = portfolioRepository.official(studentId, periodId), rubricId = versions[0]?.rubric_catalogue_id || official?.version?.rubric_catalogue_id || rubricRepository.activeAssessment()?.rubric_catalogue_id;
+    return { student: { id: student.user_id, name: student.name_en, nameZh: student.name_zh }, periodId, rubric: rubricId ? rubricRepository.catalogue(rubricId) : null, skillSummary: rubricId ? portfolioRepository.skillSummary(studentId, periodId, rubricId) : [], versions, official };
   },
   editor(user, studentId, periodId = '2026-27-P1') {
     if (user.user_type !== 'student' || user.user_id !== studentId) fail(404, 'Portfolio editor not found');
@@ -39,7 +42,8 @@ export const portfolioService = {
     const student = identityRepository.user(studentId);
     if (!student) fail(404, 'Student not found');
     const official = portfolioRepository.official(studentId, periodId);
-    return { student: { id: student.user_id, name: student.name_en, nameZh: student.name_zh }, periodId, skillSummary: portfolioRepository.skillSummary(studentId, periodId), official };
+    const rubricId = official?.version?.rubric_catalogue_id || rubricRepository.activeAssessment()?.rubric_catalogue_id;
+    return { student: { id: student.user_id, name: student.name_en, nameZh: student.name_zh }, periodId, rubric: rubricId ? rubricRepository.catalogue(rubricId) : null, skillSummary: rubricId ? portfolioRepository.skillSummary(studentId, periodId, rubricId) : [], official };
   },
   createDraft(user, input) {
     if (user.user_type !== 'student' || user.user_id !== input.studentId) fail(403, 'Students may edit only their own working Portfolio');
@@ -47,8 +51,10 @@ export const portfolioService = {
     const periodId = input.periodId || '2026-27-P1';
     const memorableSelections = memorableRepository.selections(user.user_id, periodId).filter(item => ['submitted','approved'].includes(item.submission_status));
     const versions = portfolioRepository.versions(user.user_id, periodId), latest = versions[0];
+    const activeRubric = rubricRepository.activeAssessment();
+    if (!activeRubric) fail(400, 'No validated active assessment rubric is available');
     const id = `PWV-DEMO-${randomUUID()}`;
-    portfolioRepository.createDraft({ id, schoolId: user.school_id, studentId: user.user_id, periodId, number: (latest?.version_number || 0) + 1, supersedesId: latest?.portfolio_working_version_id || null, selfIntroduction: input.selfIntroduction.trim(), memorableSelections, createdAt: new Date().toISOString() });
+    portfolioRepository.createDraft({ id, schoolId: user.school_id, studentId: user.user_id, periodId, number: (latest?.version_number || 0) + 1, supersedesId: latest?.portfolio_working_version_id || null, rubricCatalogueId: activeRubric.rubric_catalogue_id, selfIntroduction: input.selfIntroduction.trim(), memorableSelections, createdAt: new Date().toISOString() });
     identityRepository.audit(user.school_id, user.user_id, 'portfolio.draft.created', 'portfolio_working_version', id);
     return this.editor(user, user.user_id, periodId);
   },

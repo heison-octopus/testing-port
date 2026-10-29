@@ -1,6 +1,14 @@
 axis_id,rubric_catalogue_id,axis_code,name_en,name_zh,axis_kind,display_order,status,notes
 AX-VASK-COMMUNICATION,RUB-VASK-2026,communication,Communication,溝通,label,1,active,Descriptive VASK item
 AX-VASK-SELF-AWARENESS,RUB-VASK-2026,self_awareness,Self-awareness,自我認識,label,2,active,Descriptive VASK item
+AX-VASK-V1,RUB-VASK-2026,V1,Care for others,關愛他人,label,3,active,Descriptive Values label for activity intent
+AX-VASK-V2,RUB-VASK-2026,V2,Integrity,誠信,label,4,active,Descriptive Values label for activity intent
+AX-VASK-A1,RUB-VASK-2026,A1,Positive learning attitude,積極學習態度,label,5,active,Descriptive Attitudes label for activity intent
+AX-VASK-A2,RUB-VASK-2026,A2,Openness to experience,樂於接受新體驗,label,6,active,Descriptive Attitudes label for activity intent
+AX-VASK-S1,RUB-VASK-2026,S1,Communication,溝通能力,label,7,active,Descriptive Skills label for activity intent
+AX-VASK-S2,RUB-VASK-2026,S2,Collaboration,協作能力,label,8,active,Descriptive Skills label for activity intent
+AX-VASK-K1,RUB-VASK-2026,K1,Community and society,社區與社會,label,9,active,Descriptive Knowledge label for activity intent
+AX-VASK-K2,RUB-VASK-2026,K2,Health and well-being,健康與身心,label,10,active,Descriptive Knowledge label for activity intent
 AX-SB-LISTEN,RUB-SB-UF2,listening,Listening,聆聽,assessable_axis,1,active,Uses ordered official levels and conditions
 AX-SB-SPEAK,RUB-SB-UF2,speaking,Speaking,說話,assessable_axis,2,active,Uses ordered official levels and conditions
 AX-SB-PROBLEM,RUB-SB-UF2,problem_solving,Problem Solving,解難,assessable_axis,3,active,Uses ordered official levels and conditions

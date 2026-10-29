@@ -1,0 +1,2 @@
+rubric_code,name_en,name_zh,version,labelling_capable,assessment_capable,radar_eligible,level_order_type,status,disabled
+RUB-EXAMPLE,Example rubric,示例 Rubric,1.0,true,false,false,none,draft,false

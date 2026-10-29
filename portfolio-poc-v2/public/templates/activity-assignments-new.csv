@@ -1,0 +1,2 @@
+activity_id,student_identifier,student_name,group_code,planned_attendance_status,disabled
+ACT-EXAMPLE-001,S1999,Example Student,S1X-2026-27,planned,false

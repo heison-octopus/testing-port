@@ -239,6 +239,19 @@ For each rubric version and axis, the authorized review screen groups eligible h
 
 An assigned reviewer holding the required assessment-review capability and scope decides which observations and proof links are included in the official calculation. A person holding an effective assessor capability may propose or confirm an observation within assignment scope; a Teacher or TA position alone grants neither action. SchoolAdmin configures policy but receives no assessment authority merely from that role. Under `MAX-CONFIRMED`, the published level is the highest level among the included, eligible, unrevoked and human-confirmed observations for the same rubric version and axis. The reviewer may exclude an unsuitable candidate with a recorded reason, but cannot enter a source-free override. Selecting a higher level requires a human-confirmed observation linked to eligible proof.
 
+### Rubric package, selection mode and Portfolio version pinning
+
+**Confirmed System Analyst direction, 29 Oct 2026; not BHSS/JC approval.** A rubric version is an immutable, linked package: catalogue/version → rubric group → skill/axis → ordered step definition. The school round trip uses one XLSX with four linked sheets: `rubric_catalogues`, `rubric_groups`, `rubric_skills`, and `rubric_steps`. “Export all” contains the actual stored records and stable IDs; the separate new-record template contains headers/sample guidance only. Every imported row preserves source file/hash, uploader, upload time, validation result and commit/activation audit. Soft disable is used instead of hard deletion.
+
+Each rubric version declares exactly one `selection_mode`:
+
+- `definition_only`: an authorized reviewer compares the eligible evidence with the ordered step definitions and confirms the supported step. A score is neither required nor invented.
+- `score_range`: each active step requires a valid, complete and non-overlapping range for every skill. The declared scale defaults to 10 only when the package omits `score_out_of`; ranges must cover 0 through that scale. The resulting step definition and exact score remain traceable.
+
+Editing an active rubric never mutates it. Import or in-platform amendment creates a successor `draft`, retains `supersedes_rubric_catalogue_id`, passes linked-record and mode validation, and requires authorized activation. Activation supersedes the prior active version for future generation only.
+
+`portfolio_working_versions.rubric_catalogue_id` is pinned when the working version is generated. Submission, class-teacher review, approval, snapshot publication and export retain that same ID/version. Changing the SchoolAdmin-active rubric does not recalculate or migrate an existing working version or published snapshot; the next generated working version uses the newly active rubric. Published results additionally retain the axis, selected step/definition snapshot, exact included proof/observations, reviewer decision and score where score mode applies.
+
 Multiple LLM/provider suggestions for the same frozen evidence manifest are stored and shown side by side with provider, model, prompt version, input manifest and warnings. A reviewer may reject or ignore each suggestion independently. Accepting a suggestion creates or updates a human-reviewed observation; it never turns the model output into proof and never overwrites a different suggestion.
 
 An earlier acceptance is reversible at the **use** level. `proof_use_decisions` records the proof, target observation/claim/generation run, decision (`included`, `excluded`, `invalidated`, `superseded`), reason, actor and time. This permits one proof to be excluded from one rubric decision while remaining valid elsewhere. A globally false association—such as a face match assigning a student to an activity they never joined—invalidates or corrects the identity/evidence link itself.

@@ -55,7 +55,7 @@ const contracts = [
   ['36_published_rubric_results.csv', 'published_rubric_results'],
 ];
 
-const numericFields = new Set(['sort_order','is_primary','assignable','sensitive','policy_version','allow_self_assignment','allow_self_approval','publication_separate','max_human_steps','unassigned_escalation_minutes','overdue_escalation_minutes','step_number','required_decision_count','reason_required','revision_number','media_capture_expected','can_edit','can_view_raw_media','can_submit_response','is_student_latest','student_selected','display_order','sequence','is_summer','resolution_priority','is_system_default','labelling_capable','assessment_capable','radar_eligible','level_order','numeric_value','is_prerequisite_chain','published_numeric_value','item_order','required','moderation_required','include_in_portfolio']);
+const numericFields = new Set(['sort_order','is_primary','assignable','sensitive','policy_version','allow_self_assignment','allow_self_approval','publication_separate','max_human_steps','unassigned_escalation_minutes','overdue_escalation_minutes','step_number','required_decision_count','reason_required','revision_number','media_capture_expected','can_edit','can_view_raw_media','can_submit_response','is_student_latest','student_selected','display_order','sequence','is_summer','resolution_priority','is_system_default','labelling_capable','assessment_capable','radar_eligible','level_order','numeric_value','is_prerequisite_chain','published_numeric_value','item_order','required','moderation_required','include_in_portfolio','disabled','score_min','score_max','score_out_of']);
 
 function valueFor(field, value) {
   if (value === '') return null;
@@ -75,6 +75,7 @@ function insertRows(sql, table, rows, selectedColumns) {
 const loadedSeedFiles = new Set([
   ...contracts.map(([file]) => file),
   '07_form_template_items.csv','13_activity_form_assignments.csv','17_proud_moment_selections.csv','19_peer_review_assignments.csv','30_proof_items.csv','31_proof_links.csv',
+  '58_rubric_groups.csv','59_rubric_step_definitions.csv',
 ]);
 
 const slug = value => String(value).toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -125,7 +126,7 @@ export function seedFromContracts(sql, csvDirectory) {
       for (const studentId of ['USR-S-001','USR-S-002','USR-S-003']) {
         sql.run('INSERT INTO student_class_memberships VALUES(?,?,?,?,?,?,?,?)', `SCM-${studentId}`, studentId, 'BHSS', 'S1A-2026-27', '2026-27-P1', '2026-09-01', '2027-08-31', 'active');
       }
-      sql.run('INSERT INTO portfolio_snapshots VALUES(?,?,?,?,?,?,?,?,?)', 'PSNAP-S1-P1-v1', 'BHSS', 'USR-S-001', '2026-27-P1', 'PWV-S1-001', 1, 'published', 'USR-ST-001', '2026-12-20T15:00:00+08:00');
+      sql.run('INSERT INTO portfolio_snapshots(portfolio_snapshot_id,school_id,student_user_id,period_id,approved_portfolio_working_version_id,version_number,publication_status,approved_by_user_id,published_at,rubric_catalogue_id) VALUES(?,?,?,?,?,?,?,?,?,?)', 'PSNAP-S1-P1-v1', 'BHSS', 'USR-S-001', '2026-27-P1', 'PWV-S1-001', 1, 'published', 'USR-ST-001', '2026-12-20T15:00:00+08:00', 'RUB-SB-UF2');
       sql.run('INSERT INTO seed_state VALUES(?,?,?)', 'csv-3.0', csvDirectory, new Date().toISOString());
     });
   }
@@ -144,6 +145,8 @@ function ensurePocV2Extensions(sql, csvDirectory) {
       ['24_rubric_catalogues.csv', 'rubric_catalogues'],
       ['25_rubric_axes.csv', 'rubric_axes'],
       ['26_rubric_levels.csv', 'rubric_levels'],
+      ['58_rubric_groups.csv', 'rubric_groups'],
+      ['59_rubric_step_definitions.csv', 'rubric_step_definitions'],
       ['30_proof_items.csv', 'proof_items'],
       ['31_proof_links.csv', 'proof_links'],
       ['36_published_rubric_results.csv', 'published_rubric_results'],
@@ -151,6 +154,13 @@ function ensurePocV2Extensions(sql, csvDirectory) {
       ['44_role_capabilities.csv', 'role_capabilities'],
     ];
     for (const [file, table] of extensionContracts) insertRows(sql, table, parseCsv(readFileSync(join(csvDirectory, file), 'utf8')));
+    const axisGroups = [
+      ['GRP-SB-COMMUNICATION','AX-SB-LISTEN'],['GRP-SB-COMMUNICATION','AX-SB-SPEAK'],
+      ['GRP-SB-CREATIVE-PROBLEM','AX-SB-PROBLEM'],['GRP-SB-CREATIVE-PROBLEM','AX-SB-CREATIVITY'],
+      ['GRP-SB-SELF-MANAGEMENT','AX-SB-POSITIVE'],['GRP-SB-SELF-MANAGEMENT','AX-SB-AIMING'],
+      ['GRP-SB-COLLABORATION','AX-SB-LEADERSHIP'],['GRP-SB-COLLABORATION','AX-SB-TEAMWORK'],
+    ];
+    for (const [groupId, axisId] of axisGroups) sql.run('UPDATE rubric_axes SET rubric_group_id=? WHERE axis_id=?', groupId, axisId);
     sql.run(`UPDATE activities SET resolved_period_id=(
         SELECT p.period_id FROM activity_revisions r JOIN academic_periods p ON p.school_id=activities.school_id AND p.start_date<=substr(r.start_at,1,10) AND p.end_date>=substr(r.end_at,1,10)
         WHERE r.activity_revision_id=activities.latest_revision_id ORDER BY p.resolution_priority DESC LIMIT 1
@@ -216,6 +226,8 @@ function ensurePocV2Extensions(sql, csvDirectory) {
     sql.run(`INSERT OR IGNORE INTO observation_evidence VALUES(?,?,?)`, 'OE-001', 'OBS-001', 'FEV-001');
 
     sql.run(`INSERT OR IGNORE INTO proud_moment_windows VALUES(?,?,?,?,?,?,?)`, '2026-27-P1', 'BHSS', 'open', '2026-12-01T08:00:00+08:00', '2027-02-28T17:00:00+08:00', 24, 'USR-ST-001');
+    sql.run(`UPDATE portfolio_working_versions SET rubric_catalogue_id='RUB-SB-UF2' WHERE rubric_catalogue_id IS NULL`);
+    sql.run(`UPDATE portfolio_snapshots SET rubric_catalogue_id='RUB-SB-UF2' WHERE rubric_catalogue_id IS NULL`);
     ensureImportSeedLedger(sql, csvDirectory);
   });
 }

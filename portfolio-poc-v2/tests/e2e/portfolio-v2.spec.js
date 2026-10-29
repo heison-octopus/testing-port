@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
+import ExcelJS from 'exceljs';
 
 async function signIn(page, name) {
   await page.goto('/');
@@ -20,11 +21,11 @@ test.describe.serial('Portfolio POC v2 implemented workflows', () => {
     await page.getByRole('button', { name: 'EN' }).click();
 
     const matrix = [
-      ['System Administrator', ['Data imports','Staff directory','Policy controls','POC page catalogue'], ['Activities','Activity responses','Activity assessment','Approval queues','Portfolio review','Memorable activities','Portfolio editor','Published Portfolio','AI drafts','Model chatbox']],
-      ['Lee Wai Man', ['Data imports','Staff directory','Activities','Approval queues','Portfolio review','Published Portfolio','AI drafts','Model chatbox'], ['Activity responses','Activity assessment','Memorable activities','Portfolio editor','Policy controls','POC page catalogue']],
-      ['Chan Mei Ling', ['Data imports','Staff directory','Activities','Activity assessment','Approval queues','Portfolio review','Published Portfolio','AI drafts','Model chatbox'], ['Activity responses','Memorable activities','Portfolio editor','Policy controls','POC page catalogue']],
-      ['Wong Kai Ho', ['Data imports','Activities','Activity assessment'], ['Activity responses','Staff directory','Approval queues','Portfolio review','Memorable activities','Portfolio editor','Published Portfolio','AI drafts','Model chatbox','Policy controls','POC page catalogue']],
-      ['Alex Lam', ['Activities','Activity responses','Memorable activities','Portfolio editor','Published Portfolio'], ['Data imports','Activity assessment','Staff directory','Approval queues','Portfolio review','AI drafts','Model chatbox','Policy controls','POC page catalogue']],
+      ['System Administrator', ['Data operations','Staff directory','School controls','POC page catalogue'], ['Activities','Activity responses','Activity assessment','Approval queues','Portfolio review','Memorable activities','Portfolio editor','Published Portfolio','AI drafts','Model chatbox']],
+      ['Lee Wai Man', ['Data operations','Staff directory','Activities','Approval queues','Portfolio review','Published Portfolio','AI drafts','Model chatbox'], ['Activity responses','Activity assessment','Memorable activities','Portfolio editor','School controls','POC page catalogue']],
+      ['Chan Mei Ling', ['Data operations','Staff directory','Activities','Activity assessment','Approval queues','Portfolio review','Published Portfolio','AI drafts','Model chatbox'], ['Activity responses','Memorable activities','Portfolio editor','School controls','POC page catalogue']],
+      ['Wong Kai Ho', ['Data operations','Activities','Activity assessment'], ['Activity responses','Staff directory','Approval queues','Portfolio review','Memorable activities','Portfolio editor','Published Portfolio','AI drafts','Model chatbox','School controls','POC page catalogue']],
+      ['Alex Lam', ['Activities','Activity responses','Memorable activities','Portfolio editor','Published Portfolio'], ['Data operations','Activity assessment','Staff directory','Approval queues','Portfolio review','AI drafts','Model chatbox','School controls','POC page catalogue']],
     ];
     for (const [name, visible, hidden] of matrix) {
       await page.getByRole('button', { name: new RegExp(name) }).click();
@@ -50,8 +51,8 @@ test.describe.serial('Portfolio POC v2 implemented workflows', () => {
 
   test('assigned activity editor resolves and commits a CSV roster without deleting source history', async ({ page }) => {
     await signIn(page, 'Chan Mei Ling');
-    await page.locator('nav').getByRole('button', { name: 'Data imports' }).click();
-    await expect(page.getByRole('heading', { name: 'Data imports' })).toBeVisible();
+    await page.locator('nav').getByRole('button', { name: 'Data operations' }).click();
+    await expect(page.getByRole('heading', { name: 'Data operations' })).toBeVisible();
     await page.getByLabel('Roster file').setInputFiles({
       name: 'browser-roster.csv',
       mimeType: 'text/csv',
@@ -82,8 +83,9 @@ test.describe.serial('Portfolio POC v2 implemented workflows', () => {
 
   test('admin activity catalogue round trip distinguishes no-change rows from lifecycle actions', async ({ page }) => {
     await signIn(page, 'System Administrator');
-    await page.locator('nav').getByRole('button', { name: 'Data imports' }).click();
-    await expect(page.getByRole('heading', { name: 'Export, edit and re-import' })).toBeVisible();
+    await page.locator('nav').getByRole('button', { name: 'Data operations' }).click();
+    await page.locator('.data-domain-grid').getByRole('button', { name: /Activity list/ }).click();
+    await expect(page.getByRole('heading', { name: 'Export, edit and stage explicit changes' })).toBeVisible();
     const downloadPromise = page.waitForEvent('download');
     await page.getByRole('button', { name: 'Export editable CSV' }).click();
     const download = await downloadPromise;
@@ -98,7 +100,7 @@ test.describe.serial('Portfolio POC v2 implemented workflows', () => {
       'browser-policy:ACT-SPORT-001,ACT-SPORT-001,1,scheduled,Teamwork sports session,團隊合作運動,Observe teamwork and planning during group challenges,在小組挑戰觀察團隊協作及計劃,sports,,DEPT-STUDENT-DEV,2026-10-16T14:00:00+08:00,2026-10-16T16:00:00+08:00,T002,FV-CORE-001,1,School Hall,upsert,',
     ].join('\n');
     await page.getByLabel('Activity catalogue file').setInputFiles({ name: 'browser-activity-catalogue.csv', mimeType: 'text/csv', buffer: Buffer.from(noChange) });
-    await page.getByRole('button', { name: 'Stage catalogue delta' }).click();
+    await page.getByRole('button', { name: 'Stage explicit catalogue changes' }).click();
     await expect(page.locator('.import-detail-heading')).toContainText('activity_catalogue');
     await expect(page.locator('.import-row-table article')).toContainText('no change');
     await expect(page.locator('.import-row-table article')).toContainText('commit will record a no-op link');
@@ -132,6 +134,7 @@ test.describe.serial('Portfolio POC v2 implemented workflows', () => {
 
     await page.locator('nav').getByRole('button', { name: 'Portfolio editor' }).click();
     await expect(page.getByText('Latest working version 2')).toBeVisible();
+    await expect(page.locator('.working-version-panel')).toContainText('Pinned rubric · Skills Builder Universal Framework · UF2.0 · RUB-SB-UF2');
     await page.getByLabel('Self-introduction').fill('I am building a new audited Portfolio version.');
     await page.getByRole('button', { name: 'Save new working version' }).click();
     await expect(page.getByText('Latest working version 3')).toBeVisible();
@@ -141,6 +144,7 @@ test.describe.serial('Portfolio POC v2 implemented workflows', () => {
 
     await page.locator('nav').getByRole('button', { name: 'Published Portfolio' }).click();
     await expect(page.getByText('PSNAP-S1-P1-v1')).toBeVisible();
+    await expect(page.locator('.portfolio-visual-sheet')).toContainText('Pinned rubric · Skills Builder Universal Framework · UF2.0 · RUB-SB-UF2');
     await expect(page.locator('.portfolio-detail')).not.toContainText('I am building a new audited Portfolio version.');
   });
 
@@ -166,14 +170,19 @@ test.describe.serial('Portfolio POC v2 implemented workflows', () => {
     await expect(page.locator('.observation-history')).toContainText('not included');
   });
 
-  test('activity moves from author to named reviewer and publisher, then becomes student-visible', async ({ page }) => {
+  test('a custom questionnaire stays in draft and gates activity submission until separate form approval', async ({ page }) => {
     await signIn(page, 'Chan Mei Ling');
     await page.locator('nav').getByRole('button', { name: 'Activities', exact: true }).click();
     await page.getByRole('button', { name: 'New activity' }).click();
-    await page.getByLabel('English title').fill('Browser-tested reflection lab');
-    await page.getByLabel('English description').fill('Initial browser-tested description.');
-    await page.getByRole('button', { name: 'Create activity package' }).click();
+    await page.getByLabel('Activity name (English)').fill('Browser-tested reflection lab');
+    await page.getByLabel('Activity name (Chinese)').fill('瀏覽器測試反思工作坊');
+    await page.getByLabel('Description (English)').fill('Initial browser-tested description.');
+    await page.getByLabel('Description (Chinese)').fill('瀏覽器測試用的初始簡介。');
+    await page.getByRole('button', { name: 'Review activity' }).click();
+    await expect(page.getByRole('heading', { name: 'Check the activity package' })).toBeVisible();
+    await page.getByRole('button', { name: 'Create activity draft' }).click();
     await expect(page.getByRole('heading', { name: 'Browser-tested reflection lab' })).toBeVisible();
+    await expect(page.locator('.activity-detail-panel')).toContainText('FV-ACT-');
     await page.getByLabel('Proposed description').fill('Material successor description.');
     await page.getByLabel('Reason').fill('Keep the material change traceable.');
     await page.getByRole('button', { name: 'Create successor', exact: true }).click();
@@ -182,30 +191,8 @@ test.describe.serial('Portfolio POC v2 implemented workflows', () => {
     await page.getByLabel('Named reviewer').selectOption('USR-ST-001');
     await page.getByLabel('Named publisher').selectOption('USR-ST-001');
     await page.getByRole('button', { name: 'Submit revision' }).click();
-    await expect(page.locator('.activity-detail-panel')).toContainText('pending review');
-    await signOut(page);
-
-    await page.getByRole('button', { name: /Lee Wai Man/ }).click();
-    await page.locator('nav').getByRole('button', { name: 'Approval queues' }).click();
-    let record = page.locator('.approval-record').filter({ hasText: 'Browser-tested reflection lab' });
-    await expect(record).toHaveCount(1);
-    await expect(record).toContainText('Created by Chan Mei Ling');
-    await record.getByPlaceholder('Decision reason (required)').fill('Named reviewer checked the package and risk flags.');
-    await record.getByRole('button', { name: 'Approve' }).click();
-    record = page.locator('.approval-record').filter({ hasText: 'Browser-tested reflection lab' });
-    await expect(record).toHaveCount(1);
-    await expect(record).toContainText('activity publication');
-    await record.getByPlaceholder('Decision reason (required)').fill('Approved activity revision released to participants.');
-    await record.getByRole('button', { name: 'Publish' }).click();
-    await expect(page.locator('.approval-record').filter({ hasText: 'Browser-tested reflection lab' })).toHaveCount(0);
-    await signOut(page);
-
-    await page.getByRole('button', { name: /Alex Lam/ }).click();
-    await page.locator('nav').getByRole('button', { name: 'Activities', exact: true }).click();
-    await expect(page.getByText('Browser-tested reflection lab')).toBeVisible();
-    await page.getByRole('button', { name: /Browser-tested reflection lab/ }).click();
-    await expect(page.locator('.activity-detail-panel')).toContainText('published');
-    await expect(page.locator('.activity-detail-panel')).not.toContainText('Approval and publication history');
+    await expect(page.getByText('Complete the activity package: participants, VASK, risk flags and one approved published form are required')).toBeVisible();
+    await expect(page.locator('.activity-detail-panel')).toContainText('draft');
   });
 
   test('coordinator sees escalation work but cannot decide another reviewer assignment', async ({ page }) => {
@@ -221,21 +208,25 @@ test.describe.serial('Portfolio POC v2 implemented workflows', () => {
   test('AI generation, candidate decisions and narrative edits persist after reload', async ({ page }) => {
     await signIn(page, 'Chan Mei Ling');
     await page.locator('nav').getByRole('button', { name: 'AI drafts' }).click();
-    await expect(page.getByRole('heading', { name: 'MANIFEST-S1-P1' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'AI drafts and provenance' })).toBeVisible();
+    await page.getByRole('button', { name: /Candidates/ }).click();
     await expect(page.locator('.candidate-card')).toHaveCount(2);
 
     await page.getByLabel('Decision reason (required)').fill('The frozen sources support this candidate.');
-    await page.locator('.candidate-card').first().getByRole('button', { name: 'Accept as editable draft' }).click();
+    await page.locator('.candidate-card').first().getByRole('button', { name: 'Use draft' }).click();
     await expect(page.locator('.candidate-card').first()).toContainText('included');
 
+    await page.getByRole('button', { name: 'Draft', exact: true }).click();
     await page.getByLabel('Teacher-edited text').fill('A browser-tested and audited teacher edit.');
-    await page.getByLabel('Narrative edit reason').fill('Clarify the supported learner narrative.');
-    await page.getByRole('button', { name: 'Save audited edit' }).click();
-    await page.getByRole('button', { name: 'Generate independent candidate' }).click();
+    await page.getByLabel('Audited edit reason').fill('Clarify the supported learner narrative.');
+    await page.getByRole('button', { name: 'Save reviewed edit' }).click();
+    await page.getByRole('button', { name: 'Generate draft candidate' }).click();
     await expect(page.locator('.candidate-card')).toHaveCount(3);
     await page.reload();
     await page.locator('nav').getByRole('button', { name: 'AI drafts' }).click();
+    await page.getByRole('button', { name: /Candidates/ }).click();
     await expect(page.locator('.candidate-card')).toHaveCount(3);
+    await page.getByRole('button', { name: 'Draft', exact: true }).click();
     await expect(page.getByLabel('Teacher-edited text')).toHaveValue('A browser-tested and audited teacher edit.');
   });
 
@@ -304,7 +295,7 @@ test.describe.serial('Portfolio POC v2 implemented workflows', () => {
 
   test('admin policy preview and explicit deny remove the protected activity for the teacher', async ({ page }) => {
     await signIn(page, 'System Administrator');
-    await page.locator('nav').getByRole('button', { name: 'Policy controls' }).click();
+    await page.locator('nav').getByRole('button', { name: 'School controls' }).click();
     await page.getByLabel('Reason').fill('Browser-tested confidentiality override.');
     await page.getByRole('button', { name: 'Preview affected users' }).click();
     await expect(page.locator('.preview-list')).toContainText('allowed → denied');
@@ -315,5 +306,68 @@ test.describe.serial('Portfolio POC v2 implemented workflows', () => {
     await page.getByRole('button', { name: /Chan Mei Ling/ }).click();
     await page.locator('nav').getByRole('button', { name: 'Activities', exact: true }).click();
     await expect(page.getByText('ACT-PRESS-001')).toHaveCount(0);
+  });
+
+  test('SchoolAdmin catalogues and import contracts drive the teacher activity options', async ({ page }) => {
+    await signIn(page, 'System Administrator');
+    await page.locator('nav').getByRole('button', { name: 'Data operations' }).click();
+    await expect(page.getByRole('button', { name: /Question bank/ })).toContainText('166 questions');
+    await page.getByRole('button', { name: /Question bank/ }).click();
+    await expect(page.getByRole('link', { name: /Download new-record template/ })).toHaveAttribute('href', '/templates/question-bank-new.csv');
+    await expect(page.getByRole('button', { name: /Export all records for editing/ })).toBeVisible();
+
+    await page.locator('.data-domain-grid').getByRole('button', { name: /Skill rubrics/ }).click();
+    await expect(page.locator('.rubric-package-layout > aside > button')).toHaveCount(2);
+    await expect(page.locator('.rubric-package-heading')).toContainText('definition_only');
+    await expect(page.locator('.rubric-package-layout')).toContainText('8 skills · 128 steps');
+    const rubricDownloadPromise = page.waitForEvent('download');
+    await page.getByRole('button', { name: /Export all rubric records/ }).click();
+    const rubricDownload = await rubricDownloadPromise;
+    const rubricWorkbook = new ExcelJS.Workbook();
+    await rubricWorkbook.xlsx.load(await readFile(await rubricDownload.path()));
+    expect(rubricWorkbook.worksheets.map(sheet => sheet.name)).toEqual(['rubric_catalogues','rubric_groups','rubric_skills','rubric_steps']);
+    expect(rubricWorkbook.getWorksheet('rubric_catalogues').rowCount).toBe(3);
+    expect(rubricWorkbook.getWorksheet('rubric_steps').rowCount).toBe(129);
+
+    await page.locator('nav').getByRole('button', { name: 'School controls' }).click();
+    await expect(page.getByText('166 questions · 10 source constructs')).toBeVisible();
+    await expect(page.locator('.school-catalogue-controls')).toContainText('RUB-SB-UF2 · definition only · 8 skills · 128 steps');
+    await expect(page.locator('.school-catalogue-controls')).toContainText('Changes must be imported as a validated successor draft before activation.');
+    await expect(page.getByLabel('School-active label set')).toHaveValue('RUB-VASK-2026');
+
+    await signOut(page);
+    await signIn(page, 'Chan Mei Ling');
+    await page.locator('nav').getByRole('button', { name: 'Activities' }).click();
+    await page.getByRole('button', { name: 'New activity' }).click();
+    await expect(page.getByText('Default labelling · VASK v2026')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Choose VASK labels' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Build questionnaire' })).toBeVisible();
+    await expect(page.getByText('8 suggested questions from 4 selected VASK labels')).toBeVisible();
+    await expect(page.getByText(/Current skill rubric:/)).toHaveCount(0);
+
+    await page.getByLabel('Activity name (English)').fill('E2E activity builder flow');
+    await page.getByLabel('Activity name (Chinese)').fill('端對端活動建立流程');
+    await page.getByLabel('Description (English)').fill('Verifies the complete activity and questionnaire draft workflow.');
+    await page.getByLabel('Description (Chinese)').fill('驗證完整活動及問卷草稿流程。');
+    await page.locator('.vask-group label').filter({ hasText: 'Integrity' }).getByRole('checkbox').check();
+    await expect(page.getByText(/suggested questions from 5 selected VASK labels/)).toBeVisible();
+
+    await page.getByRole('button', { name: 'Choose teacher groups' }).click();
+    await page.locator('.selector-options label').filter({ hasText: 'Student Development Team' }).getByRole('checkbox').check();
+    await page.getByRole('button', { name: 'Done' }).click();
+    await page.getByLabel('Question 1', { exact: true }).fill('Describe one observed example and identify its supporting evidence.');
+    await page.getByLabel('Required 1', { exact: true }).selectOption('optional');
+    await page.getByRole('button', { name: 'Write new question' }).click();
+    const customQuestion = page.locator('.question-row').filter({ hasText: 'Custom' });
+    await expect(customQuestion.getByRole('textbox')).toHaveValue('Write a new reflection question');
+    await customQuestion.getByRole('button', { name: 'Remove question' }).click();
+    await expect(customQuestion).toHaveCount(0);
+
+    await page.getByRole('button', { name: 'Review activity' }).click();
+    await expect(page.getByRole('heading', { name: 'Check the activity package' })).toBeVisible();
+    await expect(page.getByText('1 classes · 2 teacher groups')).toBeVisible();
+    await expect(page.getByText(/Questionnaire will be saved as a successor draft form/)).toBeVisible();
+    await page.getByRole('button', { name: 'Create activity draft' }).click();
+    await expect(page.getByRole('heading', { name: 'E2E activity builder flow' })).toBeVisible();
   });
 });

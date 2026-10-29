@@ -6,6 +6,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { parse as parseCsv } from 'csv-parse/sync';
+import ExcelJS from 'exceljs';
 
 const root = resolve(import.meta.dirname, '..');
 const temporary = mkdtempSync(join(tmpdir(), 'bhss-poc-v2-test-'));
@@ -142,7 +143,7 @@ test('the import ledger preserves source custody and keeps students outside the 
   const ledger = await admin('/imports');
   assert.equal(ledger.status, 200);
   const seeded = ledger.body.batches.filter(item => item.import_batch_id.startsWith('SEED-'));
-  assert.equal(seeded.length, 56);
+  assert.equal(seeded.length, 58);
   assert.ok(seeded.every(item => item.source_relative_path.startsWith('output/import-examples/')));
   assert.ok(seeded.every(item => item.seeded_at && /^[a-f0-9]{64}$/.test(item.content_sha256)));
   assert.ok(seeded.every(item => !item.source_relative_path.startsWith('/') && !item.source_relative_path.includes('..')));
@@ -535,6 +536,30 @@ test('activity identity remains stable across revision and named approval', asyn
   assert.deepEqual(official.approvalHistory, []);
 });
 
+test('activity builder resolves active VASK, group selections and a versioned questionnaire draft', async () => {
+  const teacher = await signIn('USR-T-001');
+  const reference = await teacher('/activities/reference-data');
+  assert.equal(reference.status, 200);
+  assert.equal(reference.body.activeLabelling.code, 'VASK');
+  assert(reference.body.studentClasses.some(item => item.class_id === 'S1A-2026-27' && item.student_ids.includes('USR-S-001')));
+  assert(reference.body.teacherGroups.some(item => item.staff_group_id === 'GRP-ENG-TEACHERS' && item.member_ids.includes('USR-ST-001')));
+  assert(reference.body.questionBank.length > 0);
+
+  const sourceQuestion = reference.body.questionBank[0];
+  const created = await teacher('/activities', { method: 'POST', body: JSON.stringify({
+    titleEn: 'VASK question builder', titleZh: 'VASK 題目建立器', descriptionEn: 'Test the active labelling and editable question workflow.',
+    subjectId: 'SUB-ENG', departmentId: 'DEPT-LANG', groupId: 'S1A-2026-27', activityNature: 'non_academic', activitySetting: 'outside_school',
+    startAt: '2027-02-22T09:00', endAt: '2027-02-22T11:00', formVersionId: 'FV-CORE-001', participantIds: ['USR-S-001','USR-S-002','USR-S-003'], teacherGroupIds: ['GRP-ENG-TEACHERS'], vaskItemIds: ['AX-VASK-V1','AX-VASK-S1'], riskFlags: ['off_site'],
+    questionnaire: [{ bankItemId: sourceQuestion.bank_item_id, promptEn: `${sourceQuestion.prompt_en} (teacher edited)`, promptZh: sourceQuestion.prompt_zh, required: true, abilityCode: sourceQuestion.ability_code, abilityNameEn: sourceQuestion.ability_name_en, abilityNameZh: sourceQuestion.ability_name_zh }],
+  }) });
+  assert.equal(created.status, 201);
+  assert.match(created.body.latestRevision.requested_form_version_id, /^FV-ACT-/);
+  assert.equal(created.body.latestRevision.activity_type, 'non_academic:outside_school');
+  assert.equal(created.body.people.filter(item => item.relationship_type === 'participant').length, 3);
+  assert(created.body.people.some(item => item.relationship_type === 'supporting_teacher' && item.user_id === 'USR-ST-001'));
+  assert.deepEqual(created.body.vaskItems.map(item => item.vask_item_id).sort(), ['AX-VASK-S1','AX-VASK-V1']);
+});
+
 test('coordinators can inspect all assignments but decide only their own', async () => {
   const staff = await signIn('USR-ST-001');
   const queue = await staff('/approvals');
@@ -664,4 +689,56 @@ test('unknown and deliberately unavailable execution routes return stable 404 er
     assert.equal(result.status, 404);
     assert.equal(result.body.code, 'NOT_FOUND');
   }
+});
+
+test('rubric XLSX exports real linked records and successor activation changes only future Portfolio versions', async () => {
+  const administrator = await signIn('USR-ADM-001');
+  const workspace = await administrator('/imports/rubrics');
+  assert.equal(workspace.status, 200);
+  assert.equal(workspace.body.catalogues.length, 2);
+  assert.equal(workspace.body.active.rubric_catalogue_id, 'RUB-SB-UF2');
+  assert.equal(workspace.body.active.skill_count, 8);
+  assert.equal(workspace.body.active.step_count, 128);
+
+  const downloaded = await administrator('/imports/rubrics/export');
+  assert.equal(downloaded.status, 200);
+  assert.deepEqual(downloaded.body.counts, { catalogues: 2, groups: 4, skills: 8, steps: 128 });
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(Buffer.from(downloaded.body.contentBase64, 'base64'));
+  assert.deepEqual(workbook.worksheets.map(sheet => sheet.name), ['rubric_catalogues','rubric_groups','rubric_skills','rubric_steps']);
+  assert.equal(workbook.getWorksheet('rubric_catalogues').rowCount, 3);
+  assert.equal(workbook.getWorksheet('rubric_groups').rowCount, 5);
+  assert.equal(workbook.getWorksheet('rubric_skills').rowCount, 9);
+  assert.equal(workbook.getWorksheet('rubric_steps').rowCount, 129);
+  assert.equal(workbook.getWorksheet('rubric_catalogues').getCell('A2').value === 'example_rubric', false);
+
+  const form = new FormData();
+  form.set('file', new Blob([Buffer.from(downloaded.body.contentBase64, 'base64')], { type: downloaded.body.mimeType }), 'rubric-successor.xlsx');
+  const staged = await administrator('/imports/rubrics/preview', { method: 'POST', body: form });
+  assert.equal(staged.status, 201);
+  assert.equal(staged.body.status, 'ready');
+  assert.deepEqual(staged.body.errors, []);
+
+  const successor = await administrator(`/imports/rubrics/drafts/${staged.body.rubricImportDraftId}/commit`, { method: 'POST', body: JSON.stringify({ sourceRubricCatalogueId: 'RUB-SB-UF2' }) });
+  assert.equal(successor.status, 201);
+  assert.equal(successor.body.catalogue.status, 'draft');
+  assert.equal(successor.body.groups.length, 4);
+  assert.equal(successor.body.skills.length, 8);
+  assert.equal(successor.body.steps.length, 128);
+
+  const existingStudent = await signIn('USR-S-001');
+  const before = await existingStudent('/portfolio-editor/USR-S-001');
+  const previousVersionId = before.body.versions[0].portfolio_working_version_id;
+  assert.equal(before.body.versions[0].rubric_catalogue_id, 'RUB-SB-UF2');
+
+  const activated = await administrator(`/imports/rubrics/${successor.body.catalogue.rubric_catalogue_id}/activate`, { method: 'POST', body: JSON.stringify({ reason: 'Validated four-sheet successor package.' }) });
+  assert.equal(activated.status, 200);
+  assert.equal(activated.body.active.rubric_catalogue_id, successor.body.catalogue.rubric_catalogue_id);
+
+  const created = await existingStudent('/portfolios/USR-S-001/drafts', { method: 'POST', body: JSON.stringify({ selfIntroduction: 'This version checks immutable rubric pinning.', periodId: '2026-27-P1' }) });
+  assert.equal(created.status, 201);
+  assert.equal(created.body.versions[0].rubric_catalogue_id, successor.body.catalogue.rubric_catalogue_id);
+  const oldVersion = created.body.versions.find(item => item.portfolio_working_version_id === previousVersionId);
+  assert.equal(oldVersion.rubric_catalogue_id, 'RUB-SB-UF2');
+  assert.equal(created.body.official.version.rubric_catalogue_id, 'RUB-SB-UF2');
 });

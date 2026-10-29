@@ -1,26 +1,67 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowClockwise, ArrowRight, CalendarDots, CheckCircle, Database, LinkSimple, NotePencil, Plus, Stamp, UsersThree, Warning, XCircle } from '@phosphor-icons/react';
+import { ArrowClockwise, ArrowDown, ArrowRight, ArrowUp, CalendarDots, CheckCircle, Database, LinkSimple, NotePencil, PencilSimple, Plus, ShieldCheck, Stamp, Trash, UsersThree, Warning, X, XCircle } from '@phosphor-icons/react';
 import { api } from '../api/client';
 import type { Activity, ActivityReferenceData, ApprovalCandidate } from '../../shared/types';
 import { Field, Notice, PageHeader, Status } from '../components/Layout';
 import { useI18n } from '../i18n';
 
 const emptyCreate = {
-  titleEn: '', titleZh: '', descriptionEn: '', descriptionZh: '', activityType: 'project',
+  titleEn: '', titleZh: '', descriptionEn: '', descriptionZh: '', activityNature: 'academic', activitySetting: 'in_class',
   subjectId: 'SUB-ENG', departmentId: 'DEPT-LANG', groupId: 'S1A-2026-27',
   startAt: '2027-02-15T09:00', endAt: '2027-02-15T10:00', location: '',
   mediaExpected: false, formVersionId: 'FV-CORE-001',
-  participantIds: ['USR-S-001'], vaskItemIds: ['AX-VASK-COMMUNICATION'], riskFlags: ['none'],
+  selectedClassIds: ['S1A-2026-27'], teacherGroupIds: ['GRP-ENG-TEACHERS'],
+  participantIds: ['USR-S-001'], vaskItemIds: ['AX-VASK-V1','AX-VASK-A1','AX-VASK-S1','AX-VASK-K1'], riskFlags: ['none'],
 };
 
-const riskOptions = [
-  ['none', 'No additional risk', '沒有額外風險'],
-  ['off_site', 'Off-site activity', '校外活動'],
-  ['external_participants', 'External participants', '校外參與者'],
-  ['image_capture', 'Image capture', '拍攝相片'],
-  ['audio_capture', 'Audio capture', '錄音'],
-  ['video_capture', 'Video capture', '錄影'],
-];
+type DraftQuestion = { id: string; bankItemId?: string; promptEn: string; promptZh: string; abilityCode?: string; abilityNameEn?: string; abilityNameZh?: string; sourceLabelId?: string; required: boolean; custom: boolean; edited: boolean };
+type SelectorKind = 'classes' | 'teachers' | 'questionBank' | null;
+
+function labelCategory(code: string, name: string) {
+  const prefix = code.trim().charAt(0).toUpperCase();
+  if (['V','A','S','K'].includes(prefix)) return prefix;
+  if (/self|attitude/i.test(`${code} ${name}`)) return 'A';
+  if (/knowledge|community|subject/i.test(`${code} ${name}`)) return 'K';
+  return 'S';
+}
+
+function recommendedQuestions(reference: ActivityReferenceData, vaskIds: string[], current: DraftQuestion[]) {
+  const selected = new Set(vaskIds);
+  const next = current.filter(question => question.custom || question.edited || !question.sourceLabelId || selected.has(question.sourceLabelId));
+  if (!reference.questionBank.length) return next;
+  vaskIds.forEach((labelId, labelIndex) => {
+    if (next.some(question => question.sourceLabelId === labelId)) return;
+    for (let offset = 0; offset < Math.min(2, reference.questionBank.length); offset += 1) {
+      const item = reference.questionBank[(labelIndex * 2 + offset) % reference.questionBank.length];
+      next.push({ id: `${labelId}:${item.bank_item_id}:${offset}`, bankItemId: item.bank_item_id, promptEn: item.prompt_en, promptZh: item.prompt_zh, abilityCode: item.ability_code, abilityNameEn: item.ability_name_en, abilityNameZh: item.ability_name_zh, sourceLabelId: labelId, required: Boolean(item.required), custom: false, edited: false });
+    }
+  });
+  return next;
+}
+
+function initialCreate(reference: ActivityReferenceData) {
+  const preferred = ['V1','A1','S1','K1'].map(code => reference.vaskItems.find(item => item.axis_code.toUpperCase() === code)?.axis_id).filter(Boolean) as string[];
+  const selectedClassIds = reference.studentClasses[0] ? [reference.studentClasses[0].class_id] : [];
+  return {
+    ...emptyCreate,
+    formVersionId: reference.forms.find(item => item.is_system_default)?.form_version_id || reference.forms[0]?.form_version_id || emptyCreate.formVersionId,
+    selectedClassIds,
+    teacherGroupIds: reference.teacherGroups[0] ? [reference.teacherGroups[0].staff_group_id] : [],
+    groupId: selectedClassIds[0] || emptyCreate.groupId,
+    participantIds: reference.studentClasses.filter(item => selectedClassIds.includes(item.class_id)).flatMap(item => item.student_ids),
+    vaskItemIds: preferred.length ? preferred : reference.vaskItems[0] ? [reference.vaskItems[0].axis_id] : [],
+  };
+}
+
+function SelectorDialog({ kind, reference, create, isChinese, text, onToggle, onAddQuestion, onClose }: { kind: Exclude<SelectorKind,null>; reference: ActivityReferenceData; create: typeof emptyCreate; isChinese: boolean; text: (en: string, zh: string) => string; onToggle: (value: string) => void; onAddQuestion: (bankItemId: string) => void; onClose: () => void }) {
+  const title = kind === 'classes' ? text('Choose student classes', '選擇學生班別') : kind === 'teachers' ? text('Choose teacher groups', '選擇教師群組') : text('Add from question bank', '從題庫加入');
+  return <div className="selector-backdrop" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}><section className="selector-dialog" role="dialog" aria-modal="true" aria-label={title}><header><div><p className="eyebrow">{text('GROUP SELECTOR', '群組選擇器')}</p><h3>{title}</h3></div><button type="button" aria-label={text('Close selector', '關閉選擇器')} onClick={onClose}><X size={19}/></button></header>
+    <div className="selector-options">{kind === 'classes' && reference.studentClasses.map(item => <label key={item.class_id}><input type="checkbox" checked={create.selectedClassIds.includes(item.class_id)} onChange={() => onToggle(item.class_id)}/><span><b>{isChinese ? item.name_zh : item.name_en}</b><small>{item.student_ids.length} {text('students', '名學生')}</small></span></label>)}
+      {kind === 'teachers' && reference.teacherGroups.map(item => <label key={item.staff_group_id}><input type="checkbox" checked={create.teacherGroupIds.includes(item.staff_group_id)} onChange={() => onToggle(item.staff_group_id)}/><span><b>{isChinese ? item.name_zh : item.name_en}</b><small>{item.member_ids.length} {text('members', '名成員')}</small></span></label>)}
+      {kind === 'questionBank' && reference.questionBank.map(item => <button type="button" className="bank-option" key={item.bank_item_id} onClick={() => onAddQuestion(item.bank_item_id)}><span><b>{isChinese ? item.prompt_zh : item.prompt_en}</b><small>{isChinese ? item.ability_name_zh : item.ability_name_en}</small></span><Plus size={17}/></button>)}</div>
+    <footer><span>{text('Selections remain editable until the draft is created.', '建立草稿前仍可修改選擇。')}</span><button type="button" className="primary" onClick={onClose}>{text('Done', '完成')}</button></footer>
+  </section></div>;
+}
 
 function toggle(values: string[], value: string) {
   if (value === 'none') return values.includes('none') ? [] : ['none'];
@@ -37,6 +78,10 @@ export function Activities({ report, focusActivityId, onSelectActivity, onOpenIm
   const [canCreate, setCanCreate] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [create, setCreate] = useState(emptyCreate);
+  const [questions, setQuestions] = useState<DraftQuestion[]>([]);
+  const [selector, setSelector] = useState<SelectorKind>(null);
+  const [questionFilter, setQuestionFilter] = useState('ALL');
+  const [reviewMode, setReviewMode] = useState(false);
   const [reason, setReason] = useState('');
   const [proposal, setProposal] = useState('');
   const [reviewerId, setReviewerId] = useState('USR-ST-001');
@@ -59,12 +104,9 @@ export function Activities({ report, focusActivityId, onSelectActivity, onOpenIm
     void load();
     api.activityReferenceData().then(data => {
       setReference(data);
-      setCreate(current => ({
-        ...current,
-        formVersionId: data.forms.find(item => item.is_system_default)?.form_version_id || data.forms[0]?.form_version_id || current.formVersionId,
-        participantIds: data.students[0] ? [data.students[0].user_id] : [],
-        vaskItemIds: data.vaskItems[0] ? [data.vaskItems[0].axis_id] : [],
-      }));
+      const initial = initialCreate(data);
+      setCreate(initial);
+      setQuestions(recommendedQuestions(data, initial.vaskItemIds, []));
     }).catch(() => undefined);
     api.activityApprovalCandidates().then(data => {
       setCandidates(data);
@@ -76,17 +118,49 @@ export function Activities({ report, focusActivityId, onSelectActivity, onOpenIm
   useEffect(() => { if (focusActivityId) void load(focusActivityId); }, [focusActivityId]);
 
   const resolvedPeriod = useMemo(() => reference?.periods.find(item => item.start_date <= create.startAt.slice(0, 10) && item.end_date >= create.endAt.slice(0, 10)), [reference, create.startAt, create.endAt]);
+  const displayVaskItems = useMemo(() => {
+    const coded = reference?.vaskItems.filter(item => /^[VASK]\d+$/i.test(item.axis_code)) || [];
+    return coded.length ? coded : reference?.vaskItems || [];
+  }, [reference]);
 
   async function createActivity(event: React.FormEvent) {
     event.preventDefault();
+    if (!reference) return;
     try {
-      const item = await api.createActivity(create);
+      const participantIds = [...new Set(reference.studentClasses.filter(item => create.selectedClassIds.includes(item.class_id)).flatMap(item => item.student_ids))];
+      const item = await api.createActivity({ ...create, groupId: create.selectedClassIds[0] || null, participantIds, riskFlags: create.activitySetting === 'outside_school' ? ['off_site'] : create.riskFlags, questionnaire: questions.map(question => ({ bankItemId: question.bankItemId, promptEn: question.promptEn, promptZh: question.promptZh, required: question.required, abilityCode: question.abilityCode, abilityNameEn: question.abilityNameEn, abilityNameZh: question.abilityNameZh, suggestedByVaskLabelId: question.sourceLabelId })) });
       setShowCreate(false);
-      setCreate(emptyCreate);
+      const reset = initialCreate(reference);
+      setCreate(reset);
+      setQuestions(recommendedQuestions(reference, reset.vaskItemIds, []));
+      setReviewMode(false);
       onSelectActivity(item.activity_id);
       await load(item.activity_id);
     } catch (error) { report(error); }
   }
+
+  function toggleVask(labelId: string) {
+    if (!reference) return;
+    const vaskItemIds = create.vaskItemIds.includes(labelId) ? create.vaskItemIds.filter(id => id !== labelId) : [...create.vaskItemIds, labelId];
+    setCreate({ ...create, vaskItemIds });
+    setQuestions(current => recommendedQuestions(reference, vaskItemIds, current));
+  }
+
+  function toggleSelectorValue(value: string) {
+    if (selector === 'classes') setCreate({ ...create, selectedClassIds: toggle(create.selectedClassIds, value) });
+    if (selector === 'teachers') setCreate({ ...create, teacherGroupIds: toggle(create.teacherGroupIds, value) });
+  }
+
+  function addBankQuestion(bankItemId: string) {
+    const item = reference?.questionBank.find(candidate => candidate.bank_item_id === bankItemId);
+    if (!item) return;
+    setQuestions(current => [...current, { id: `bank:${bankItemId}:${Date.now()}`, bankItemId, promptEn: item.prompt_en, promptZh: item.prompt_zh, abilityCode: item.ability_code, abilityNameEn: item.ability_name_en, abilityNameZh: item.ability_name_zh, required: Boolean(item.required), custom: true, edited: false }]);
+    setSelector(null);
+  }
+
+  function updateQuestion(id: string, patch: Partial<DraftQuestion>) { setQuestions(current => current.map(question => question.id === id ? { ...question, ...patch, edited: true } : question)); }
+  function moveQuestion(id: string, direction: -1 | 1) { setQuestions(current => { const index = current.findIndex(question => question.id === id), target = index + direction; if (index < 0 || target < 0 || target >= current.length) return current; const next = [...current]; [next[index], next[target]] = [next[target], next[index]]; return next; }); }
+  function addCustomQuestion() { setQuestions(current => [...current, { id: `custom:${Date.now()}`, promptEn: 'Write a new reflection question', promptZh: '新增反思題目', required: false, custom: true, edited: true }]); }
   async function revise() {
     if (!selected) return;
     try {
@@ -125,40 +199,34 @@ export function Activities({ report, focusActivityId, onSelectActivity, onOpenIm
   return <>
     <PageHeader kicker={text('INPUT · ACTIVITY PACKAGE · TRACEABLE HAND-OFF', '輸入 · 活動資料套件 · 可追溯交接')} title={text('Activities and status', '活動及狀態')} description={text('Create the complete package, see who made it, and follow the named reviewer and publisher without losing the stable activity record.', '建立完整活動資料套件，查看建立者，並追蹤具名覆核人及發布人，同時保留穩定的活動紀錄。')} action={canCreate ? <button className="primary" onClick={() => setShowCreate(value => !value)}><Plus size={17} />{text('New activity', '新增活動')}</button> : undefined} />
 
-    {showCreate && <form className="activity-editor" onSubmit={createActivity}>
-      <div className="editor-heading"><div><p className="eyebrow">{text('REVISION 1 · SERVER-RESOLVED PERIOD', '修訂 1 · 由伺服器判定學段')}</p><h2>{text('Build the activity package', '建立活動資料套件')}</h2></div><button type="button" className="text-action" onClick={() => setShowCreate(false)}>{text('Cancel', '取消')}</button></div>
-      <div className="activity-editor-grid">
-        <section>
-          <h3>01 · {text('Activity context', '活動資料')}</h3>
-          <div className="form-grid two">
-            <Field label={text('English title', '英文標題')}><input required value={create.titleEn} onChange={event => setCreate({ ...create, titleEn: event.target.value })} /></Field>
-            <Field label={text('Chinese title', '中文標題')}><input value={create.titleZh} onChange={event => setCreate({ ...create, titleZh: event.target.value })} /></Field>
-          </div>
-          <Field label={text('English description', '英文說明')}><textarea required value={create.descriptionEn} onChange={event => setCreate({ ...create, descriptionEn: event.target.value })} /></Field>
-          <div className="form-grid three">
-            <Field label={text('Group / programme', '班別／計劃')}><select value={create.groupId} onChange={event => setCreate({ ...create, groupId: event.target.value })}>{reference?.groups.map(item => <option value={item.group_id} key={item.group_id}>{isChinese ? item.name_zh : item.name_en}</option>)}</select></Field>
-            <Field label={text('Subject', '科目')}><select value={create.subjectId} onChange={event => setCreate({ ...create, subjectId: event.target.value })}>{reference?.subjects.map(item => <option value={item.subject_id} key={item.subject_id}>{isChinese ? item.name_zh : item.name_en}</option>)}</select></Field>
-            <Field label={text('Department', '部門')}><select value={create.departmentId} onChange={event => setCreate({ ...create, departmentId: event.target.value })}>{reference?.departments.map(item => <option value={item.department_id} key={item.department_id}>{isChinese ? item.name_zh : item.name_en}</option>)}</select></Field>
-          </div>
-          <div className="form-grid three">
-            <Field label={text('Start', '開始時間')}><input required type="datetime-local" value={create.startAt} onChange={event => setCreate({ ...create, startAt: event.target.value })} /></Field>
-            <Field label={text('End', '結束時間')}><input required type="datetime-local" value={create.endAt} onChange={event => setCreate({ ...create, endAt: event.target.value })} /></Field>
-            <Field label={text('Location', '地點')}><input value={create.location} onChange={event => setCreate({ ...create, location: event.target.value })} /></Field>
-          </div>
-          <div className={resolvedPeriod ? 'period-resolution valid' : 'period-resolution invalid'}><CalendarDots size={19} /><span><b>{resolvedPeriod ? (isChinese ? resolvedPeriod.name_zh : resolvedPeriod.name_en) : text('No single reporting period', '未能對應單一學段')}</b><small>{resolvedPeriod ? `${resolvedPeriod.start_date} → ${resolvedPeriod.end_date} · ${resolvedPeriod.period_id}` : text('Cross-period activities are blocked by the server.', '跨學段活動會被伺服器封鎖。')}</small></span></div>
+    {showCreate && reference && <form className="activity-editor activity-builder-v2" onSubmit={createActivity}>
+      <div className="editor-heading"><div><p className="eyebrow">{text('NEW ACTIVITY · TRACEABLE DRAFT', '新增活動 · 可追溯草稿')}</p><h2>{text('Build an activity and its questionnaire', '建立活動及問卷')}</h2><span>{text('The active VASK labels suggest questions from the approved bank. You remain in control of the final questionnaire.', '生效 VASK 標籤會從已批核題庫建議題目；最終問卷仍由你決定。')}</span></div><button type="button" className="text-action" onClick={() => { setShowCreate(false); setReviewMode(false); }}>{text('Cancel', '取消')}</button></div>
+
+      <section className="activity-identity-panel">
+        <div className="identity-title-grid"><Field label={text('Activity name (English)', '活動名稱（英文）')}><input required value={create.titleEn} onChange={event => setCreate({ ...create, titleEn: event.target.value })}/></Field><Field label={text('Activity name (Chinese)', '活動名稱（中文）')}><input required value={create.titleZh} onChange={event => setCreate({ ...create, titleZh: event.target.value })}/></Field></div>
+        <div className="identity-description-grid"><Field label={text('Description (English)', '活動簡介（英文）')}><textarea required rows={2} value={create.descriptionEn} onChange={event => setCreate({ ...create, descriptionEn: event.target.value })}/></Field><Field label={text('Description (Chinese)', '活動簡介（中文）')}><textarea rows={2} value={create.descriptionZh} onChange={event => setCreate({ ...create, descriptionZh: event.target.value })}/></Field></div>
+        <div className="identity-detail-grid"><Field label={text('Start', '開始時間')}><input required type="datetime-local" value={create.startAt} onChange={event => setCreate({ ...create, startAt: event.target.value })}/></Field><Field label={text('End', '完結時間')}><input required type="datetime-local" value={create.endAt} onChange={event => setCreate({ ...create, endAt: event.target.value })}/></Field><Field label={text('Location', '地點')}><input value={create.location} onChange={event => setCreate({ ...create, location: event.target.value })}/></Field><Field label={text('Subject', '科目')}><select value={create.subjectId} onChange={event => setCreate({ ...create, subjectId: event.target.value })}>{reference.subjects.map(item => <option value={item.subject_id} key={item.subject_id}>{isChinese ? item.name_zh : item.name_en}</option>)}</select></Field></div>
+        <div className="classification-row"><fieldset><legend>{text('Primary nature', '主要性質')}</legend>{[['academic','Academic','學術'],['non_academic','Non-academic','非學術']].map(item => <label className={create.activityNature === item[0] ? 'classification selected' : 'classification'} key={item[0]}><input type="radio" name="activity-nature" checked={create.activityNature === item[0]} onChange={() => setCreate({ ...create, activityNature: item[0] })}/>{text(item[1],item[2])}</label>)}</fieldset><fieldset><legend>{text('Activity setting', '活動場景')}</legend>{[['in_class','In-class','課堂內'],['out_of_class','Out-of-class','課堂外'],['outside_school','Outside school','校外']].map(item => <label className={create.activitySetting === item[0] ? 'classification selected' : 'classification'} key={item[0]}><input type="radio" name="activity-setting" checked={create.activitySetting === item[0]} onChange={() => setCreate({ ...create, activitySetting: item[0], riskFlags: item[0] === 'outside_school' ? ['off_site'] : ['none'] })}/>{text(item[1],item[2])}</label>)}</fieldset></div>
+        <div className="people-selector-row"><div><span>{text('Student classes', '學生班別')}</span><div className="selection-chips">{create.selectedClassIds.map(id => { const item = reference.studentClasses.find(candidate => candidate.class_id === id); return item ? <em key={id}>{isChinese ? item.name_zh : item.name_en}<button type="button" aria-label={text('Remove class', '移除班別')} onClick={() => setCreate({ ...create, selectedClassIds: create.selectedClassIds.filter(value => value !== id) })}><X size={12}/></button></em> : null; })}</div><button type="button" className="selector-trigger" onClick={() => setSelector('classes')}><UsersThree size={16}/>{text('Choose classes', '選擇班別')}</button></div><div><span>{text('Teacher groups', '教師群組')}</span><div className="selection-chips">{create.teacherGroupIds.map(id => { const item = reference.teacherGroups.find(candidate => candidate.staff_group_id === id); return item ? <em key={id}>{isChinese ? item.name_zh : item.name_en}<button type="button" aria-label={text('Remove teacher group', '移除教師群組')} onClick={() => setCreate({ ...create, teacherGroupIds: create.teacherGroupIds.filter(value => value !== id) })}><X size={12}/></button></em> : null; })}</div><button type="button" className="selector-trigger" onClick={() => setSelector('teachers')}><UsersThree size={16}/>{text('Choose teacher groups', '選擇教師群組')}</button></div></div>
+        <div className={resolvedPeriod ? 'period-resolution valid' : 'period-resolution invalid'}><CalendarDots size={19}/><span><b>{resolvedPeriod ? (isChinese ? resolvedPeriod.name_zh : resolvedPeriod.name_en) : text('No single reporting period', '未能對應單一學段')}</b><small>{resolvedPeriod ? `${resolvedPeriod.start_date} → ${resolvedPeriod.end_date} · ${resolvedPeriod.period_id}` : text('The activity must fit inside one configured period.', '活動必須完整位於同一個已設定學段。')}</small></span></div>
+      </section>
+
+      {!reviewMode ? <div className="question-builder-grid">
+        <section className="vask-label-pane"><div className="active-labelling-banner"><ShieldCheck size={20}/><span><b>{text(`Default labelling · ${reference.activeLabelling?.code || 'VASK'} v${reference.activeLabelling?.version || '1.0'}`, `預設標籤 · ${reference.activeLabelling?.code || 'VASK'} v${reference.activeLabelling?.version || '1.0'}`)}</b><small>{text('Managed by SchoolAdmin · automatically used for new activities', '由 SchoolAdmin 管理 · 新增活動時自動套用')}</small></span></div><h3>{text('Choose VASK labels', '選擇 VASK 標籤')}</h3><p>{text('Labels describe the activity’s intended development areas. They are not assessment results.', '標籤描述活動期望發展的範疇，並不是評估結果。')}</p>
+          {['V','A','S','K'].map(category => <div className={`vask-group vask-${category.toLowerCase()}`} key={category}><header><b>{category}</b><span>{text(category === 'V' ? 'Values' : category === 'A' ? 'Attitudes' : category === 'S' ? 'Skills' : 'Knowledge', category === 'V' ? '價值觀' : category === 'A' ? '態度' : category === 'S' ? '技能' : '知識')}</span><small>{displayVaskItems.filter(item => create.vaskItemIds.includes(item.axis_id) && labelCategory(item.axis_code,item.name_en) === category).length} {text('selected', '項已選')}</small></header>{displayVaskItems.filter(item => labelCategory(item.axis_code,item.name_en) === category).map(item => <label className={create.vaskItemIds.includes(item.axis_id) ? 'selected' : ''} key={item.axis_id}><input type="checkbox" checked={create.vaskItemIds.includes(item.axis_id)} onChange={() => toggleVask(item.axis_id)}/><em>{item.axis_code}</em><span>{isChinese ? item.name_zh : item.name_en}</span></label>)}</div>)}
         </section>
-        <section>
-          <h3>02 · {text('Participants, VASK and form', '參與者、VASK 及表格')}</h3>
-          <Field label={text('Exact published form version', '指定已發布表格版本')}><select required value={create.formVersionId} onChange={event => setCreate({ ...create, formVersionId: event.target.value })}>{reference?.forms.map(item => <option value={item.form_version_id} key={item.form_version_id}>{isChinese ? item.name_zh : item.name_en} · v{item.version_number}</option>)}</select></Field>
-          <p className="field-caption">{text('Participants', '參與學生')}</p>
-          <div className="choice-grid">{reference?.students.map(item => <label className={create.participantIds.includes(item.user_id) ? 'choice selected' : 'choice'} key={item.user_id}><input type="checkbox" checked={create.participantIds.includes(item.user_id)} onChange={() => setCreate({ ...create, participantIds: toggle(create.participantIds, item.user_id) })} /><span><b>{isChinese ? item.name_zh : item.name_en}</b><small>{item.student_number}</small></span></label>)}</div>
-          <p className="field-caption">{text('VASK intentions (context, not a score)', 'VASK 意向（只屬情境，不是評分）')}</p>
-          <div className="choice-grid">{reference?.vaskItems.map(item => <label className={create.vaskItemIds.includes(item.axis_id) ? 'choice selected' : 'choice'} key={item.axis_id}><input type="checkbox" checked={create.vaskItemIds.includes(item.axis_id)} onChange={() => setCreate({ ...create, vaskItemIds: toggle(create.vaskItemIds, item.axis_id) })} /><span><b>{isChinese ? item.name_zh : item.name_en}</b><small>{item.axis_code}</small></span></label>)}</div>
-          <p className="field-caption">{text('Risk and collection flags', '風險及收集標記')}</p>
-          <div className="choice-grid">{riskOptions.map(item => <label className={create.riskFlags.includes(item[0]) ? 'choice selected' : 'choice'} key={item[0]}><input type="checkbox" checked={create.riskFlags.includes(item[0])} onChange={() => setCreate({ ...create, riskFlags: toggle(create.riskFlags, item[0]) })} /><span><b>{text(item[1], item[2])}</b></span></label>)}</div>
+
+        <section className="questionnaire-pane"><header><div><h3>{text('Build questionnaire', '建立問卷')}</h3><p>{text('Questions are suggested from the active question bank. Edit them or add your own.', '題目由生效題庫提供建議；你可修改或自行新增。')}</p></div></header><div className="question-suggestion-note"><NotePencil size={20}/><span><b>{text(`${questions.length} suggested questions from ${create.vaskItemIds.length} selected VASK labels`, `已按 ${create.vaskItemIds.length} 個 VASK 標籤建議 ${questions.length} 條題目`)}</b><small>{text('Suggestions use question metadata. They are editable recommendations—not assessment mappings.', '建議按題目資料產生，可自由修改，並非評估對應。')}</small></span></div>
+          <div className="question-filter"><span>{text('Filter by label', '按標籤篩選')}</span>{['ALL','V','A','S','K'].map(filter => <button type="button" className={questionFilter === filter ? 'selected' : ''} onClick={() => setQuestionFilter(filter)} key={filter}>{filter === 'ALL' ? text(`All (${questions.length})`,`全部 (${questions.length})`) : `${filter} (${questions.filter(question => { const label = reference.vaskItems.find(item => item.axis_id === question.sourceLabelId); return label && labelCategory(label.axis_code,label.name_en) === filter; }).length})`}</button>)}</div>
+          <div className="question-list"><div className="question-row heading"><span>#</span><span>{text('Question', '題目')}</span><span>{text('Suggested by', '建議標籤')}</span><span>{text('Required', '必答')}</span><span>{text('Actions', '操作')}</span></div>{questions.map((question,index) => {
+            const source = reference.vaskItems.find(item => item.axis_id === question.sourceLabelId); const category = source ? labelCategory(source.axis_code,source.name_en) : 'custom'; const visible = questionFilter === 'ALL' || category === questionFilter; return visible ? <div className="question-row" key={question.id}><span className="question-order"><b>{index + 1}</b><button type="button" disabled={index === 0} aria-label={text('Move question up', '題目上移')} onClick={() => moveQuestion(question.id,-1)}><ArrowUp size={12}/></button><button type="button" disabled={index === questions.length - 1} aria-label={text('Move question down', '題目下移')} onClick={() => moveQuestion(question.id,1)}><ArrowDown size={12}/></button></span><input aria-label={`${text('Question','題目')} ${index + 1}`} value={isChinese ? question.promptZh : question.promptEn} onChange={event => updateQuestion(question.id,isChinese ? {promptZh:event.target.value}:{promptEn:event.target.value})}/><span className={`source-label source-${String(category).toLowerCase()}`}>{source ? `${source.axis_code} · ${isChinese ? source.name_zh : source.name_en}` : text('Custom','自訂')}</span><select aria-label={`${text('Required','必答')} ${index + 1}`} value={question.required ? 'required' : 'optional'} onChange={event => updateQuestion(question.id,{required:event.target.value === 'required'})}><option value="required">{text('Required','必答')}</option><option value="optional">{text('Optional','選答')}</option></select><span className="question-actions"><button type="button" aria-label={text('Edit question', '修改題目')} onClick={() => document.querySelector<HTMLInputElement>(`input[aria-label='${text('Question','題目')} ${index + 1}']`)?.focus()}><PencilSimple size={15}/></button><button type="button" className="danger" aria-label={text('Remove question', '移除題目')} onClick={() => setQuestions(current => current.filter(item => item.id !== question.id))}><Trash size={15}/></button></span></div> : null;
+          })}</div>
+          <div className="question-add-actions"><button type="button" onClick={() => setSelector('questionBank')}><Plus size={17}/>{text('Add from question bank', '從題庫加入')}</button><button type="button" className="primary" onClick={addCustomQuestion}><Plus size={17}/>{text('Write new question', '撰寫新題目')}</button></div>
         </section>
-      </div>
-      <div className="form-actions"><span>{text('Draft creation is audited. Approval and publication remain separate actions.', '建立草稿會保留稽核紀錄；批核及發布仍屬不同操作。')}</span><button className="primary" disabled={!resolvedPeriod || !create.participantIds.length || !create.vaskItemIds.length || !create.riskFlags.length}>{text('Create activity package', '建立活動資料套件')}<ArrowRight size={16} /></button></div>
+      </div> : <section className="activity-review-panel"><header><div><p className="eyebrow">{text('REVIEW BEFORE DRAFT', '建立草稿前覆核')}</p><h3>{text('Check the activity package', '檢查活動資料套件')}</h3></div><button type="button" onClick={() => setReviewMode(false)}>{text('Back to edit', '返回修改')}</button></header><div className="review-summary-grid"><article><span>{text('Activity', '活動')}</span><b>{isChinese ? create.titleZh : create.titleEn}</b><small>{create.startAt.replace('T',' ')} → {create.endAt.replace('T',' ')}</small></article><article><span>{text('Classification', '活動分類')}</span><b>{text(create.activityNature === 'academic' ? 'Academic' : 'Non-academic',create.activityNature === 'academic' ? '學術' : '非學術')} · {text(create.activitySetting === 'in_class' ? 'In-class' : create.activitySetting === 'out_of_class' ? 'Out-of-class' : 'Outside school',create.activitySetting === 'in_class' ? '課堂內' : create.activitySetting === 'out_of_class' ? '課堂外' : '校外')}</b><small>{resolvedPeriod ? (isChinese ? resolvedPeriod.name_zh : resolvedPeriod.name_en) : text('Period unresolved','學段未確定')}</small></article><article><span>{text('People', '參與人員')}</span><b>{create.selectedClassIds.length} {text('classes','個班別')} · {create.teacherGroupIds.length} {text('teacher groups','個教師群組')}</b><small>{[...new Set(reference.studentClasses.filter(item => create.selectedClassIds.includes(item.class_id)).flatMap(item => item.student_ids))].length} {text('students','名學生')}</small></article><article><span>{text('VASK and form', 'VASK 及表格')}</span><b>{create.vaskItemIds.length} {text('labels','個標籤')} · {questions.length} {text('questions','條題目')}</b><small>{text('Questionnaire will be saved as a successor draft form requiring separate approval.','問卷會保存為後繼表格草稿，並須另行批核。')}</small></article></div><Notice tone="warning">{text('Creating this draft does not publish the activity or questionnaire. Form approval, activity approval and publication remain separate audited actions.', '建立草稿不會發布活動或問卷；表格批核、活動批核及發布仍是分開並可稽核的操作。')}</Notice></section>}
+
+      <div className="activity-builder-footer"><span><b>{questions.length} {text('questions', '條題目')}</b> · {text(`approx. ${Math.max(2,Math.ceil(questions.length * .75))} min`, `約 ${Math.max(2,Math.ceil(questions.length * .75))} 分鐘`)}</span><div>{reviewMode ? <><button type="button" onClick={() => setReviewMode(false)}>{text('Back to edit', '返回修改')}</button><button type="button" className="primary" onClick={event => event.currentTarget.form?.requestSubmit()} disabled={!resolvedPeriod || !create.titleEn || !create.titleZh || !create.descriptionEn || !create.selectedClassIds.length || !create.teacherGroupIds.length || !create.vaskItemIds.length || !questions.length}>{text('Create activity draft', '建立活動草稿')}<ArrowRight size={16}/></button></> : <><button type="submit" disabled={!resolvedPeriod || !create.titleEn || !create.titleZh || !create.descriptionEn || !create.selectedClassIds.length || !create.teacherGroupIds.length || !create.vaskItemIds.length || !questions.length}>{text('Save draft', '儲存草稿')}</button><button type="button" className="primary" disabled={!resolvedPeriod || !create.titleEn || !create.titleZh || !create.descriptionEn || !create.selectedClassIds.length || !create.teacherGroupIds.length || !create.vaskItemIds.length || !questions.length} onClick={() => setReviewMode(true)}>{text('Review activity', '覆核活動')}<ArrowRight size={16}/></button></>}</div></div>
+      {selector && <SelectorDialog kind={selector} reference={reference} create={create} isChinese={isChinese} text={text} onToggle={toggleSelectorValue} onAddQuestion={addBankQuestion} onClose={() => setSelector(null)}/>}
     </form>}
 
     <div className="activity-summary-strip">

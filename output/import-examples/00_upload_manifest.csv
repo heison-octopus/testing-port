@@ -55,3 +55,5 @@ UP-2026-0053,BHSS Platform,54_portfolio_version_items.csv,portfolio_version_item
 UP-2026-0054,BHSS Platform,55_learner_narrative_versions.csv,learner_narrative_version,3.0,2026/27,2026-27-P1,USR-T-001,2026-12-20T14:00:00+08:00,true,validated,Generated edited and final-approved text remain separate
 UP-2026-0055,BHSS Admin,56_staff_groups.csv,staff_group,3.0,2026/27,,USR-ADM-001,2026-08-20T09:30:00+08:00,false,validated,Teacher groups support scoped policy and activity visibility
 UP-2026-0056,BHSS Admin,57_staff_group_memberships.csv,staff_group_membership,3.0,2026/27,,USR-ADM-001,2026-08-20T09:35:00+08:00,true,validated,Effective membership independent from position and functional role
+UP-2026-0057,BHSS Admin,58_rubric_groups.csv,rubric_group,3.1,2026/27,,USR-ADM-001,2026-10-29T17:00:00+08:00,true,validated,Versioned rubric groups organize related skills without changing their assessment meaning
+UP-2026-0058,BHSS Admin,59_rubric_step_definitions.csv,rubric_step_definition,3.1,2026/27,,USR-ADM-001,2026-10-29T17:05:00+08:00,true,validated,Source-linked 8 by 16 definitions extracted from the supplied UF2.0 framework

@@ -1,0 +1,2 @@
+external_user_id,student_number,name_en,name_zh,class_code,guardian_consent_status,media_consent_scope,status,disabled
+EXT-S-NEW,S1999,Example Student,示例學生,S1X-2026-27,pending,no_publication,active,false

@@ -76,6 +76,16 @@ This module records the approved POC interpretation following the 26 October 202
 
 The manual controls that must be available, subject to role and assignment scope, are: reject a false identity match; correct a student/activity or attendance association; correct extracted text/speaker segmentation; exclude one proof from one assessment or Portfolio claim; globally invalidate a false, duplicate, corrupt or withdrawn proof; reject an AI suggestion; supersede a human observation; withdraw/reissue a published result; and restore a wrongly excluded item through a new audited decision. These actions are soft correction/invalidation operations, not destructive deletion.
 
+## 7A. Rubric package and Portfolio pinning
+
+| ID | Requirement | Status |
+| --- | --- | --- |
+| V2-FR-056 | Rubric import/export shall use one four-sheet linked XLSX (`rubric_catalogues`, `rubric_groups`, `rubric_skills`, `rubric_steps`); export-all shall contain actual records, while a separate download supplies the new-record template. | Confirmed System Analyst direction, 29 Oct 2026; not BHSS/JC approval |
+| V2-FR-057 | Each immutable rubric version shall declare exactly one selection mode: `definition_only` or `score_range`. Score mode shall require complete valid non-overlapping bands covering zero to the declared scale, defaulting the scale to 10 only when omitted. | Confirmed System Analyst direction, 29 Oct 2026; not BHSS/JC approval |
+| V2-FR-058 | An active rubric shall not be edited in place. Any imported or in-platform change shall create a validated successor draft and require reasoned authorized activation. | Confirmed System Analyst direction, 29 Oct 2026; not BHSS/JC approval |
+| V2-FR-059 | A Portfolio working version shall pin the active assessment rubric ID/version when generated. Review, approval, publication and export shall retain it; later activation affects only subsequently generated working versions. | Confirmed System Analyst direction, 29 Oct 2026; not BHSS/JC approval |
+| V2-FR-060 | Portfolio editor, reviewer and published views shall expose the pinned rubric ID/version to authorized viewers; published results shall retain the selected definition, included proof/observations, reviewer decision and score where applicable. | Confirmed System Analyst direction, 29 Oct 2026; not BHSS/JC approval |
+
 ## 8. Access summary
 
 | Action | Student | Activity teacher | Class teacher | Staff | SchoolAdmin |

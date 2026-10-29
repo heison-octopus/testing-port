@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Eye, ShieldChevron } from '@phosphor-icons/react';
+import { Books, ChartPolar, CheckCircle, Eye, ShieldChevron, Tag } from '@phosphor-icons/react';
 import { api } from '../api/client';
-import type { ReferenceData } from '../../shared/types';
-import { Field, Notice, PageHeader } from '../components/Layout';
+import type { ReferenceData, RubricWorkspace } from '../../shared/types';
+import { Field, Notice, PageHeader, Status } from '../components/Layout';
 import { useI18n } from '../i18n';
 
 const initial = { targetType: 'group', targetId: 'GRP-ENG-TEACHERS', capabilityId: 'CAP-ACTIVITY-VIEW', effect: 'deny', scopeType: 'activity', scopeId: 'ACT-PRESS-001', reason: '' };
@@ -10,13 +10,23 @@ const initial = { targetType: 'group', targetId: 'GRP-ENG-TEACHERS', capabilityI
 export function PolicyLab({ report }: { report: (error: unknown) => void }) {
   const { isChinese, text, codeLabel } = useI18n();
   const [reference, setReference] = useState<ReferenceData | null>(null), [overrides, setOverrides] = useState<any[]>([]), [form, setForm] = useState(initial), [preview, setPreview] = useState<{ userId: string; name: string; nameZh?: string; beforeAllowed: boolean; afterAllowed: boolean }[]>([]);
-  async function load() { try { const data = await api.policy(); setReference(data.reference); setOverrides(data.overrides); } catch (error) { report(error); } }
+  const [rubrics, setRubrics] = useState<RubricWorkspace | null>(null);
+  const [activeLabels, setActiveLabels] = useState('RUB-VASK-2026');
+  const [questionBankEnabled, setQuestionBankEnabled] = useState(true);
+  async function load() { try { const [data, rubricData] = await Promise.all([api.policy(), api.rubrics()]); setReference(data.reference); setOverrides(data.overrides); setRubrics(rubricData); } catch (error) { report(error); } }
   useEffect(() => { load(); }, []);
   async function runPreview() { try { setPreview(await api.previewPolicy(form)); } catch (error) { report(error); } }
   async function apply() { try { await api.applyPolicy(form); setForm({ ...form, reason: '' }); setPreview([]); await load(); } catch (error) { report(error); } }
   const targets = form.targetType === 'group' ? reference?.groups.map(item => ({ id: item.staff_group_id, name: isChinese ? item.name_zh : item.name_en })) || [] : [{ id: 'USR-T-001', name: isChinese ? '陳美玲' : 'Chan Mei Ling' },{ id: 'USR-T-002', name: isChinese ? '黃啟豪' : 'Wong Kai Ho' },{ id: 'USR-ST-001', name: isChinese ? '李慧敏' : 'Lee Wai Man' }];
   return <>
-    <PageHeader kicker={text('SCHOOL POLICY · EXPLICIT DENY WINS', '校本政策 · 明確拒絕優先')} title={text('Capability policy lab', '功能權限政策測試')} description={text('Preview a scoped school-wide or individual change before writing the audited override.', '寫入可稽核的例外設定前，先預覽校本、群組或個別使用者範圍的影響。')} />
+    <PageHeader kicker={text('SCHOOLADMIN · SCHOOL-WIDE CONFIGURATION', 'SCHOOLADMIN · 全校設定')} title={text('School controls', '校本控制')} description={text('Control which question bank, skill rubric and activity-ability labelling set the school is currently using. Capability overrides remain a separate audited control below.', '設定學校目前採用的題庫、技能 Rubric 及活動能力標籤組合；功能權限例外仍在下方以獨立可稽核方式控制。')} />
+    <section className="school-catalogue-controls">
+      <article><header><Books size={21} /><div><p>{text('QUESTION BANK', '題庫')}</p><h2>{text('Supplied source questionnaire', '所提供來源問卷')}</h2></div><Status value={questionBankEnabled ? 'active' : 'disabled'} /></header><strong>{text('166 questions · 10 source constructs', '166 題 · 10 個來源構念')}</strong><span>{text('Question abilities remain question-owned. They are not fixed mappings to VASK or Skills Builder.', '題目能力由題目本身擁有，並非固定對應 VASK 或 Skills Builder。')}</span><label><input type="checkbox" checked={questionBankEnabled} onChange={event => setQuestionBankEnabled(event.target.checked)} />{text('Available when staff build form versions', '供教職員建立表格版本時使用')}</label></article>
+      <article><header><ChartPolar size={21} /><div><p>{text('CURRENT SKILL RUBRIC', '目前技能 RUBRIC')}</p><h2>{text('Assessment reference', '評估參考')}</h2></div><Status value={rubrics?.active?.status || 'not_configured'} /></header>{rubrics?.active ? <><strong>{isChinese ? rubrics.active.name_zh : rubrics.active.name_en} · {rubrics.active.version}</strong><small className="rubric-version-pin">{rubrics.active.rubric_catalogue_id} · {codeLabel(rubrics.active.selection_mode)} · {rubrics.active.skill_count} {text('skills', '項技能')} · {rubrics.active.step_count} {text('steps', '個階段')}</small><span>{text('This immutable version is pinned only when a new Portfolio working version is generated. Existing working and published Portfolios remain on their recorded rubric version.', '只有建立新 Portfolio 工作版本時才會鎖定這個不可變版本；現有工作版本及已發布 Portfolio 會繼續使用其已記錄的 Rubric 版本。')}</span><div className="catalogue-activation"><CheckCircle size={16} />{text(`${rubrics.active.portfolio_usage_count} Portfolio records currently retain this version. Changes must be imported as a validated successor draft before activation.`, `目前有 ${rubrics.active.portfolio_usage_count} 個 Portfolio 紀錄保留這個版本。任何修改必須先匯入為已驗證的後續草稿，方可啟用。`)}</div></> : <Notice tone="warning">{text('No assessment-capable rubric is active.', '目前沒有生效並可作評估的 Rubric。')}</Notice>}</article>
+      <article><header><Tag size={21} /><div><p>{text('CURRENT ACTIVITY ABILITY LABELLING', '目前活動能力標籤')}</p><h2>{text('Teacher activity options', '老師活動選項')}</h2></div><Status value="active" /></header><Field label={text('School-active label set', '校本生效標籤組合')}><select value={activeLabels} onChange={event => setActiveLabels(event.target.value)}><option value="RUB-VASK-2026">VASK reference vocabulary · 2026</option><option value="LABEL-STUDENT-GROWTH-2027">Student Growth labels · 2027 · {text('uploaded draft', '已上載草稿')}</option></select></Field><span>{text('Once activated, this is the label set teachers see when adding or revising an activity.', '啟用後，老師新增或修訂活動時會看到這套標籤。')}</span><div className="catalogue-activation"><CheckCircle size={16} />{text('Activation changes the available choices; existing activity revisions keep their original version.', '啟用會改變可選項目；現有活動修訂保留原來版本。')}</div></article>
+    </section>
+    <Notice>{text('Rubric activation is persisted through the protected Data Operations successor workflow. Question-bank and activity-label controls remain demonstration settings in this POC.', 'Rubric 啟用會透過「數據操作」內受保護的後續版本流程保存；題庫及活動標籤控制在本 POC 仍屬示範設定。')}</Notice>
+    <h2 className="section-title">{text('Capability overrides', '功能權限例外')}</h2>
     <section className="policy-editor">
       <Field label={text('Target type', '目標類型')}><select value={form.targetType} onChange={event => setForm({ ...form, targetType: event.target.value, targetId: event.target.value === 'group' ? 'GRP-ENG-TEACHERS' : 'USR-T-001' })}><option value="group">{text('Staff group', '教職員群組')}</option><option value="user">{text('Individual user', '個別使用者')}</option></select></Field>
       <Field label={text('Target', '目標')}><select value={form.targetId} onChange={event => setForm({ ...form, targetId: event.target.value })}>{targets.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></Field>

@@ -1,0 +1,2 @@
+activity_id,media_base_path,source_system,validation_mode,status,disabled
+ACT-EXAMPLE-001,school_media/2026-27/ACT-EXAMPLE-001/,school_archive,metadata_only,active,false

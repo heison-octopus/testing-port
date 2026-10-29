@@ -30,6 +30,8 @@
 | FRM-FR-013 | Form review shall use the school's independently configured lean approval policy and named eligible reviewer assignment; reviewer eligibility shall not depend on the person's job title. | Approved System Analyst architecture decision, 28 Oct 2026 | P1 |
 | FRM-FR-014 | Form approval and publication shall remain separate capabilities even when policy assigns both to one person. Self-approval shall follow the active form policy. | Approved System Analyst architecture decision, 28 Oct 2026 | P1 |
 | FRM-FR-015 | Unassigned, declined or overdue form reviews shall enter the configured default/escalation queue with reason and audit history. | Approved System Analyst architecture decision, 28 Oct 2026 | P1 |
+| FRM-FR-016 | The supplied source instrument shall be represented visibly as a versioned question bank. The current workbook evidence contains 166 questions across ten source constructs; each question retains its own source and ability definition and remains separate from VASK and rubric mappings. | Confirmed source evidence and System Analyst direction, 29 Oct 2026; not BHSS/JC approval | P1 |
+| FRM-FR-017 | SchoolAdmin shall control whether a validated question-bank version is available to staff building form versions. Activating or disabling a bank version changes future selection only and shall not rewrite published forms or historical responses. | Confirmed System Analyst direction, 29 Oct 2026; not BHSS/JC approval | P1 |
 
 ## 3. Question and form-definition fields
 

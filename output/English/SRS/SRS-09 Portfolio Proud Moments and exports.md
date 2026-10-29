@@ -101,3 +101,11 @@ Each export records snapshot version, generator, recipient category, filter/scop
 - A class teacher can submit 25 reviewed students and leave the remainder in a filterable incomplete/no-approved-version queue.
 - Editing `Me as a learner` preserves the generated wording, sources, teacher-edited wording and final approval; it does not permit editing the student's self-introduction.
 
+## 8. Portfolio rubric pinning
+
+**Confirmed System Analyst direction, 29 Oct 2026; not BHSS/JC approval.** When a Portfolio working version is generated, it stores the then-active assessment-capable `rubric_catalogue_id`. The student submission, class-teacher review, approval record, published snapshot, visualization and export all retain that same ID/version. Activating a successor rubric changes only working versions generated afterwards. Existing drafts, submitted versions and published snapshots are not recalculated, relabelled or migrated silently.
+
+The editor, reviewer and published visualization shall display the pinned rubric name, version and ID to authorized viewers. A published result retains the selected axis/step, the definition snapshot, exact included observations/proof, reviewer decision and score when applicable.
+
+Acceptance: after a successor is activated, a newly generated working version uses it; an older working version and its published snapshot continue to resolve and display the prior rubric version.
+

@@ -1,0 +1,2 @@
+label_code,name_en,name_zh,description_en,description_zh,catalogue_code,catalogue_version,status,disabled
+LBL-EXAMPLE,Example activity ability,示例活動能力,Describes an intended activity ability,描述活動擬培養的能力,ACTIVITY-ABILITY,1.0,draft,false

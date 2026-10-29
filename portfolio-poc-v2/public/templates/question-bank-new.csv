@@ -1,0 +1,2 @@
+question_id,source_workbook,source_sheet,source_row,source_construct_en,source_construct_zh,prompt_en,prompt_zh,response_type,scale_type,ability_code,ability_name_en,ability_name_zh,approval_status,disabled
+,School question bank,Question bank,2,Example construct,示例構念,Example prompt,示例題目,scale,frequency_1_to_6,AB-EXAMPLE,Example ability,示例能力,draft,false

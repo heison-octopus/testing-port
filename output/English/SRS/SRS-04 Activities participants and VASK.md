@@ -26,6 +26,9 @@ Define a school-owned activity as a stable container connecting versioned contex
 | ACT-FR-016 | An assigned teacher without edit authority shall submit a versioned change request to the owner/authorized editor, with field, proposed value, reason, actor and resolution. | Approved System Analyst architecture decision, 28 Oct 2026 | P1 |
 | ACT-FR-017 | Activity approval policy shall independently support `not_required`, `automatic`, `single_reviewer` and `two_stage_sequential`; approval and publication may be assigned separately or to the same eligible person. | Approved System Analyst architecture decision, 28 Oct 2026 | P1 |
 | ACT-FR-018 | Self-assignment/self-approval shall follow the active school policy. Even when allowed, the creator must have approval capability, matching scope and a named audited assignment. | Approved System Analyst architecture decision, 28 Oct 2026 | P1 |
+| ACT-FR-019 | SchoolAdmin shall select one active, versioned activity-ability labelling set from the catalogues that have passed import validation. Teachers creating or revising an activity shall be offered only labels from that active set. Existing activity revisions retain the exact label-set version originally selected. | Confirmed System Analyst direction, 29 Oct 2026; not BHSS/JC approval | P1 |
+| ACT-FR-020 | Activating a new activity-ability labelling set changes available teacher choices only; it shall not relabel existing activities, create assessment results or alter the active skill rubric. | Confirmed System Analyst direction, 29 Oct 2026; not BHSS/JC approval | P0/P1 |
+| ACT-FR-021 | VASK shall be the seeded default activity-ability labelling set. When a teacher creates a new activity, the system shall automatically resolve the school's currently active labelling-set version and show its labels; the activity creator shall not ask the teacher to choose between VASK and assessment rubrics. A SchoolAdmin-uploaded successor labelling set affects new revisions only after validation and explicit activation. | Confirmed System Analyst direction, 29 Oct 2026; not BHSS/JC approval | P0/P1 |
 
 ## 3. Activity data package
 
@@ -92,4 +95,5 @@ Routine use of the approved default form with no new sensitive media may follow 
 - Editing an approved description creates revision 2 while revision 1 remains the official view and the same `activity_id` continues to own existing evidence.
 - A teacher assigned to a staff-created activity without edit authority can submit a change request but cannot overwrite the description.
 - A teacher with the configured approval capability may approve an activity even if their job title is not “staff”; self-approval succeeds only where explicitly allowed.
+- A new activity automatically displays labels from the school's active VASK labelling-set version. Skills Builder and RC360 assessment rubrics do not appear as alternative activity-labelling catalogues.
 

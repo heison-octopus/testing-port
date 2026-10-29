@@ -14,6 +14,13 @@ api.post('/policy/overrides', controller.applyPolicy);
 
 api.get('/imports', controller.imports);
 api.get('/imports/activity-catalogue/export', controller.exportActivityCatalogue);
+api.get('/imports/rubrics', controller.rubrics);
+api.get('/imports/rubrics/export', controller.exportRubrics);
+api.get('/imports/rubrics/template', controller.rubricTemplate);
+api.get('/imports/rubrics/:rubricId', controller.rubricPackage);
+api.post('/imports/rubrics/preview', importUpload.single('file'), controller.previewRubrics);
+api.post('/imports/rubrics/drafts/:draftId/commit', controller.commitRubricSuccessor);
+api.post('/imports/rubrics/:rubricId/activate', controller.activateRubric);
 api.post('/imports/activity-catalogue/files', importUpload.single('file'), controller.uploadActivityCatalogue);
 api.post('/imports/files', importUpload.single('file'), controller.uploadImport);
 api.post('/imports/connectors/:sourceSystemId/runs', controller.runImportConnector);
