@@ -128,7 +128,9 @@ The stable root of one actual activity. Governed display/content fields belong t
 | `created_by_user_id` | UUID | Original creator; not an ongoing permission grant |
 | `latest_revision_id` | UUID | Latest draft or submitted revision |
 | `current_approved_revision_id` | UUID, nullable | Official content revision; may trail latest revision |
-| `operational_status` | enum | `planned`, `scheduled`, `active`, `completed`, `cancelled`, `archived` |
+| `operational_status` | enum | `planned`, `scheduled`, `active`, `completed`, `cancelled`, `archived`, `disabled`; `disabled` is an explicit soft lifecycle state, never inferred from a missing import row |
+| `disabled_previous_status` | enum, nullable | State to restore after a new authorized restore decision |
+| `disabled_reason`, `disabled_by_user_id`, `disabled_at` | mixed, nullable | Current soft-disable context; full history remains in `activity_lifecycle_events` |
 | `created_at` | timestamp | Required |
 | `updated_at` | timestamp | Required |
 
@@ -1050,6 +1052,10 @@ When staff resolve an imported response with an incorrect student ID, keep the o
 | `correction_reason` | text | Required |
 | `corrected_by_user_id` | UUID | Staff member who made the decision |
 | `corrected_at` | timestamp | Required |
+
+#### Activity catalogue import and lifecycle records
+
+**Confirmed System Analyst direction, 29 Oct 2026; not BHSS/JC approval.** `import_batches` identifies the `activity_catalogue` contract and delta mode. `import_records` preserves original and normalized rows, expected revision, lifecycle action and row decision; `import_record_links` connects a committed row to the stable activity and any successor revision. `activity_lifecycle_events` append explicit disable/restore decisions with prior/new state, reason, actor, import row and time. `activity_dependency_impacts` registers affected proof, submissions, observations, curation and Portfolio items as `needs_review`/`stale`. Omission from a file creates no row and no lifecycle effect.
 
 ---
 

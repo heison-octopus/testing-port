@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { portfolioRepository } from '../repositories/portfolioRepository.js';
-import { activityRepository } from '../repositories/activityRepository.js';
 import { approvalRepository } from '../repositories/approvalRepository.js';
 import { identityRepository } from '../repositories/identityRepository.js';
-import { capabilityDecision, fail, requireCapability } from './access.js';
+import { memorableRepository } from '../repositories/memorableRepository.js';
+import { capabilityDecision, fail, requireCapability, sessionProfile } from './access.js';
 
 function accessResource(studentId, periodId) {
   const membership = identityRepository.classMembership(studentId, periodId);
@@ -17,6 +17,7 @@ function canSee(user, studentId, periodId) {
 
 export const portfolioService = {
   list(user, periodId = '2026-27-P1') {
+    if (!sessionProfile(user).pageAccess.portfolios) fail(403, 'Portfolio workspace access is not assigned');
     return portfolioRepository.students(user.school_id).filter(student => canSee(user, student.user_id, periodId)).map(student => {
       const versions = portfolioRepository.versions(student.user_id, periodId), latest = versions[0] || null, official = portfolioRepository.official(student.user_id, periodId);
       return { student: { id: student.user_id, name: student.name_en, nameZh: student.name_zh }, latest, officialVersion: official?.version || null, officialSnapshot: official ? { id: official.portfolio_snapshot_id, publishedAt: official.published_at } : null, status: official ? 'approved_version_available' : 'no_approved_version' };
@@ -26,20 +27,30 @@ export const portfolioService = {
     if (!canSee(user, studentId, periodId)) fail(404, 'Portfolio not found');
     const student = identityRepository.user(studentId);
     if (!student) fail(404, 'Student not found');
-    return { student: { id: student.user_id, name: student.name_en, nameZh: student.name_zh }, versions: portfolioRepository.versions(studentId, periodId).map(item => portfolioRepository.version(item.portfolio_working_version_id)), official: portfolioRepository.official(studentId, periodId) };
+    return { student: { id: student.user_id, name: student.name_en, nameZh: student.name_zh }, periodId, skillSummary: portfolioRepository.skillSummary(studentId, periodId), versions: portfolioRepository.versions(studentId, periodId).map(item => portfolioRepository.version(item.portfolio_working_version_id)), official: portfolioRepository.official(studentId, periodId) };
+  },
+  editor(user, studentId, periodId = '2026-27-P1') {
+    if (user.user_type !== 'student' || user.user_id !== studentId) fail(404, 'Portfolio editor not found');
+    const detail = this.detail(user, studentId, periodId);
+    return { ...detail, submittedMemorableActivities: memorableRepository.selections(studentId, periodId).filter(item => ['submitted','approved'].includes(item.submission_status)) };
+  },
+  view(user, studentId, periodId = '2026-27-P1') {
+    if (!canSee(user, studentId, periodId)) fail(404, 'Portfolio not found');
+    const student = identityRepository.user(studentId);
+    if (!student) fail(404, 'Student not found');
+    const official = portfolioRepository.official(studentId, periodId);
+    return { student: { id: student.user_id, name: student.name_en, nameZh: student.name_zh }, periodId, skillSummary: portfolioRepository.skillSummary(studentId, periodId), official };
   },
   createDraft(user, input) {
     if (user.user_type !== 'student' || user.user_id !== input.studentId) fail(403, 'Students may edit only their own working Portfolio');
     if (!input.selfIntroduction?.trim()) fail(400, 'Self-introduction is required');
-    if (input.activityId) {
-      const person = activityRepository.person(input.activityId, user.user_id);
-      if (!person) fail(400, 'The selected memorable activity is not assigned to this student');
-    }
-    const versions = portfolioRepository.versions(user.user_id, input.periodId || '2026-27-P1'), latest = versions[0];
+    const periodId = input.periodId || '2026-27-P1';
+    const memorableSelections = memorableRepository.selections(user.user_id, periodId).filter(item => ['submitted','approved'].includes(item.submission_status));
+    const versions = portfolioRepository.versions(user.user_id, periodId), latest = versions[0];
     const id = `PWV-DEMO-${randomUUID()}`;
-    portfolioRepository.createDraft({ id, schoolId: user.school_id, studentId: user.user_id, periodId: input.periodId || '2026-27-P1', number: (latest?.version_number || 0) + 1, supersedesId: latest?.portfolio_working_version_id || null, selfIntroduction: input.selfIntroduction, activityId: input.activityId || null, activityText: input.activityText || '', createdAt: new Date().toISOString() });
+    portfolioRepository.createDraft({ id, schoolId: user.school_id, studentId: user.user_id, periodId, number: (latest?.version_number || 0) + 1, supersedesId: latest?.portfolio_working_version_id || null, selfIntroduction: input.selfIntroduction.trim(), memorableSelections, createdAt: new Date().toISOString() });
     identityRepository.audit(user.school_id, user.user_id, 'portfolio.draft.created', 'portfolio_working_version', id);
-    return this.detail(user, user.user_id, input.periodId);
+    return this.editor(user, user.user_id, periodId);
   },
   submit(user, versionId) {
     const version = portfolioRepository.version(versionId);
@@ -54,14 +65,22 @@ export const portfolioService = {
     const version = portfolioRepository.version(versionId);
     if (!version) fail(404, 'Working version not found');
     const resource = accessResource(version.student_user_id, version.period_id);
-    const access = requireCapability(user, 'portfolio.review', resource);
+    requireCapability(user, 'portfolio.review', resource);
     if (!['student_submitted','class_teacher_review'].includes(version.status)) fail(400, 'This version is not awaiting class-teacher review');
     if (!Array.isArray(input.decisions) || !input.decisions.length) fail(400, 'Review at least one submitted item');
-    const reviewedAt = new Date().toISOString();
-    portfolioRepository.review({ versionId, decisions: input.decisions, narrativeId: version.narrative?.learner_narrative_version_id || null, narrativeText: input.narrativeText || '', narrativeReason: input.narrativeReason || '', actorId: user.user_id, reviewedAt });
+    const validItemIds = new Set(version.items.map(item => item.portfolio_version_item_id));
+    if (input.decisions.some(decision => !validItemIds.has(decision.itemId))) fail(400, 'Every reviewed item must belong to this Portfolio version');
+    if (input.decisions.some(decision => !['included','returned'].includes(decision.decision) || !decision.reason?.trim())) fail(400, 'Every item requires a supported decision and reason');
+    if (input.narrativeText && version.narrative) {
+      requireCapability(user, 'portfolio.generated_narrative.edit', resource);
+      if (!input.narrativeReason?.trim()) fail(400, 'A narrative-edit reason is required');
+    }
     const policy = approvalRepository.policy('portfolio', user.school_id), step = approvalRepository.step(policy.approval_policy_version_id, 2), approver = identityRepository.user(input.approverId || 'USR-ST-001');
+    if (!approver) fail(400, 'Select a Portfolio approver');
     const approverAccess = capabilityDecision(approver, 'portfolio.approve', { school_id: user.school_id });
     if (!approverAccess.allowed) fail(400, 'Selected Portfolio approver is not eligible');
+    const reviewedAt = new Date().toISOString();
+    portfolioRepository.review({ versionId, decisions: input.decisions, narrativeId: version.narrative?.learner_narrative_version_id || null, narrativeText: input.narrativeText || '', narrativeReason: input.narrativeReason || '', actorId: user.user_id, reviewedAt });
     approvalRepository.createAssignment({ id: `AASG-PORT-${randomUUID()}`, schoolId: user.school_id, policyId: policy.approval_policy_version_id, stepId: step.approval_policy_step_id, targetType: 'portfolio_working_version', targetId: versionId, targetVersionId: versionId, assigneeId: approver.user_id, roleAssignmentId: approverAccess.roleAssignmentId, assignedBy: user.user_id, assignedAt: reviewedAt, dueAt: new Date(Date.now() + policy.overdue_escalation_minutes * 60000).toISOString() });
     identityRepository.audit(user.school_id, user.user_id, 'portfolio.class_teacher_reviewed', 'portfolio_working_version', versionId, input.reason || null);
     return { ok: true };

@@ -3,24 +3,35 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"npm:server\" \"npm:client\"",
+    "dev": "concurrently \"npm:connector:fixture\" \"npm:server:fixture\" \"npm:client\"",
     "client": "vite --host 127.0.0.1 --port 5174",
-    "server": "PORT=3200 node --experimental-sqlite server/index.js",
+    "server": "PORT=3200 node --env-file-if-exists=.env --experimental-sqlite server/index.js",
+    "server:fixture": "TIME_INFINITY_ROSTER_BASE_URL=http://127.0.0.1:3210/ npm run server",
+    "connector:fixture": "node scripts/mock-time-infinity-server.js",
     "build": "tsc --noEmit && vite build",
-    "test": "node --experimental-sqlite --test tests/*.test.js"
+    "test": "node --experimental-sqlite --test tests/*.test.js",
+    "test:api": "node --experimental-sqlite --test tests/*.test.js",
+    "test:e2e": "playwright test",
+    "test:all": "npm run build && npm run test:api && npm run test:e2e",
+    "test:llm:live": "node --env-file-if-exists=.env tests/live-llm-smoke.js",
+    "llm:models": "node --env-file-if-exists=.env scripts/list-llm-models.js"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
     "@tailwindcss/vite": "^4.1.0",
     "@vitejs/plugin-react": "^4.3.0",
     "concurrently": "^9.1.0",
+    "csv-parse": "^6.1.0",
+    "exceljs": "^4.4.0",
     "express": "^5.1.0",
+    "multer": "^2.0.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwindcss": "^4.1.0",
     "vite": "^6.2.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "typescript": "^5.7.0"

@@ -84,6 +84,7 @@ A SchoolAdmin manages the school tenant, account identities, reusable role defin
 - Publish, withdraw, or retire approved form versions and configure their visibility and validity dates.
 - Configure consent categories, media access scopes, retention periods, and deletion workflows.
 - Review import batches, Time Infinity staging records, audit logs, and failed validations.
+- Export and commit a school-scoped activity-catalogue delta when `import.export`/`import.commit` are granted. Missing rows have no effect; explicit disable/restore and material successor revisions remain auditable. This operational import authority does not grant content approval.
 - Revoke sessions and reset account access.
 - View the school's effective feature availability and request/configure changes only within delegated policy; the ordinary SchoolAdmin role cannot re-enable a disabled hosted-service school.
 - View school-wide administrative metadata and published summaries.
@@ -221,6 +222,10 @@ Each school configures activity approval independently from form, submission, Po
 - A routine school activity using the approved default form and no new media collection may be automatically approved if school policy allows it.
 - An activity requires human approval when it uses a custom form, collects image/audio/video, occurs off-site, imports external participants, changes intended rubric-axis labels, or introduces a new data-retention requirement.
 - A policy may separate approval from publication or assign both capabilities to the same eligible person. Self-approval is configurable per workflow and scope; if enabled, an eligible activity author may assign themselves. The decision still requires a named assignment, reason and audit record.
+
+## Activity catalogue import authority
+
+**Confirmed System Analyst direction, 29 Oct 2026; not BHSS/JC approval.** The editable activity export deliberately omits the immutable original author. `created_by_user_id`, current owner, uploader/committer and approval assignee are separate identities. SchoolAdmin may operate the school-scoped delta import when granted import capabilities but does not become the activity author, owner or approver. A material row creates a successor draft and uses the normal named approval assignment. Only explicit `disable` changes canonical availability; excluding the staged row has no lifecycle effect. Disabled activities remain staff-auditable but are denied to participant/student surfaces server-side.
 - Unassigned, declined or overdue work enters the default/escalation queue for an approval coordinator. Time-bounded delegation is supported.
 - Suggested lifecycle: `draft → pending_review → approved → active → completed → archived`.
 

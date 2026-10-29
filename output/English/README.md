@@ -12,6 +12,7 @@ This folder contains the current English architecture, planning, and stakeholder
 | `Aspects updated.md` | Non-authoritative before/after entity and field explanation; Core governs any difference | `../Chinese/資料欄位修訂.md` |
 | `Internal system review and manday estimate.md` | Internal scope analysis and delivery estimate | `../Chinese/內部系統檢視及人日估算.md` |
 | `External lean MVP proposal.md` | Stakeholder-facing recommended MVP | `../Chinese/對外精簡MVP方案.md` |
+| `Playground v2 coverage against original proposal.md` | Traceable comparison of the current v2 POC against `Design ideas.docx`, separating demonstrated, partial, dummy-contract and uncovered capabilities | `../Chinese/Playground v2 對原始構想的覆蓋評估.md` |
 | `BHSS discovery findings and client clarification questions.docx` | Client discovery and clarification document | `../Chinese/BHSS探索結果及客戶確認問題.docx` |
 | [`SRS/`](SRS/) | Modular, testable software requirements including access control, field limits, infrastructure and page visibility | [`../Chinese/SRS/`](../Chinese/SRS/) |
 

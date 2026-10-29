@@ -201,6 +201,24 @@ unpublished -> published_to_portfolio -> withdrawn
 
 When staff resolve an incorrect student ID, the imported payload remains immutable. The system records the original and resolved student IDs, before and after values, correction reason, correcting user, and timestamp. Published or counted records use the resolved identity without erasing the source error.
 
+### Activity-catalogue delta import and lifecycle policy
+
+**Status: confirmed System Analyst direction on 29 October 2026. This is internal product/architecture direction, not BHSS or JC approval.**
+
+Activity-catalogue CSV/XLSX import is a **non-destructive delta (partial upsert)**. The file is not an authoritative snapshot: absence from the file means `no_change`. An activity changes only when its stable `activity_id` appears in a validated, included row, or when an authorized user edits it through the platform. A future authoritative-snapshot mode would need a separate policy, explicit `missing = disable` choice and impact preview; it is not inferred from an ordinary upload.
+
+The editable round trip contains `activity_id`, `expected_revision_number`, governed editable fields, the current owner identifier, `lifecycle_action` and `change_reason`. It omits the immutable original author and upload-audit identities. An authorized audit export may show creator/uploader as read-only provenance. A stale expected revision is rejected rather than overwriting newer data. A new imported activity must name an eligible initial owner or an approved external-source authorship policy; the uploader is never silently made its author.
+
+The lifecycle actions are `upsert`, `disable` and `restore`:
+
+- `upsert` with identical governed values is an audited no-op. A material change creates an immutable successor draft against the same `activity_id`; a submitted/approved/published activity follows the normal reapproval path. The last approved revision remains official while the successor is pending.
+- `disable` is the only ordinary import action that hides the canonical activity. It records reason, actor, time and previous state. Excluding the staged row only excludes that requested change; it does not disable the activity.
+- `restore` is a new audited lifecycle decision and never erases the disable event.
+
+`created_by_user_id` remains the original author. `owner_user_id`, uploaded/requested/service actor, committer and approval assignee remain separate. Upload or commit authority does not confer edit ownership, authorship or approval authority. Platform editing and spreadsheet import share server-side scope checks, validation, revision and approval policy.
+
+When disabled, the activity is unavailable on student/participant discovery, direct activity, response, assessment and Proud Moment surfaces, and no new participant media/evidence fetch is authorized through it. Participation, media, proof, source rows and revision history remain; authorized staff retain audit access. Dependencies are registered as `needs_review` or `stale`, and an official output is withdrawn or reissued through an audited successor rather than silently recalculated. No action in this lifecycle hard-deletes the activity or its evidence.
+
 ### HKEAA input and the human review gate
 
 The RC360 image states that the Skills component is partially assessed or validated with HKEAA involvement, while teachers perform final review and confirmation. The current scope therefore requires:

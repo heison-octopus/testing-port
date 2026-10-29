@@ -12,6 +12,7 @@
 | `資料欄位修訂.md` | 非權威的修改前／後實體及欄位說明；如有差異以核心文件為準 | `../English/Aspects updated.md` |
 | `內部系統檢視及人日估算.md` | 內部範圍分析及開發估算 | `../English/Internal system review and manday estimate.md` |
 | `對外精簡MVP方案.md` | 對外使用的建議 MVP 範圍 | `../English/External lean MVP proposal.md` |
+| `Playground v2 對原始構想的覆蓋評估.md` | 把現時 v2 POC 與 `Design ideas.docx` 作可追溯比較，分開已示範、部分覆蓋、模擬合約及未覆蓋功能 | `../English/Playground v2 coverage against original proposal.md` |
 | `BHSS探索結果及客戶確認問題.docx` | 客戶探索及確認問題文件 | `../English/BHSS discovery findings and client clarification questions.docx` |
 | [`SRS/`](SRS/) | 模組化及可驗收的軟件需求，包括存取控制、欄位限制、基礎設施及頁面可見範圍 | [`../English/SRS/`](../English/SRS/) |
 

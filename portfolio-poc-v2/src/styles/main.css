@@ -1,12 +1,15 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ink: #342820;
-  --color-muted: #756a62;
-  --color-line: #e8e1db;
-  --color-soft: #f8f5f2;
-  --color-orange: #e97838;
-  --color-orange-soft: #fff1e8;
+  --color-ink: #183f43;
+  --color-muted: #667271;
+  --color-line: #dde5e2;
+  --color-soft: #f5f8f7;
+  --color-orange: #e66a17;
+  --color-orange-soft: #fff1e7;
+  --color-teal: #176b72;
+  --color-teal-dark: #0d4e55;
+  --color-mint: #d6ebe7;
   --color-pink-soft: #fff0f1;
   --color-brown-soft: #efe4d7;
   --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -14,12 +17,12 @@
 
 @layer base {
   * { box-sizing: border-box; }
-  body { @apply m-0 bg-white text-ink antialiased; font-family: var(--font-sans); }
+  body { @apply m-0 bg-white text-[#283332] antialiased; font-family: var(--font-sans); }
   button, input, select, textarea { font: inherit; }
   button { @apply cursor-pointer; }
   button:disabled { @apply cursor-not-allowed opacity-45; }
   h1, h2, h3, p { @apply m-0; }
-  h1 { @apply text-4xl font-semibold tracking-[-0.045em]; }
+  h1 { @apply text-[2.15rem] font-semibold tracking-[-0.045em] text-[#1d2827]; }
   h2 { @apply text-xl font-semibold tracking-[-0.025em]; }
   h3 { @apply text-sm font-semibold; }
   small { @apply block text-xs text-muted; }
@@ -34,34 +37,42 @@
 
 @layer components {
   .app-shell { @apply flex min-h-screen; }
-  .sidebar { @apply fixed inset-y-0 left-0 z-20 flex w-64 flex-col border-r border-line bg-[#fbfaf9] px-4 py-5; }
-  .brand { @apply flex items-baseline gap-2 bg-transparent px-3 py-2 text-left; }
-  .brand span { @apply text-xl font-black tracking-[-0.05em]; }
-  .brand small { @apply text-[10px] font-semibold tracking-[0.16em] text-orange; }
-  .stage-link { @apply mx-3 mb-7 mt-1 flex items-center gap-1 text-xs text-muted no-underline hover:text-orange; }
+  .sidebar { @apply fixed inset-y-0 left-0 z-20 flex w-64 flex-col border-r border-line bg-[#f6f7f5] px-4 py-5; }
+  .brand { @apply mb-4 flex items-center gap-3 border-0 bg-transparent px-2 py-1 text-left; }
+  .brand > span:last-child { @apply min-w-0; }
+  .brand b { @apply block text-base font-semibold tracking-[-0.02em] text-teal-dark; }
+  .brand small { @apply mt-1 block text-[8px] font-bold tracking-[0.16em] text-orange; }
+  .brand-mark { @apply flex h-10 w-10 shrink-0 items-center justify-center bg-teal text-white; }
+  .stage-link { @apply mt-4 flex items-center gap-1 text-xs text-muted no-underline hover:text-orange; }
   .sidebar nav { @apply grid gap-1; }
+  .nav-group { @apply mb-3; }
+  .nav-group > p { @apply mb-1 mt-3 px-3 text-[9px] font-bold tracking-[0.18em] text-orange; }
   .nav-link { @apply flex items-center gap-3 border-l-2 border-transparent bg-transparent px-3 py-2.5 text-left text-sm text-muted; }
   .nav-link:hover { @apply bg-white text-ink; }
-  .nav-link.active { @apply border-orange bg-orange-soft font-semibold text-ink; }
+  .nav-link.active { @apply border-teal bg-mint font-semibold text-teal-dark; }
   .sidebar-note { @apply mt-auto border-t border-line px-3 pt-4; }
   .sidebar-note b, .sidebar-note span { @apply block text-xs; }
   .sidebar-note span { @apply mt-1 leading-relaxed text-muted; }
   .main-panel { @apply ml-64 min-w-0 flex-1; }
-  .topbar { @apply sticky top-0 z-10 flex h-[68px] items-center justify-between border-b border-line bg-white/95 px-8 backdrop-blur; }
+  .topbar { @apply sticky top-0 z-10 flex h-16 items-center justify-between border-b border-line bg-white px-8; }
+  .topbar.topbar-collapsed { @apply hidden; }
   .topbar > div { @apply flex items-center gap-3 text-xs text-muted; }
+  .topbar-toggle { @apply ml-1 flex items-center gap-1 border-0 border-l border-line bg-transparent pl-3 text-[11px] font-semibold text-muted hover:text-orange; }
+  .topbar-reveal { @apply sticky top-0 z-10 flex h-9 items-center justify-end border-b border-line bg-white/95 px-8 backdrop-blur; }
+  .topbar-reveal button { @apply flex items-center gap-1 border-0 bg-transparent text-[11px] font-semibold text-muted hover:text-orange; }
   .language-toggle { @apply inline-flex border border-white/25; }
   .language-toggle button { @apply border-0 bg-transparent px-3 py-2 text-xs font-semibold text-white/60; }
   .language-toggle button.active { @apply bg-white text-ink; }
   .language-toggle.compact { @apply border-line; }
   .language-toggle.compact button { @apply px-2.5 py-1.5 text-muted; }
-  .language-toggle.compact button.active { @apply bg-ink text-white; }
+  .language-toggle.compact button.active { @apply bg-teal-dark text-white; }
   .stage-pill { @apply bg-orange-soft px-2 py-1 font-semibold text-orange; }
   .account { @apply text-right!; }
   .account > span b, .account > span small { @apply block; }
   .account button { @apply border-0 bg-transparent p-2 text-muted hover:text-orange; }
-  .content { @apply mx-auto max-w-[1500px] px-8 py-8; }
+  .content { @apply mx-auto max-w-[1320px] px-8 py-9; }
   .page-header { @apply mb-7 flex items-end justify-between gap-6 border-b border-line pb-6; }
-  .page-header p, .eyebrow { @apply mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-orange; }
+  .page-header p, .eyebrow { @apply mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-orange; }
   .page-header span { @apply mt-2 block max-w-3xl text-sm leading-relaxed text-muted; }
   button.primary, .form-actions button.primary, .submit-strip button.primary, .review-strip button.primary { @apply flex items-center justify-center gap-2 border border-orange bg-orange px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#cf6126]; }
   .notice { @apply my-4 flex items-center gap-2 border-l-4 border-line bg-soft px-4 py-3 text-sm text-muted; }
@@ -72,9 +83,9 @@
   .field input, .field select, .field textarea { @apply font-normal text-ink; }
   .mono { @apply font-mono text-[11px]! text-muted; }
   .status { @apply inline-flex whitespace-nowrap border px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.07em]; }
-  .status-approved, .status-published, .status-approved-version-available, .status-included { @apply border-[#b7d8c2] bg-[#eef7f1] text-[#356348]; }
-  .status-draft, .status-student-submitted, .status-class-teacher-review, .status-assigned, .status-in-review, .status-pending { @apply border-[#efc7a5] bg-orange-soft text-[#985128]; }
-  .status-changes-requested, .status-rejected, .status-returned, .status-no-approved-version, .status-awaiting-staff-approval { @apply border-[#edc1c5] bg-pink-soft text-[#86454b]; }
+  .status-approved, .status-published, .status-approved-version-available, .status-included, .status-accepted, .status-ready, .status-ready-to-commit, .status-committed, .status-active { @apply border-[#b7d8c2] bg-[#eef7f1] text-[#356348]; }
+  .status-draft, .status-student-submitted, .status-class-teacher-review, .status-assigned, .status-in-review, .status-pending, .status-staged, .status-catalogued, .status-valid { @apply border-[#efc7a5] bg-orange-soft text-[#985128]; }
+  .status-changes-requested, .status-rejected, .status-returned, .status-withdrawn, .status-no-approved-version, .status-awaiting-staff-approval, .status-invalid, .status-excluded, .status-disabled, .status-needs-resolution { @apply border-[#edc1c5] bg-pink-soft text-[#86454b]; }
   .table-wrap { @apply overflow-x-auto border border-line; }
   .tag-row { @apply flex flex-wrap gap-2; }
   .tag { @apply mr-1.5 mb-1.5 inline-flex flex-col border border-line bg-soft px-2 py-1 text-xs; }
@@ -204,18 +215,19 @@
   .coverage-groups article p { @apply mt-1 text-xs leading-relaxed text-muted; }
   .coverage-state { @apply flex h-fit items-center gap-1.5 border px-2 py-1.5 text-[10px] font-semibold uppercase tracking-[0.05em]; }
 
-  .login-shell { @apply grid min-h-screen grid-cols-[1fr_minmax(480px,0.8fr)]; }
-  .login-intro { @apply flex flex-col justify-center bg-ink px-[9vw] py-16 text-white; }
+  .login-shell { @apply grid min-h-screen grid-cols-[0.9fr_1.1fr] bg-[#edf4f2]; }
+  .login-intro { @apply flex flex-col justify-center bg-teal-dark px-[8vw] py-16 text-white; }
   .login-tools { @apply mb-auto flex items-center justify-between gap-4; }
   .login-tools > a { @apply text-xs text-white/60 no-underline hover:text-orange; }
-  .login-intro h1 { @apply max-w-2xl text-5xl leading-[1.05]; }
+  .login-intro h1 { @apply max-w-2xl text-5xl leading-[1.05] text-white; }
   .login-intro > p:not(.eyebrow) { @apply mt-6 max-w-xl text-base leading-relaxed text-white/65; }
-  .login-principles { @apply mt-10 grid gap-3; }
-  .login-principles span { @apply flex items-center gap-3 text-sm; }
+  .login-flow { @apply mt-8 flex items-center gap-3 text-sm font-semibold text-white/80; }
+  .login-principles { @apply mt-8 grid gap-3; }
+  .login-principles span { @apply flex items-center gap-3 text-sm text-white/85; }
   .ai-disabled { @apply mt-auto flex items-start gap-3 border-l-4 border-[#9c7753] bg-[#4d3d31] p-4; }
   .ai-disabled b, .ai-disabled span { @apply block; }
   .ai-disabled span { @apply mt-1 text-xs leading-relaxed text-white/60; }
-  .account-picker { @apply overflow-y-auto px-[6vw] py-16; }
+  .account-picker { @apply overflow-y-auto bg-white px-[6vw] py-16; }
   .account-picker header p { @apply text-xs font-semibold uppercase tracking-[0.15em] text-orange; }
   .account-picker header h2 { @apply mt-2 mb-8 text-2xl; }
   .account-group { @apply mb-6; }
@@ -223,13 +235,425 @@
   .account-group button { @apply grid w-full grid-cols-[1fr_auto_20px] items-center gap-3 border-0 border-b border-line bg-white px-0 py-3 text-left hover:text-orange; }
   .account-group button b, .account-group button small { @apply block; }
   .account-group button em { @apply bg-soft px-2 py-1 text-[10px] not-italic uppercase text-muted; }
+
+  .overview-hero-v1 { @apply mb-8 grid grid-cols-[1fr_430px] overflow-hidden bg-[#edf6f4]; }
+  .overview-hero-v1 > div:first-child { @apply flex flex-col items-start justify-center p-9; }
+  .overview-hero-v1 > div:first-child > p { @apply mb-3 text-[10px] font-bold tracking-[0.18em] text-orange; }
+  .overview-hero-v1 h2 { @apply max-w-2xl text-3xl leading-tight text-teal-dark; }
+  .overview-hero-v1 > div:first-child > span { @apply my-4 max-w-2xl text-sm leading-relaxed text-muted; }
+  .hero-visual { @apply relative flex min-h-[270px] items-end justify-end overflow-hidden bg-teal-dark p-8 text-white; }
+  .hero-visual::before, .hero-visual::after { content: ''; @apply absolute border border-white/25 rounded-full; }
+  .hero-visual::before { @apply -right-16 -top-20 h-72 w-72; }
+  .hero-visual::after { @apply right-20 top-8 h-44 w-44; }
+  .hero-visual > div { @apply relative z-[1] max-w-[190px] text-right; }
+  .hero-visual > div b { @apply block text-6xl font-semibold; }
+  .hero-visual > div span { @apply mt-2 block text-sm leading-relaxed text-white/70; }
+  .hero-orbit { @apply absolute left-8 top-8 z-[2] flex h-24 w-24 flex-col items-center justify-center rounded-full border-4 border-mint bg-white text-teal-dark; }
+  .hero-orbit b { @apply text-2xl; }
+  .hero-orbit small { @apply text-[10px] text-teal-dark; }
+  .dashboard-flow { @apply mb-8 grid grid-cols-3 border-y border-line; }
+  .dashboard-flow article { @apply min-h-64 border-r border-line px-7 py-6 last:border-r-0; }
+  .dashboard-flow article > span { @apply block text-[10px] font-bold tracking-[0.17em] text-orange; }
+  .dashboard-flow article > svg { @apply my-6 text-teal; }
+  .dashboard-flow article > b { @apply block text-lg text-teal-dark; }
+  .dashboard-flow article > p { @apply mt-2 min-h-16 text-sm leading-relaxed text-muted; }
+  .dashboard-flow article > button { @apply mt-3 flex items-center gap-1 border-0 bg-transparent p-0 text-sm font-semibold text-teal; }
+  .home-status { @apply mb-8 grid grid-cols-3 gap-6; }
+  .home-status > div { @apply flex items-start gap-3 border-l-2 border-mint pl-4 text-teal-dark; }
+  .home-status > div b { @apply block text-2xl; }
+  .home-status > div small { @apply mt-1; }
+
+  .activity-editor { @apply mb-8 border-y border-line bg-[#fbfcfb]; }
+  .editor-heading { @apply flex items-end justify-between border-b border-line px-6 py-5; }
+  .editor-heading h2 { @apply text-2xl text-teal-dark; }
+  .text-action { @apply border-0 bg-transparent text-sm font-semibold text-teal; }
+  .activity-editor-grid { @apply grid grid-cols-2; }
+  .activity-editor-grid > section { @apply min-w-0 border-r border-line p-6 last:border-r-0; }
+  .activity-editor-grid > section > h3 { @apply mb-4 text-teal-dark; }
+  .form-grid { @apply grid gap-3; }
+  .form-grid.two { @apply grid-cols-2; }
+  .form-grid.three { @apply grid-cols-3; }
+  .field-caption { @apply mb-2 mt-5 text-xs font-semibold text-muted; }
+  .choice-grid { @apply grid grid-cols-2 border-l border-t border-line; }
+  .choice { @apply flex cursor-pointer items-start gap-2 border-b border-r border-line bg-white p-3 text-sm; }
+  .choice.selected { @apply bg-[#edf6f4] text-teal-dark; }
+  .choice input { @apply mt-0.5 h-auto w-auto accent-[#176b72]; }
+  .choice b, .choice small { @apply block; }
+  .period-resolution { @apply mt-4 flex items-start gap-3 border-l-4 p-3; }
+  .period-resolution span { @apply min-w-0; }
+  .period-resolution b, .period-resolution small { @apply block; }
+  .period-resolution.valid { @apply border-teal bg-[#edf6f4] text-teal-dark; }
+  .period-resolution.invalid { @apply border-[#d9828a] bg-pink-soft text-[#86454b]; }
+  .activity-editor > .form-actions { @apply flex items-center justify-between border-t border-line px-6 py-5; }
+  .activity-editor > .form-actions > span { @apply max-w-2xl text-xs text-muted; }
+  .activity-summary-strip { @apply grid grid-cols-3 border-y border-line bg-soft; }
+  .activity-summary-strip > span { @apply border-r border-line px-5 py-4 text-xs text-muted last:border-r-0; }
+  .activity-summary-strip b { @apply mr-2 text-xl text-teal-dark; }
+  .activity-workspace { @apply grid min-h-[720px] grid-cols-[390px_minmax(0,1fr)] border-b border-line; }
+  .activity-list-panel { @apply border-r border-line; }
+  .activity-row-v1 { @apply grid w-full grid-cols-[34px_minmax(0,1fr)_auto_16px] items-center gap-3 border-0 border-b border-line bg-white px-3 py-4 text-left hover:bg-soft; }
+  .activity-row-v1.selected { @apply border-l-4 border-l-teal bg-[#edf6f4] pl-2; }
+  .activity-row-main { @apply min-w-0; }
+  .activity-row-main > b, .activity-row-main > small { @apply block truncate; }
+  .activity-row-main > b { @apply text-sm text-[#263231]; }
+  .activity-index { @apply text-xs font-semibold text-[#a0aaa7]; }
+  .row-tags { @apply mt-2 flex flex-wrap gap-1; }
+  .row-tags em { @apply bg-soft px-1.5 py-0.5 text-[9px] not-italic text-muted; }
+  .activity-row-state { @apply flex flex-col items-end gap-1; }
+  .activity-detail-panel { @apply min-w-0 p-7; }
+  .record-banner { @apply flex items-start justify-between gap-8 border-l-4 border-teal bg-[#edf6f4] p-5; }
+  .record-banner h2 { @apply mt-1 text-2xl text-teal-dark; }
+  .record-banner > div:first-child > span { @apply mt-2 block max-w-3xl text-sm leading-relaxed text-muted; }
+  .record-status { @apply flex flex-col items-end gap-2; }
+  .copy-link { @apply flex items-center gap-1.5 border-0 bg-transparent p-0 text-[11px] font-semibold text-teal hover:text-orange; }
+  .activity-flow { @apply my-6 grid grid-cols-4 border-y border-line; }
+  .activity-flow > div { @apply grid grid-cols-[28px_1fr] items-center border-r border-line px-3 py-4 text-muted last:border-r-0; }
+  .activity-flow > div > span { @apply row-span-2 flex h-6 w-6 items-center justify-center border border-line text-xs; }
+  .activity-flow > div b, .activity-flow > div small { @apply block; }
+  .activity-flow > div.active { @apply bg-orange-soft text-[#8a4c28]; }
+  .activity-flow > div.done { @apply bg-[#edf6f4] text-teal-dark; }
+  .activity-flow > div.done > span { @apply border-0 text-teal; }
+  .record-facts { @apply mb-6 grid grid-cols-4 border-y border-line; }
+  .record-facts > div { @apply min-w-0 border-r border-line px-4 py-3 last:border-r-0; }
+  .record-facts span, .record-facts b { @apply block; }
+  .record-facts span { @apply mb-1 text-[9px] font-bold uppercase tracking-[0.1em] text-muted; }
+  .record-facts b { @apply break-words text-xs text-teal-dark; }
+  .package-columns { @apply mb-6 grid grid-cols-3 border-b border-line; }
+  .package-columns > section { @apply min-w-0 border-r border-line px-4 pb-5 last:border-r-0; }
+  .package-columns h3 { @apply mb-3 text-teal-dark; }
+  .action-panel { @apply my-6 border-l-4 border-teal bg-soft p-5; }
+  .action-panel > div:first-child { @apply mb-4; }
+  .action-grid { @apply grid grid-cols-[2fr_1fr_auto] items-end gap-3; }
+  .action-grid button { @apply flex items-center gap-2 border border-line bg-white px-3 py-2.5 text-sm font-semibold hover:border-teal; }
+  .withdraw-strip { @apply my-6 grid grid-cols-[24px_minmax(200px,1fr)_minmax(180px,0.7fr)_auto] items-center gap-3 border-l-4 border-[#d9828a] bg-pink-soft p-4; }
+  .withdraw-strip b, .withdraw-strip span { @apply block; }
+  .withdraw-strip span { @apply mt-1 text-xs text-muted; }
+  .withdraw-strip button { @apply border border-[#d7a8ad] bg-white px-3 py-2.5 text-sm font-semibold text-[#86454b]; }
+  .section-heading { @apply flex items-end justify-between border-b border-line pb-3; }
+  .request-list { @apply my-7; }
+  .request-list > article { @apply grid grid-cols-[1fr_auto] gap-3 border-b border-line py-4; }
+  .request-list article > div:first-child b, .request-list article > div:first-child span, .request-list article > div:first-child small { @apply block; }
+  .request-list article > div:first-child span { @apply mt-1 text-sm; }
+  .request-actions { @apply col-span-full grid grid-cols-[1fr_auto_auto] gap-2; }
+  .request-actions button { @apply flex items-center gap-1.5 border border-line bg-white px-3 py-2 text-xs font-semibold hover:border-teal; }
+  .request-actions button.danger { @apply border-[#d7a8ad] text-[#86454b]; }
+  .activity-submit { @apply grid-cols-[minmax(240px,1.3fr)_minmax(170px,0.7fr)_minmax(170px,0.7fr)_auto]; }
+  .approval-timeline { @apply mt-8; }
+  .timeline-row { @apply grid grid-cols-[12px_1fr] gap-3 pb-5; }
+  .timeline-row > span { @apply mt-2 h-2 w-2 bg-orange; }
+  .timeline-head { @apply flex items-start justify-between gap-3; }
+  .timeline-row p { @apply my-1 text-sm text-muted; }
+  .timeline-row blockquote { @apply my-2 border-l-2 border-teal pl-3 text-sm; }
+  .activity-empty { @apply grid min-h-[560px] place-content-center justify-items-center text-center text-muted; }
+  .activity-empty h2 { @apply mt-4 text-teal-dark; }
+  .activity-empty p { @apply mt-2 max-w-sm text-sm; }
+
+  .approval-metrics { @apply grid grid-cols-4 border-y border-line; }
+  .approval-metrics > div { @apply border-r border-line px-5 py-4 last:border-r-0; }
+  .approval-metrics b, .approval-metrics span { @apply block; }
+  .approval-metrics b { @apply text-2xl text-teal-dark; }
+  .approval-metrics span { @apply mt-1 text-xs text-muted; }
+  .approval-filters { @apply my-5 grid grid-cols-[20px_180px_180px_1fr] items-end gap-4 border-y border-line bg-soft px-4 py-3; }
+  .approval-filters > svg { @apply mb-3 text-teal; }
+  .approval-filters label > span { @apply mb-1 block text-[10px] font-semibold uppercase tracking-[0.08em] text-muted; }
+  .approval-inbox { @apply border-t border-line; }
+  .approval-record { @apply grid grid-cols-[64px_minmax(240px,1.15fr)_minmax(180px,0.75fr)_minmax(170px,0.65fr)_minmax(260px,1fr)] gap-4 border-b border-line py-5; }
+  .approval-record.actionable { @apply border-l-4 border-l-orange pl-3; }
+  .approval-kind { @apply text-center; }
+  .approval-kind > span { @apply mx-auto flex h-10 w-10 items-center justify-center bg-teal text-lg font-semibold text-white; }
+  .approval-kind small { @apply mt-2 text-[9px] uppercase; }
+  .approval-target > p { @apply text-[10px] font-bold uppercase tracking-[0.12em] text-orange; }
+  .approval-target h2 { @apply mt-1 text-lg text-teal-dark; }
+  .target-meta { @apply mt-2 flex flex-wrap items-center gap-2 text-xs text-muted; }
+  .creator-line { @apply mt-3 flex items-center gap-1.5 text-xs text-teal; }
+  .assignment-meta > span, .assignment-meta > b, .assignment-meta > small { @apply block; }
+  .assignment-meta > span { @apply text-[10px] font-semibold uppercase tracking-[0.1em] text-muted; }
+  .assignment-meta > b { @apply mt-2 text-sm text-teal-dark; }
+  .assignment-meta > small { @apply mt-1; }
+  .approval-state blockquote { @apply my-3 border-l-2 border-teal pl-3 text-xs leading-relaxed; }
+  .approval-actions { @apply grid content-start gap-2; }
+  .approval-actions > div { @apply flex flex-wrap gap-1; }
+  .approval-actions button { @apply border border-line bg-white px-3 py-2 text-xs font-semibold hover:border-teal; }
+  .approval-actions button.danger { @apply border-[#d7a8ad] text-[#86454b]; }
+  .approval-actions .open-record { @apply flex items-center gap-1.5 border-0 bg-transparent p-0 pb-2 text-teal; }
+  .approval-empty { @apply grid min-h-64 place-content-center justify-items-center text-center text-muted; }
+  .approval-empty h2 { @apply mt-3 text-teal-dark; }
+  .approval-empty p { @apply mt-1 text-sm; }
+
+  .portfolio-visual-sheet { @apply mb-6 border border-line shadow-[0_12px_28px_rgba(23,107,114,0.08)]; }
+  .portfolio-visual-sheet > header { @apply flex items-center justify-between bg-teal px-5 py-3 text-white; }
+  .portfolio-visual-sheet > header > div { @apply flex items-center gap-3; }
+  .portfolio-visual-sheet > header b, .portfolio-visual-sheet > header small { @apply block; }
+  .portfolio-visual-sheet > header small { @apply mt-0.5 text-white/70; }
+  .portfolio-visual-sheet > header em { @apply text-xs not-italic text-white/70; }
+  .skill-visual-grid { @apply grid grid-cols-2; }
+  .skill-visual-grid article { @apply flex min-h-28 items-center gap-4 border-b border-r border-line p-4 even:border-r-0; }
+  .skill-visual-grid article.missing { @apply bg-soft text-muted; }
+  .skill-level { @apply flex h-14 w-14 shrink-0 items-baseline justify-center rounded-full border-4 border-mint pt-3 text-teal-dark; }
+  .skill-level b { @apply text-xl; }
+  .skill-level span { @apply text-[9px]; }
+  .skill-visual-grid article > div:last-child { @apply min-w-0 flex-1; }
+  .skill-visual-grid article > div:last-child > b { @apply text-sm; }
+  .level-track { @apply mt-2 flex gap-0.5; }
+  .level-track i { @apply h-1.5 min-w-0 flex-1 bg-[#e5e9e7]; }
+  .level-track i.filled { @apply bg-orange; }
+  .skill-visual-grid article small { @apply mt-2 truncate; }
+  .learner-statement { @apply mb-6 flex items-start gap-4 bg-[#edf6f4] p-5 text-teal-dark; }
+  .learner-statement p { @apply text-[10px] font-bold tracking-[0.14em] text-orange; }
+  .learner-statement blockquote { @apply my-2 text-sm leading-relaxed; }
+
+  .secondary-action, .stop-action { @apply flex items-center gap-2 border border-line bg-white px-4 py-2.5 text-sm font-semibold hover:border-orange; }
+  .stop-action { @apply border-[#e5b3b7] text-[#86454b]; }
+  .chat-status { @apply mb-5 grid grid-cols-[minmax(250px,1.2fr)_repeat(3,minmax(170px,1fr))] border border-line bg-soft; }
+  .chat-status > * { @apply min-w-0 border-r border-line p-4 last:border-r-0; }
+  .chat-status > div span, .chat-status > div b, .chat-status > div small { @apply block; }
+  .chat-status > div span { @apply text-[11px] font-semibold uppercase tracking-[0.08em] text-muted; }
+  .chat-status > div b { @apply mt-2 truncate text-base; }
+  .chat-status > div small { @apply mt-1 leading-relaxed; }
+  .chat-workspace { @apply grid min-h-[650px] grid-rows-[minmax(360px,1fr)_auto] border border-line; height: calc(100vh - 310px); }
+  .chat-history { @apply overflow-y-auto bg-[#fcfbfa] p-5; }
+  .chat-empty { @apply mx-auto grid h-full max-w-md place-content-center gap-2 text-center; }
+  .chat-empty b { @apply text-lg; }
+  .chat-empty span { @apply text-sm leading-relaxed text-muted; }
+  .chat-message { @apply mb-5 max-w-[82%] border-l-4 border-line bg-white px-4 py-3 shadow-[0_1px_0_0_#e8e1db]; }
+  .chat-message.user { @apply ml-auto border-orange bg-orange-soft; }
+  .chat-message.assistant { @apply mr-auto border-[#9c7753] bg-brown-soft; }
+  .chat-message header { @apply mb-2 flex items-center justify-between gap-4 text-xs; }
+  .chat-message header time { @apply text-[10px] text-muted; }
+  .chat-message > p { @apply whitespace-pre-wrap text-sm leading-7; }
+  .stream-cursor { @apply animate-pulse text-orange; }
+  .chat-metrics { @apply mt-4 flex flex-wrap border-t border-[#ceb89f] pt-3; }
+  .chat-metrics span { @apply mr-5 mb-2 text-[10px] text-muted; }
+  .chat-metrics b { @apply block text-xs text-ink; }
+  .chat-controls { @apply border-t border-line bg-white p-4; }
+  .chat-tuning { @apply mb-3 grid max-w-lg grid-cols-2 gap-3; }
+  .chat-controls textarea { @apply min-h-24; }
+  .chat-send-row { @apply mt-3 flex items-center justify-between gap-4; }
+  .chat-send-row > button { @apply min-w-28; }
+
+  .response-workspace { @apply grid min-h-[680px] grid-cols-[360px_minmax(0,1fr)] border border-line; }
+  .response-task-list { @apply border-r border-line bg-soft; }
+  .response-task { @apply grid w-full grid-cols-[34px_minmax(0,1fr)_auto] items-center gap-3 border-0 border-b border-line bg-transparent p-4 text-left hover:bg-white; }
+  .response-task.selected { @apply border-l-4 border-l-teal bg-white pl-3; }
+  .response-task > span:nth-child(2) { @apply min-w-0; }
+  .response-task b, .response-task small { @apply block truncate; }
+  .task-icon { @apply flex h-8 w-8 items-center justify-center bg-mint text-teal; }
+  .response-sheet { @apply min-w-0 p-7; }
+  .response-heading, .assessment-heading { @apply flex items-start justify-between gap-5 border-b border-line pb-5; }
+  .response-heading p, .assessment-heading p { @apply text-[10px] font-semibold uppercase tracking-[0.12em] text-orange; }
+  .response-heading h2, .assessment-heading h2 { @apply mt-1 text-2xl text-teal-dark; }
+  .response-heading > div > span, .assessment-heading > div > span { @apply mt-2 block text-sm text-muted; }
+  .task-context { @apply mb-6 grid grid-cols-3 border-b border-line; }
+  .task-context > span { @apply grid grid-cols-[20px_auto] items-center gap-x-2 border-r border-line px-4 py-4 text-xs last:border-r-0; }
+  .task-context > span > svg { @apply row-span-2 text-teal; }
+  .task-context b { @apply text-[10px] uppercase tracking-[0.08em] text-muted; }
+  .response-questions { @apply mt-6 border-t border-line; }
+  .response-questions > label { @apply grid grid-cols-[minmax(220px,0.8fr)_minmax(320px,1.2fr)] gap-5 border-b border-line py-5; }
+  .response-questions label > span { @apply grid grid-cols-[36px_1fr] content-start gap-x-3; }
+  .response-questions em { @apply row-span-2 font-mono text-xs not-italic text-orange; }
+  .response-questions b { @apply text-sm leading-relaxed; }
+  .response-questions small { @apply mt-2; }
+  .response-questions textarea { @apply min-h-32; }
+  .response-actions { @apply mt-5 flex items-center justify-end gap-3 border-l-4 border-orange bg-soft p-4; }
+  .response-actions > span { @apply mr-auto max-w-lg text-xs text-muted; }
+  .response-actions button { @apply flex items-center gap-2 border border-line bg-white px-4 py-2.5 text-sm font-semibold; }
+
+  .assessment-workspace { @apply grid min-h-[760px] grid-cols-[300px_minmax(0,1fr)] border border-line; }
+  .assessment-scope { @apply border-r border-line bg-soft; }
+  .assessment-scope section > h3 { @apply border-b border-line px-4 py-3 text-teal-dark; }
+  .assessment-scope button { @apply grid w-full grid-cols-[1fr_auto] items-center gap-3 border-0 border-b border-line bg-transparent px-4 py-3 text-left hover:bg-white; }
+  .assessment-scope button.selected { @apply border-l-4 border-l-teal bg-white pl-3; }
+  .assessment-scope button b, .assessment-scope button small { @apply block; }
+  .assessment-sheet { @apply min-w-0 p-7; }
+  .source-count { @apply flex flex-col items-center bg-teal-dark px-5 py-3 text-xs text-white; }
+  .source-count b { @apply text-2xl; }
+  .perspective-board { @apply mt-6; }
+  .perspective-title { @apply flex items-end justify-between border-b border-line pb-3; }
+  .perspective-title p, .peer-assignment-strip p, .teacher-assessment-form > header p { @apply text-[10px] font-semibold tracking-[0.13em] text-orange; }
+  .perspective-title > span { @apply text-xs text-muted; }
+  .perspective-grid { @apply grid grid-cols-2 border-l border-line; }
+  .perspective-grid > article { @apply min-w-0 border-r border-b border-line p-4; }
+  .perspective-grid article > header { @apply mb-3 flex items-center justify-between gap-3; }
+  .perspective-grid article > header > span { @apply flex items-center gap-2 text-xs font-semibold; }
+  .perspective-grid blockquote { @apply my-3 border-l-2 border-mint pl-3 text-sm leading-relaxed; }
+  .perspective-grid blockquote small { @apply mb-1 text-[10px] font-semibold uppercase; }
+  .moderation-actions { @apply mt-4 grid grid-cols-[1fr_auto_auto_auto] gap-2; }
+  .moderation-actions button { @apply flex items-center gap-1 border border-line bg-white px-2 py-2 text-xs; }
+  .moderation-actions button.danger { @apply border-[#d7a8ad] text-[#86454b]; }
+  .peer-assignment-strip { @apply my-7 grid grid-cols-[minmax(280px,1fr)_220px_auto] items-end gap-4 border-l-4 border-orange bg-orange-soft p-5; }
+  .peer-assignment-strip > div > span { @apply mt-1 block text-xs text-muted; }
+  .peer-assignment-strip button { @apply flex items-center gap-2 border border-[#efc7a5] bg-white px-4 py-2.5 text-sm font-semibold; }
+  .teacher-assessment-form { @apply border-y border-line; }
+  .teacher-assessment-form > header { @apply flex items-end justify-between gap-5 bg-soft px-5 py-4; }
+  .teacher-assessment-form > header > span { @apply max-w-sm text-right text-xs text-muted; }
+  .teacher-comment-grid { @apply grid grid-cols-3 border-t border-line; }
+  .teacher-comment-grid > label { @apply border-r border-line p-4 last:border-r-0; }
+  .teacher-comment-grid textarea { @apply min-h-32; }
+  .rubric-observation { @apply border-t border-line bg-[#fbfcfb] p-5; }
+  .rubric-fields { @apply mb-4 grid grid-cols-4 gap-3; }
+  .citation-list { @apply mt-4 border-t border-line pt-4; }
+  .citation-list p { @apply mb-2 text-xs font-semibold; }
+  .citation-list label { @apply mr-3 inline-flex items-center gap-2 border border-line bg-white px-3 py-2 text-xs; }
+  .citation-list input { @apply h-auto w-auto; }
+  .teacher-assessment-form > footer { @apply grid grid-cols-[1fr_auto] items-end gap-4 border-t border-line bg-soft p-5; }
+  .observation-history { @apply mt-7; }
+  .observation-history > h3 { @apply border-b border-line pb-3; }
+  .observation-history article { @apply grid grid-cols-[180px_1fr_auto] items-start gap-4 border-b border-line py-4; }
+  .observation-history blockquote { @apply border-l-2 border-teal pl-3 text-sm; }
+
+  .selection-window { @apply mb-6 flex items-start gap-3 border-l-4 p-4; }
+  .selection-window.open { @apply border-teal bg-[#edf6f4]; }
+  .selection-window.closed { @apply border-[#d9828a] bg-pink-soft; }
+  .selection-window b, .selection-window span { @apply block; }
+  .selection-window span { @apply mt-1 text-xs text-muted; }
+  .memorable-workspace { @apply grid min-h-[560px] grid-cols-[380px_minmax(0,1fr)] border border-line; }
+  .eligible-activities { @apply border-r border-line bg-soft; }
+  .eligible-activities button { @apply grid w-full grid-cols-[26px_1fr_auto] items-center gap-3 border-0 border-b border-line bg-transparent p-4 text-left hover:bg-white; }
+  .eligible-activities button.selected { @apply border-l-4 border-l-orange bg-white pl-3; }
+  .eligible-activities button > span { @apply min-w-0; }
+  .eligible-activities b, .eligible-activities small { @apply block; }
+  .eligible-activities small { @apply mt-1 line-clamp-2; }
+  .memorable-editor { @apply min-w-0 p-7; }
+  .memorable-editor form > header { @apply mb-6 flex items-start justify-between border-b border-line pb-5; }
+  .memorable-editor header p { @apply font-mono text-xs text-orange; }
+  .memorable-editor header h2 { @apply mt-1 text-2xl; }
+  .memorable-editor form > label > span { @apply mb-2 block text-sm font-semibold; }
+  .memorable-editor textarea { @apply min-h-60; }
+  .memorable-actions { @apply mt-4 flex items-center justify-end gap-3; }
+  .memorable-actions > span { @apply mr-auto max-w-md text-xs text-muted; }
+  .memorable-actions button { @apply flex items-center gap-2 border border-line bg-white px-4 py-2.5 text-sm font-semibold; }
+  .selection-register { @apply mt-7; }
+  .selection-register > h3 { @apply border-b border-line pb-3; }
+  .selection-register article { @apply grid grid-cols-[220px_1fr_auto] items-start gap-4 border-b border-line py-4; }
+  .selection-register blockquote { @apply border-l-2 border-orange pl-3 text-sm; }
+
+  .portfolio-editor-layout { @apply grid min-h-[650px] grid-cols-[minmax(340px,0.8fr)_minmax(420px,1.2fr)] border border-line; }
+  .working-version-panel { @apply border-r border-line bg-soft p-6; }
+  .working-version-panel > header { @apply flex items-start justify-between gap-4 border-b border-line pb-4; }
+  .working-version-panel header p { @apply font-mono text-xs text-muted; }
+  .working-version-panel header h2 { @apply mt-1 text-2xl; }
+  .working-version-panel header span:not(.status) { @apply mt-1 block text-xs text-muted; }
+  .editor-items article { @apply border-b border-line py-4; }
+  .editor-items article > span { @apply flex items-center justify-between; }
+  .editor-items blockquote { @apply my-3 border-l-2 border-orange pl-3 text-sm leading-relaxed; }
+  .submit-working { @apply mt-5; }
+  .portfolio-compose-panel { @apply min-w-0 p-7; }
+  .submitted-memorable > header, .portfolio-intro-form > header { @apply mb-4 flex items-start gap-3 border-b border-line pb-3; }
+  .submitted-memorable header span, .portfolio-intro-form header span { @apply mt-1 block text-xs text-muted; }
+  .submitted-memorable article { @apply grid grid-cols-[1fr_auto] border-b border-line py-4; }
+  .submitted-memorable article blockquote { @apply col-span-2 mt-2 border-l-2 border-orange pl-3 text-sm; }
+  .portfolio-intro-form { @apply mt-8 border-l-4 border-teal bg-soft p-5; }
+  .portfolio-intro-form textarea { @apply min-h-44; }
+  .published-only .portfolio-detail { @apply bg-white; }
+  .published-sections { @apply mt-7; }
+  .published-sections > h3 { @apply border-b border-line pb-3; }
+  .published-sections article { @apply grid grid-cols-[180px_1fr] gap-4 border-b border-line py-4; }
+  .published-sections article span b, .published-sections article span small { @apply block; }
+  .published-sections blockquote { @apply border-l-2 border-orange pl-4 text-sm leading-relaxed; }
+  .no-published-view { @apply grid min-h-[440px] place-content-center justify-items-center text-center text-muted; }
+  .no-published-view h3 { @apply mt-3 text-lg text-teal-dark; }
+  .no-published-view p { @apply mt-2 max-w-md text-sm; }
+
+  .import-entry-grid { @apply mb-7 grid grid-cols-2 border border-line; }
+  .import-entry-card { @apply grid content-start gap-4 border-r border-line bg-white p-5 last:border-r-0; }
+  .import-entry-card.connector { @apply bg-[#fbfcfb]; }
+  .import-entry-card.catalogue { @apply col-span-2 border-t border-r-0 border-line bg-[#fffaf6]; }
+  .catalogue-actions { @apply flex flex-wrap gap-3; }
+  .catalogue-actions button { @apply border border-line bg-white px-4 py-2 text-xs font-semibold hover:border-orange hover:text-orange; }
+  .catalogue-actions button.primary { @apply border-orange bg-orange text-white hover:text-white; }
+  .import-entry-card > header, .source-registry > header, .import-batch-list > header, .row-resolution > header { @apply flex items-start gap-3; }
+  .import-entry-card > header > svg, .source-registry > header > svg, .import-batch-list > header > svg, .row-resolution > header > svg { @apply mt-0.5 shrink-0 text-teal; }
+  .import-entry-card header p, .source-registry header p, .import-batch-list header p, .row-resolution header p { @apply mb-1 text-[9px] font-bold tracking-[0.16em] text-orange; }
+  .import-entry-card header h2 { @apply text-lg; }
+  .import-entry-card > button { @apply justify-self-start; }
+
+  .source-registry { @apply mb-7 border-l-4 border-teal bg-soft p-5; }
+  .source-registry > header { @apply mb-4 border-b border-line pb-4; }
+  .source-registry > .field { @apply mt-4 max-w-3xl; }
+  .source-list { @apply border border-line bg-white; }
+  .source-list article { @apply grid grid-cols-[minmax(220px,1fr)_auto_auto] items-center gap-4 border-b border-line px-4 py-3 last:border-b-0; }
+  .source-list article > span b, .source-list article > span small { @apply block; }
+  .source-list article button { @apply border border-line bg-white px-3 py-2 text-xs font-semibold hover:border-orange hover:text-orange; }
+
+  .import-workspace { @apply grid min-h-[620px] grid-cols-[340px_minmax(0,1fr)] border border-line; }
+  .import-batch-list { @apply max-h-[780px] overflow-auto border-r border-line bg-soft; }
+  .import-batch-list > header { @apply sticky top-0 z-[1] border-b border-line bg-soft p-4; }
+  .import-batch-list > header h2 { @apply text-base; }
+  .import-batch-list > button { @apply grid w-full grid-cols-[minmax(0,1fr)_auto] items-start gap-3 border-0 border-b border-line bg-transparent p-4 text-left hover:bg-white; }
+  .import-batch-list > button.selected { @apply border-l-4 border-l-orange bg-white pl-3; }
+  .import-batch-list > button > span { @apply min-w-0; }
+  .import-batch-list > button b { @apply block truncate text-sm; }
+  .import-batch-list > button small { @apply mt-1 line-clamp-2 text-[10px]; }
+  .import-batch-detail { @apply min-w-0 bg-white; }
+  .import-empty { @apply grid min-h-[540px] place-content-center justify-items-center px-6 text-center text-muted; }
+  .import-empty svg { @apply mb-3 text-teal; }
+  .import-empty h3 { @apply text-base text-ink; }
+  .import-empty p { @apply mt-2 max-w-md text-sm; }
+  .import-detail-heading { @apply flex items-start justify-between gap-5 border-b border-line px-6 py-5; }
+  .import-detail-heading p { @apply font-mono text-[10px] text-orange; }
+  .import-detail-heading h2 { @apply mt-1; }
+  .import-detail-heading span:not(.status) { @apply mt-1 block text-xs text-muted; }
+  .import-counts { @apply grid grid-cols-5 border-b border-line bg-soft; }
+  .import-counts > span { @apply border-r border-line px-4 py-3 text-xs text-muted last:border-r-0; }
+  .import-counts b { @apply mr-2 text-lg text-ink; }
+
+  .custody-panel { @apply m-6 border-l-4 border-teal bg-soft p-4; }
+  .custody-panel > header { @apply mb-3 flex items-center gap-2 text-teal-dark; }
+  .custody-panel > div { @apply grid grid-cols-[170px_minmax(0,1fr)] gap-3 border-t border-line py-2 text-xs; }
+  .custody-panel > div > span { @apply font-semibold text-muted; }
+  .custody-panel code { @apply min-w-0 break-all text-[11px] text-ink; }
+
+  .import-row-table { @apply mx-6 mb-6 overflow-x-auto border border-line; }
+  .import-row-table > header, .import-row-table > article { @apply grid min-w-[700px] grid-cols-[105px_150px_165px_minmax(200px,1fr)_80px]; }
+  .import-row-table > header { @apply bg-soft text-[10px] font-semibold uppercase tracking-[0.08em] text-muted; }
+  .import-row-table > header > span, .import-row-table > article > span { @apply border-r border-line px-3 py-3 last:border-r-0; }
+  .import-row-table > article { @apply border-t border-line text-xs; }
+  .import-row-table > article.has-error { @apply bg-pink-soft; }
+  .import-row-table article span > b, .import-row-table article span > small, .import-row-table article span > code { @apply block; }
+  .import-row-table article span > code { @apply mt-1 text-[10px] text-muted; }
+  .import-row-table article button { @apply border border-line bg-white px-2 py-1.5 text-[11px] font-semibold hover:border-orange hover:text-orange; }
+  .row-error { @apply mt-2 border-l-2 border-[#ca6f77] pl-2 text-[#86454b]; }
+  .row-warning { @apply mt-2 border-l-2 border-orange pl-2 text-[#8b572a]; }
+
+  .row-resolution { @apply mx-6 mb-6 border-l-4 border-orange bg-orange-soft p-5; }
+  .row-resolution > header { @apply mb-4 items-center border-b border-[#efc7a5] pb-3; }
+  .row-resolution > header > div { @apply flex-1; }
+  .row-resolution > header button { @apply border-0 bg-transparent text-xs font-semibold text-muted; }
+  .row-resolution > form { @apply grid grid-cols-[1fr_1fr_1.4fr_auto] items-end gap-3; }
+  .row-resolution form > button, .decision-row > button { @apply flex min-h-10 items-center justify-center gap-2 border border-orange bg-white px-3 py-2 text-xs font-semibold text-orange; }
+  .decision-row { @apply mt-4 grid grid-cols-[1fr_auto] items-end gap-3 border-t border-[#efc7a5] pt-4; }
+  .decision-row > button.danger { @apply border-[#d7a8ad] text-[#86454b]; }
+
+  .import-commit-strip { @apply grid grid-cols-[minmax(260px,1fr)_minmax(230px,0.7fr)_auto_auto] items-end gap-4 border-t border-line bg-soft p-5; }
+  .import-commit-strip > div { @apply flex items-start gap-3; }
+  .import-commit-strip > div > svg { @apply mt-0.5 shrink-0 text-teal; }
+  .import-commit-strip > div span b, .import-commit-strip > div span small { @apply block; }
+  .import-commit-strip > button:not(.primary) { @apply min-h-10 border border-line bg-white px-3 py-2 text-xs font-semibold; }
+}
+
+@media (max-width: 1400px) {
+  .import-workspace { @apply grid-cols-[260px_minmax(0,1fr)]; }
+  .import-row-table > header, .import-row-table > article { @apply min-w-[640px] grid-cols-[90px_130px_150px_minmax(190px,1fr)_70px]; }
+  .row-resolution > form, .import-commit-strip { @apply grid-cols-2; }
 }
 
 @media (max-width: 1100px) {
   .concept-grid { @apply grid-cols-2; }
   .filter-bar, .editor-grid, .policy-editor { @apply grid-cols-2; }
+  .overview-hero-v1 { @apply grid-cols-[1fr_340px]; }
+  .activity-editor-grid { @apply grid-cols-1; }
+  .activity-editor-grid > section { @apply border-r-0 border-b last:border-b-0; }
+  .approval-record { @apply grid-cols-[50px_1fr_1fr]; }
+  .approval-state, .approval-actions { @apply col-span-1; }
+  .approval-actions { @apply col-start-2 col-span-2; }
   .login-shell { @apply grid-cols-1; }
   .login-intro { @apply min-h-[620px]; }
+  .chat-status { @apply grid-cols-2; }
+  .chat-status > * { @apply border-b; }
+  .import-workspace { @apply grid-cols-1; }
+  .import-batch-list { @apply max-h-64 border-r-0 border-b; }
+  .row-resolution > form { @apply grid-cols-2; }
+  .import-commit-strip { @apply grid-cols-2; }
 }
 
 @media (max-width: 760px) {
@@ -237,8 +661,23 @@
   .app-shell { @apply block; }
   .main-panel { @apply ml-0; }
   .topbar { @apply static px-4; }
+  .topbar-toggle { @apply px-2 text-[0px]; }
+  .topbar-toggle svg { @apply h-4 w-4; }
+  .topbar-reveal { @apply static px-4; }
   .content { @apply px-4; }
   .split-view, .portfolio-layout, .overview-hero { @apply grid-cols-1; }
+  .overview-hero-v1, .activity-workspace { @apply grid-cols-1; }
+  .activity-list-panel { @apply max-h-96 overflow-auto border-r-0 border-b; }
+  .dashboard-flow, .home-status, .activity-summary-strip, .approval-metrics { @apply grid-cols-1; }
+  .dashboard-flow article, .activity-summary-strip > span, .approval-metrics > div { @apply border-r-0 border-b last:border-b-0; }
+  .form-grid.two, .form-grid.three, .choice-grid, .record-facts, .package-columns, .activity-flow, .skill-visual-grid { @apply grid-cols-1; }
+  .choice, .record-facts > div, .package-columns > section, .activity-flow > div, .skill-visual-grid article { @apply border-r-0; }
+  .action-grid, .withdraw-strip, .activity-submit, .approval-filters { @apply grid-cols-1; }
+  .approval-filters > svg { @apply hidden; }
+  .approval-record { @apply grid-cols-1 pl-0; }
+  .approval-kind { @apply text-left; }
+  .approval-kind > span { @apply mx-0; }
+  .approval-actions { @apply col-span-1 col-start-1; }
   .list-panel, .student-list { @apply max-h-72 overflow-auto border-r-0 border-b; }
   .concept-grid, .filter-bar, .editor-grid, .policy-editor, .queue-grid { @apply grid-cols-1; }
   .inline-form, .submit-strip, .review-strip { @apply grid-cols-1; }
@@ -249,4 +688,24 @@
   .model-note i { @apply hidden; }
   .login-intro h1 { @apply text-4xl; }
   .account-picker { @apply px-6; }
+  .chat-status { @apply grid-cols-1; }
+  .chat-status > * { @apply border-r-0; }
+  .chat-workspace { @apply h-auto min-h-[600px]; }
+  .chat-message { @apply max-w-[96%]; }
+  .chat-tuning { @apply grid-cols-1; }
+  .response-workspace, .assessment-workspace, .memorable-workspace, .portfolio-editor-layout { @apply grid-cols-1; }
+  .response-task-list, .assessment-scope, .eligible-activities, .working-version-panel { @apply max-h-80 overflow-auto border-r-0 border-b; }
+  .task-context, .response-questions > label, .perspective-grid, .teacher-comment-grid, .rubric-fields, .teacher-assessment-form > footer, .peer-assignment-strip, .moderation-actions, .observation-history article, .selection-register article, .published-sections article { @apply grid-cols-1; }
+  .teacher-comment-grid > label { @apply border-r-0 border-b last:border-b-0; }
+  .selection-register article blockquote, .submitted-memorable article blockquote { @apply col-span-1; }
+  .import-entry-grid, .import-workspace { @apply grid-cols-1; }
+  .import-entry-card { @apply border-r-0 border-b last:border-b-0; }
+  .import-entry-card.catalogue { @apply col-span-1; }
+  .import-batch-list { @apply max-h-80 border-r-0 border-b; }
+  .import-counts { @apply grid-cols-2; }
+  .import-counts > span { @apply border-b; }
+  .custody-panel { @apply m-4; }
+  .custody-panel > div { @apply grid-cols-1 gap-1; }
+  .import-row-table, .row-resolution { @apply mx-4; }
+  .row-resolution > form, .decision-row, .import-commit-strip, .source-list article { @apply grid-cols-1; }
 }

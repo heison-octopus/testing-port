@@ -20,6 +20,12 @@ export const portfolioRepository = {
     const snapshot = sql.get(`SELECT * FROM portfolio_snapshots WHERE student_user_id=? AND period_id=? AND publication_status='published' ORDER BY version_number DESC LIMIT 1`, studentId, periodId);
     return snapshot ? { ...snapshot, version: this.version(snapshot.approved_portfolio_working_version_id) } : null;
   },
+  skillSummary(studentId, periodId = '2026-27-P1') {
+    return sql.all(`SELECT axis.axis_id,axis.axis_code,axis.name_en,axis.name_zh,axis.display_order,result.published_numeric_value,result.published_level_id,result.contributing_observation_ids,result.calculation_trace,result.published_at
+      FROM rubric_axes axis
+      LEFT JOIN published_rubric_results result ON result.axis_id=axis.axis_id AND result.student_id=? AND result.period_id=? AND result.status='published'
+      WHERE axis.rubric_catalogue_id='RUB-SB-UF2' AND axis.status='active' ORDER BY axis.display_order`, studentId, periodId);
+  },
   createDraft(record) {
     sql.transaction(() => {
       sql.run('UPDATE portfolio_working_versions SET is_student_latest=0 WHERE student_user_id=? AND period_id=?', record.studentId, record.periodId);
@@ -27,8 +33,8 @@ export const portfolioRepository = {
         VALUES(?,?,?,?,?,?,?,?,?,1)`, record.id, record.schoolId, record.studentId, record.periodId, record.number, record.supersedesId, 'draft', record.studentId, record.createdAt);
       sql.run(`INSERT INTO portfolio_version_items(portfolio_version_item_id,portfolio_working_version_id,section_key,source_type,source_id,student_selected,class_teacher_decision,display_order,authorship_origin,student_text)
         VALUES(?,?,?,?,?,?,?,?,?,?)`, `${record.id}-INTRO`, record.id, 'self_introduction', 'student_text', null, 1, 'pending', 1, 'human_authored', record.selfIntroduction);
-      if (record.activityId) sql.run(`INSERT INTO portfolio_version_items(portfolio_version_item_id,portfolio_working_version_id,section_key,source_type,source_id,student_selected,class_teacher_decision,display_order,authorship_origin,student_text)
-        VALUES(?,?,?,?,?,?,?,?,?,?)`, `${record.id}-ACT`, record.id, 'memorable_activity', 'activity', record.activityId, 1, 'pending', 2, 'human_authored', record.activityText);
+      for (const [index, selection] of record.memorableSelections.entries()) sql.run(`INSERT INTO portfolio_version_items(portfolio_version_item_id,portfolio_working_version_id,section_key,source_type,source_id,student_selected,class_teacher_decision,display_order,authorship_origin,student_text)
+        VALUES(?,?,?,?,?,?,?,?,?,?)`, `${record.id}-PM-${index + 1}`, record.id, 'memorable_activity', 'proud_moment_selection', selection.selection_id, 1, 'pending', index + 2, 'human_authored', selection.selection_reason);
     });
   },
   submit(versionId, submittedAt) { sql.run(`UPDATE portfolio_working_versions SET status='student_submitted',student_submitted_at=? WHERE portfolio_working_version_id=?`, submittedAt, versionId); },

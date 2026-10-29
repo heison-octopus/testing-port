@@ -16,6 +16,13 @@ CAP-PORTFOLIO-REVIEW,portfolio.review,Review Portfolio working versions,覆核 P
 CAP-PORTFOLIO-APPROVE,portfolio.approve,Approve Portfolio working versions,批核 Portfolio 工作版本,portfolio,true,active
 CAP-PORTFOLIO-PUBLISH,portfolio.publish,Publish Portfolio snapshots,發布 Portfolio 快照,portfolio,true,active
 CAP-NARRATIVE-EDIT,portfolio.generated_narrative.edit,Edit generated learner narrative,修改生成學習者敘述,portfolio,true,active
+CAP-AI-DRAFT-REVIEW,portfolio.ai_draft.review,Review AI Portfolio drafts,覆核 AI Portfolio 草稿,portfolio,true,active
 CAP-APPROVAL-COORDINATE,approval.coordinate,Coordinate approval queues,統籌批核佇列,approval,true,active
 CAP-MEDIA-RAW-VIEW,media.raw.view,View permitted raw media,查看獲准原始媒體,media,true,active
 CAP-POLICY-MANAGE,policy.manage,Manage school policies,管理校本政策,policy,true,active
+CAP-IMPORT-VIEW,import.view,View scoped import batches,查看範圍內匯入批次,import,true,active
+CAP-IMPORT-RUN,import.run,Stage scoped data imports,建立範圍內匯入暫存,import,true,active
+CAP-IMPORT-RESOLVE,import.exception.resolve,Resolve scoped import exceptions,處理範圍內匯入例外,import,true,active
+CAP-IMPORT-COMMIT,import.commit,Commit validated scoped imports,提交已驗證範圍內匯入,import,true,active
+CAP-IMPORT-SOURCE-MANAGE,import.source.manage,Manage school source availability,管理學校來源可用狀態,import,true,active
+CAP-IMPORT-EXPORT,import.export,Export scoped editable import contracts,匯出範圍內可編輯匯入格式,import,true,active

@@ -15,7 +15,7 @@ app.get('/api/v2/demo/users', (_req, res) => res.json(identityService.demoUsers(
 app.post('/api/v2/demo/session', (req, res, next) => {
   try {
     const user = identityRepository.user(req.body.userId);
-    if (!user) throw new HttpError(400, 'Unknown demo account');
+    if (!user) throw new HttpError(400, 'Unknown demo account', 'VALIDATION_ERROR');
     const token = randomBytes(32).toString('hex'), key = randomBytes(24).toString('hex');
     sessions.set(token, { user, key });
     identityRepository.audit(user.school_id, user.user_id, 'session.started', 'session', token.slice(0, 12));
@@ -27,8 +27,8 @@ app.post('/api/v2/demo/session', (req, res, next) => {
 app.use('/api/v2', (req, _res, next) => {
   const token = req.headers.cookie?.split(';').map(value => value.trim()).find(value => value.startsWith(`${cookieName}=`))?.slice(cookieName.length + 1);
   const session = sessions.get(token);
-  if (!session) return next(new HttpError(401, 'Sign in required'));
-  if (req.headers['x-request-key'] !== session.key) return next(new HttpError(403, 'Invalid request key'));
+  if (!session) return next(new HttpError(401, 'Sign in required', 'AUTH_REQUIRED'));
+  if (req.headers['x-request-key'] !== session.key) return next(new HttpError(403, 'Invalid request key', 'INVALID_REQUEST_KEY'));
   req.user = session.user;
   req.sessionToken = token;
   next();
@@ -42,10 +42,15 @@ app.post('/api/v2/logout', (req, res) => {
 });
 
 app.use('/api/v2', api);
-app.use('/api/v2', (_req, res) => res.status(404).json({ error: 'API route not found' }));
+app.use('/api/v2', (_req, res) => res.status(404).json({ error: 'API route not found', code: 'NOT_FOUND' }));
 app.use((error, _req, res, _next) => {
+  if (error?.name === 'MulterError') return res.status(error.code === 'LIMIT_FILE_SIZE' ? 413 : 400).json({ error: error.code === 'LIMIT_FILE_SIZE' ? 'Import file exceeds 4 MiB' : error.message, code: error.code || 'IMPORT_UPLOAD_ERROR' });
   if (!(error instanceof HttpError)) console.error(error);
-  res.status(error.status || 500).json({ error: error.status ? error.message : 'Unexpected server error' });
+  res.status(error.status || 500).json({
+    error: error.status ? error.message : 'Unexpected server error',
+    code: error.status ? error.code : 'UNEXPECTED_ERROR',
+    ...(error.details ? { details: error.details } : {}),
+  });
 });
 
 const port = Number(process.env.PORT || 3200);

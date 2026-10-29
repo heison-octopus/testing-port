@@ -1,5 +1,9 @@
 node_modules/
 dist/
+.env
+.env.local
 playground-v2.sqlite
 playground-v2.sqlite-wal
 playground-v2.sqlite-shm
+playwright-report/
+test-results/
