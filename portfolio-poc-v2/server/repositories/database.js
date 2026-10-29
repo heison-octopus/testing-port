@@ -41,4 +41,6 @@ export const sql = {
   },
 };
 
-seedFromContracts(sql, process.env.POC_V2_CSV_DIR || resolve(here, '../../../output/import-examples'));
+const seedMode = String(process.env.POC_V2_SEED_MODE || 'demo').toLowerCase();
+if (!['demo', 'none'].includes(seedMode)) throw new Error('POC_V2_SEED_MODE must be "demo" or "none"');
+if (seedMode === 'demo') seedFromContracts(sql, process.env.POC_V2_CSV_DIR || resolve(here, '../../../output/import-examples'));

@@ -72,6 +72,30 @@ The default database is `portfolio-poc-v2/playground-v2.sqlite`. On first start,
 
 Import rows are never hard-deleted. Pre-commit exceptions are excluded or restored through appended decisions. A post-commit exclusion leaves the linked activity assignment intact and marks the link for human review. A committed batch is immutable; a source or uncommitted batch can only be disabled with actor, reason and timestamp.
 
+### Create a schema-only database
+
+To create a separate SQLite database containing every current migration and table but no demo school or domain rows, run:
+
+```bash
+npm run db:create-empty
+```
+
+The default output is `portfolio-poc-v2/playground-v2-empty.sqlite`. The migration ledger remains populated because it records which schema versions were applied; all domain tables are empty.
+
+Supply another filename after `--` when required:
+
+```bash
+npm run db:create-empty -- ./my-empty.sqlite
+```
+
+The command refuses to overwrite an existing database or matching `-wal`／`-shm` file. To start v2 against the generated database without loading demonstration CSV data:
+
+```bash
+POC_V2_DB=./playground-v2-empty.sqlite POC_V2_SEED_MODE=none npm run dev
+```
+
+This schema-only instance has no school or demo account, so the account picker is empty until initial school, user, role and policy data are loaded. Use the normal `npm run dev` command for the seeded demonstration.
+
 To create a fresh local demo database, stop the v2 server, remove only `portfolio-poc-v2/playground-v2.sqlite` plus its `-shm` and `-wal` companions, and start it again. This reset is intentionally not automated because it deletes local demonstration changes.
 
 Tests use a temporary database and deterministic fake LLM instead of the working POC database or LAN provider:

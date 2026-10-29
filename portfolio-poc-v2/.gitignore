@@ -5,5 +5,8 @@ dist/
 playground-v2.sqlite
 playground-v2.sqlite-wal
 playground-v2.sqlite-shm
+playground-v2-empty.sqlite
+playground-v2-empty.sqlite-wal
+playground-v2-empty.sqlite-shm
 playwright-report/
 test-results/

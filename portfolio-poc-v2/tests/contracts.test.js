@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, resolve, relative } from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { DatabaseSync } from 'node:sqlite';
 import { fakeExtractionProvider } from '../server/adapters/extractionProvider.js';
 import { parseStructuredInput } from '../server/adapters/importParsers.js';
 import { parseModelIds } from '../scripts/llm-models.js';
@@ -51,6 +54,23 @@ test('the OCR provider boundary returns a normalized, source-linked result', asy
 test('OpenAI-compatible model discovery normalizes and sorts model IDs', () => {
   assert.deepEqual(parseModelIds({ data: [{ id: 'model-z' }, { id: 'model-a' }, { id: 'model-a' }] }), ['model-a', 'model-z']);
   assert.deepEqual(parseModelIds({ models: [{ name: 'fallback-model' }] }), ['fallback-model']);
+});
+
+test('schema-only database applies migrations without demo domain rows', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'bhss-v2-schema-'));
+  const database = join(directory, 'empty.sqlite');
+  try {
+    const result = spawnSync(process.execPath, ['--experimental-sqlite', join(root, 'scripts/create-empty-database.js'), database], { encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stderr || result.stdout);
+    const sql = new DatabaseSync(database, { readOnly: true });
+    assert(Number(sql.prepare('SELECT COUNT(*) count FROM schema_migrations').get().count) > 0);
+    for (const table of ['schools', 'users', 'activities', 'portfolio_working_versions', 'proof_items']) {
+      assert.equal(Number(sql.prepare(`SELECT COUNT(*) count FROM ${table}`).get().count), 0, table);
+    }
+    sql.close();
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
 });
 
 test('CSV, XLSX and connector JSON normalize to the same roster shape', async () => {
