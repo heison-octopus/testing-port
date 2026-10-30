@@ -122,6 +122,56 @@ test('authentication requires an opaque session and matching request key', async
   assert.equal((await teacher('/session')).status, 401);
 });
 
+test('Data Operations inventory and every generic CSV export use the same real server records', async () => {
+  const administrator = await signIn('USR-ADM-001');
+  const inventory = await administrator('/imports/data-operations');
+  assert.equal(inventory.status, 200);
+  assert.deepEqual(inventory.body.counts, {
+    catalogue: 4,
+    users: 7,
+    groups: 3,
+    teachers: 4,
+    students: 3,
+    roster: 8,
+    questions: 166,
+    rubrics: 2,
+    labels: 10,
+    media: 4,
+  });
+
+  const expectations = {
+    users: ['external_user_id','user_type','student_number','staff_number','name_en','name_zh','email','status','disabled'],
+    groups: ['group_code','group_type','name_en','name_zh','effective_from','effective_until','status','disabled'],
+    teachers: ['external_user_id','staff_number','name_en','name_zh','position_code','staff_group_code','effective_from','status','disabled'],
+    students: ['external_user_id','student_number','name_en','name_zh','class_code','guardian_consent_status','media_consent_scope','status','disabled'],
+    roster: ['activity_id','student_identifier','student_name','group_code','planned_attendance_status','disabled'],
+    questions: ['question_id','source_workbook','source_sheet','source_row','source_construct_en','source_construct_zh','prompt_en','prompt_zh','response_type','scale_type','ability_code','ability_name_en','ability_name_zh','approval_status','disabled'],
+    labels: ['label_code','name_en','name_zh','description_en','description_zh','catalogue_code','catalogue_version','status','disabled'],
+    media: ['activity_id','media_base_path','source_system','validation_mode','status','disabled'],
+  };
+  for (const [domain, headers] of Object.entries(expectations)) {
+    const exported = await administrator(`/imports/data-operations/${domain}/export`);
+    assert.equal(exported.status, 200, domain);
+    const rows = parseCsv(exported.body.content, { columns: true, skip_empty_lines: true });
+    assert.equal(exported.body.count, inventory.body.counts[domain], domain);
+    assert.equal(rows.length, inventory.body.counts[domain], domain);
+    assert.deepEqual(Object.keys(rows[0]), headers, domain);
+    assert(!exported.body.content.includes('example_'), domain);
+    assert(rows.every(row => ['true','false'].includes(row.disabled)), `${domain} disabled values must be explicit booleans`);
+  }
+
+  const users = parseCsv((await administrator('/imports/data-operations/users/export')).body.content, { columns: true, skip_empty_lines: true });
+  assert(users.some(row => row.user_type === 'student' && row.student_number === 'S1001'));
+  const students = parseCsv((await administrator('/imports/data-operations/students/export')).body.content, { columns: true, skip_empty_lines: true });
+  assert(students.every(row => row.student_number));
+  const questions = parseCsv((await administrator('/imports/data-operations/questions/export')).body.content, { columns: true, skip_empty_lines: true });
+  assert.equal(questions[0].source_workbook, '10份技能問卷整理總表.xlsx');
+  assert(questions[0].prompt_zh);
+  assert.equal(questions[0].ability_code, '');
+  const media = parseCsv((await administrator('/imports/data-operations/media/export')).body.content, { columns: true, skip_empty_lines: true });
+  assert(media.every(row => row.activity_id && row.media_base_path.endsWith(`/${row.activity_id}/`)));
+});
+
 test('server session drives the complete role navigation matrix', async () => {
   const expected = {
     'USR-ADM-001': { activities: false, responses: false, assessments: false, approvals: false, portfolios: false, portfolioEditor: false, portfolioReview: false, memorable: false, imports: true, aiDrafts: false, staff: true, policy: true, catalogue: true },

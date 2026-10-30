@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import ExcelJS from 'exceljs';
+import { parse as parseCsv } from 'csv-parse/sync';
 
 async function signIn(page, name) {
   await page.goto('/');
@@ -84,6 +85,8 @@ test.describe.serial('Portfolio POC v2 implemented workflows', () => {
   test('admin activity catalogue round trip distinguishes no-change rows from lifecycle actions', async ({ page }) => {
     await signIn(page, 'System Administrator');
     await page.locator('nav').getByRole('button', { name: 'Data operations' }).click();
+    await expect(page.locator('.operations-inventory > header')).toContainText('4 teachers · 4 activities');
+    await expect(page.locator('.activity-inventory > button')).toHaveCount(4);
     await page.locator('.data-domain-grid').getByRole('button', { name: /Activity list/ }).click();
     await expect(page.getByRole('heading', { name: 'Export, edit and stage explicit changes' })).toBeVisible();
     const downloadPromise = page.waitForEvent('download');
@@ -108,6 +111,41 @@ test.describe.serial('Portfolio POC v2 implemented workflows', () => {
     await page.getByRole('button', { name: 'Commit explicit activity actions' }).click();
     await expect(page.locator('.import-detail-heading')).toContainText('committed');
     await expect(page.getByRole('button', { name: 'Disable this import batch' })).toHaveCount(0);
+  });
+
+  test('every Data Operations CSV export downloads the records counted on its domain card', async ({ page }) => {
+    await signIn(page, 'System Administrator');
+    await page.locator('nav').getByRole('button', { name: 'Data operations' }).click();
+    const exportCsv = async (cardName, buttonName) => {
+      const card = page.locator('.data-domain-grid').getByRole('button', { name: new RegExp(cardName) });
+      await expect(card).not.toContainText('Loading');
+      const expected = Number((await card.locator('em').innerText()).match(/\d+/)?.[0]);
+      await card.click();
+      const downloadPromise = page.waitForEvent('download');
+      await page.getByRole('button', { name: new RegExp(buttonName) }).click();
+      const download = await downloadPromise;
+      const rows = parseCsv(await readFile(await download.path(), 'utf8'), { columns: true, skip_empty_lines: true });
+      expect(rows.length, cardName).toBe(expected);
+      expect(rows.some(row => Object.values(row).some(value => String(value).startsWith('example_'))), cardName).toBe(false);
+      return rows;
+    };
+
+    const users = await exportCsv('User list', 'Export all records for editing');
+    expect(users.some(row => row.user_type === 'student')).toBe(true);
+    await exportCsv('User groups', 'Export all records for editing');
+    const teachers = await exportCsv('Teacher updates', 'Export all records for editing');
+    expect(teachers.every(row => row.staff_number || row.name_en === 'System Administrator')).toBe(true);
+    const students = await exportCsv('Student updates', 'Export all records for editing');
+    expect(students.every(row => row.student_number)).toBe(true);
+    const questions = await exportCsv('Question bank', 'Export all records for editing');
+    expect(questions).toHaveLength(166);
+    expect(questions[0].source_workbook).toBe('10份技能問卷整理總表.xlsx');
+    const labels = await exportCsv('Activity ability labels', 'Export all records for editing');
+    expect(labels.every(row => row.catalogue_code === 'VASK')).toBe(true);
+    await exportCsv('Activity assignments', 'Export all assignments');
+    const media = await exportCsv('Media source paths', 'Export batch output');
+    expect(media.every(row => row.activity_id && row.media_base_path)).toBe(true);
+    await expect(page.locator('.media-path-table > article')).toHaveCount(media.length);
   });
 
   test('student reflection, memorable activity and Portfolio editing are separate scoped pages', async ({ page }) => {

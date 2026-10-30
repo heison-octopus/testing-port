@@ -678,4 +678,28 @@ export const migrations = [
       CREATE INDEX idx_portfolio_rubric ON portfolio_working_versions(rubric_catalogue_id,student_user_id,period_id);
     `,
   },
+  {
+    version: 11,
+    name: 'persisted_media_source_paths',
+    sql: `
+      CREATE TABLE media_source_paths(
+        media_source_path_id TEXT PRIMARY KEY,
+        school_id TEXT NOT NULL REFERENCES schools(school_id),
+        activity_id TEXT NOT NULL REFERENCES activities(activity_id),
+        media_base_path TEXT NOT NULL,
+        source_system TEXT NOT NULL,
+        validation_mode TEXT NOT NULL,
+        status TEXT NOT NULL,
+        disabled_reason TEXT,
+        disabled_by_user_id TEXT,
+        disabled_at TEXT,
+        created_by_user_id TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_by_user_id TEXT,
+        updated_at TEXT,
+        UNIQUE(school_id,activity_id)
+      );
+      CREATE INDEX idx_media_source_paths_school ON media_source_paths(school_id,status,activity_id);
+    `,
+  },
 ];

@@ -1,8 +1,10 @@
-import type { ActivityCatalogueExport, ImportBatchDetail, ImportWorkspace, RubricImportPreview, RubricPackage, RubricWorkbookDownload, RubricWorkspace } from '../../shared/types';
+import type { ActivityCatalogueExport, DataOperationExport, DataOperationInventory, ImportBatchDetail, ImportWorkspace, RubricImportPreview, RubricPackage, RubricWorkbookDownload, RubricWorkspace } from '../../shared/types';
 import { call } from './transport';
 
 export const importsApi = {
   imports: () => call<ImportWorkspace>('/imports'),
+  dataOperations: () => call<DataOperationInventory>('/imports/data-operations'),
+  exportDataOperation: (domain: string) => call<DataOperationExport>(`/imports/data-operations/${domain}/export`),
   exportActivityCatalogue: () => call<ActivityCatalogueExport>('/imports/activity-catalogue/export'),
   rubrics: () => call<RubricWorkspace>('/imports/rubrics'),
   rubricPackage: (rubricId: string) => call<RubricPackage>(`/imports/rubrics/${rubricId}`),

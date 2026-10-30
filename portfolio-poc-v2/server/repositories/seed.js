@@ -228,6 +228,12 @@ function ensurePocV2Extensions(sql, csvDirectory) {
     sql.run(`INSERT OR IGNORE INTO proud_moment_windows VALUES(?,?,?,?,?,?,?)`, '2026-27-P1', 'BHSS', 'open', '2026-12-01T08:00:00+08:00', '2027-02-28T17:00:00+08:00', 24, 'USR-ST-001');
     sql.run(`UPDATE portfolio_working_versions SET rubric_catalogue_id='RUB-SB-UF2' WHERE rubric_catalogue_id IS NULL`);
     sql.run(`UPDATE portfolio_snapshots SET rubric_catalogue_id='RUB-SB-UF2' WHERE rubric_catalogue_id IS NULL`);
+    const mediaPathSeededAt = '2026-10-29T09:00:00+08:00';
+    for (const activity of sql.all(`SELECT a.activity_id,a.school_id,COALESCE(p.academic_year_label,'2026-27') academic_year_label
+      FROM activities a LEFT JOIN academic_periods p ON p.period_id=a.resolved_period_id ORDER BY a.activity_id`)) {
+      sql.run(`INSERT OR IGNORE INTO media_source_paths(media_source_path_id,school_id,activity_id,media_base_path,source_system,validation_mode,status,created_by_user_id,created_at)
+        VALUES(?,?,?,?,?,?,?,?,?)`, `MSP-${activity.activity_id}`, activity.school_id, activity.activity_id, `bhss_media/${activity.academic_year_label}/${activity.activity_id}/`, 'school_archive', 'metadata_only', 'active', 'USR-ADM-001', mediaPathSeededAt);
+    }
     ensureImportSeedLedger(sql, csvDirectory);
   });
 }

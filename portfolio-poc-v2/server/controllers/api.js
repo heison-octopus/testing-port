@@ -8,6 +8,7 @@ import { assessmentService } from '../services/assessmentService.js';
 import { memorableService } from '../services/memorableService.js';
 import { importService } from '../services/importService.js';
 import { rubricService } from '../services/rubricService.js';
+import { dataOperationsService } from '../services/dataOperationsService.js';
 import { openAiCompatibleChat } from '../adapters/openAiCompatibleChat.js';
 
 const response = (status, work) => async (req, res, next) => { try { res.status(status).json(await work(req)); } catch (error) { next(error); } };
@@ -22,6 +23,8 @@ export const controller = {
   previewPolicy: ok(req => identityService.previewPolicy(req.user, req.body)),
   applyPolicy: created(req => identityService.applyPolicy(req.user, req.body)),
   imports: ok(req => importService.workspace(req.user)),
+  dataOperationsInventory: ok(req => dataOperationsService.inventory(req.user)),
+  exportDataOperation: ok(req => dataOperationsService.export(req.user, req.params.domain)),
   exportActivityCatalogue: ok(req => importService.exportActivityCatalogue(req.user)),
   rubrics: ok(req => rubricService.workspace(req.user)),
   rubricPackage: ok(req => rubricService.package(req.user, req.params.rubricId)),

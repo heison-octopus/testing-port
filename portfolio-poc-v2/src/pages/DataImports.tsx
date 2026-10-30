@@ -1,29 +1,30 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AddressBook, ArrowClockwise, Books, ChartPolar, CheckCircle, CloudArrowDown, Database, DownloadSimple, FileArrowUp, FolderOpen, ListChecks, Prohibit, ShieldCheck, Student, Tag, UsersThree, Warning } from '@phosphor-icons/react';
 import { api } from '../api/client';
-import type { ImportBatchDetail, ImportRecord, ImportWorkspace, RubricImportPreview, RubricPackage, RubricWorkspace, Staff } from '../../shared/types';
+import type { DataOperationInventory, ImportBatchDetail, ImportRecord, ImportWorkspace, RubricImportPreview, RubricPackage, RubricWorkspace, Staff } from '../../shared/types';
 import { Field, Notice, PageHeader, Status } from '../components/Layout';
 import { useI18n } from '../i18n';
 
 const emptyCorrection = { fieldName: 'student_identifier', afterValue: '', reason: '' };
 type DataOperation = 'roster' | 'catalogue' | 'media' | 'users' | 'groups' | 'teachers' | 'students' | 'questions' | 'rubrics' | 'labels';
 
-const domainDefinitions: { id: DataOperation; labelEn: string; labelZh: string; detailEn: string; detailZh: string; count: string; fields: string[]; template: string; icon: typeof Database }[] = [
-  { id: 'catalogue', labelEn: 'Activity list', labelZh: '活動清單', detailEn: 'Stable activity IDs, lifecycle and successor revisions', detailZh: '穩定活動 ID、生命週期及後繼修訂', count: '5 records', fields: ['activity_id','title_en','operational_status','disabled'], template: '/templates/activities-new.csv', icon: ListChecks },
-  { id: 'users', labelEn: 'User list', labelZh: '使用者清單', detailEn: 'School identities shared by staff and students', detailZh: '教職員及學生共用的校內身份', count: '7 users', fields: ['external_user_id','user_type','name_en','status','disabled'], template: '/templates/users-new.csv', icon: AddressBook },
-  { id: 'groups', labelEn: 'User groups', labelZh: '使用者群組', detailEn: 'Classes, staff groups and effective membership', detailZh: '班別、教職員群組及生效成員關係', count: '4 groups', fields: ['group_code','group_type','effective_from','disabled'], template: '/templates/groups-new.csv', icon: UsersThree },
-  { id: 'teachers', labelEn: 'Teacher updates', labelZh: '老師更新', detailEn: 'Staff number, position and functional assignments', detailZh: '教職員編號、職銜及功能分派', count: '3 teachers', fields: ['staff_number','position_code','group_code','disabled'], template: '/templates/teachers-new.csv', icon: AddressBook },
-  { id: 'students', labelEn: 'Student updates', labelZh: '學生更新', detailEn: 'Student number, class history and consent metadata', detailZh: '學生編號、班別歷史及同意資料', count: '3 students', fields: ['student_number','class_code','media_consent_scope','disabled'], template: '/templates/students-new.csv', icon: Student },
-  { id: 'roster', labelEn: 'Activity assignments', labelZh: '活動分派', detailEn: 'Planned participants and attendance state by activity', detailZh: '按活動記錄預定參與者及出席狀態', count: 'By activity', fields: ['activity_id','student_identifier','planned_attendance_status','disabled'], template: '/templates/activity-assignments-new.csv', icon: FileArrowUp },
-  { id: 'questions', labelEn: 'Question bank', labelZh: '題庫', detailEn: 'Supplied source instrument: 166 questions across 10 constructs', detailZh: '所提供來源工具：10 個構念共 166 題', count: '166 questions', fields: ['question_id','source_construct','prompt_zh','ability_code','disabled'], template: '/templates/question-bank-new.csv', icon: Books },
-  { id: 'rubrics', labelEn: 'Skill rubrics', labelZh: '技能 Rubric', detailEn: 'Versioned groups, skills, step definitions and optional score bands', detailZh: '有版本群組、技能、階段定義及可選分數範圍', count: '2 catalogues', fields: ['rubric_catalogue_id','selection_mode','score_out_of','status','disabled'], template: '', icon: ChartPolar },
-  { id: 'labels', labelEn: 'Activity ability labels', labelZh: '活動能力標籤', detailEn: 'School-active labels offered to teachers during activity creation', detailZh: '老師建立活動時可使用的校本生效標籤', count: '1 active set', fields: ['label_code','name_en','catalogue_version','status','disabled'], template: '/templates/activity-labels-new.csv', icon: Tag },
-  { id: 'media', labelEn: 'Media source paths', labelZh: '媒體來源路徑', detailEn: 'Activity-linked media locations and validation', detailZh: '活動連繫媒體位置及驗證', count: 'By activity', fields: ['activity_id','media_base_path','source_system','disabled'], template: '/templates/media-paths-new.csv', icon: FolderOpen },
+const domainDefinitions: { id: DataOperation; labelEn: string; labelZh: string; detailEn: string; detailZh: string; fields: string[]; template: string; icon: typeof Database }[] = [
+  { id: 'catalogue', labelEn: 'Activity list', labelZh: '活動清單', detailEn: 'Stable activity IDs, lifecycle and successor revisions', detailZh: '穩定活動 ID、生命週期及後繼修訂', fields: ['activity_id','title_en','operational_status','disabled'], template: '/templates/activities-new.csv', icon: ListChecks },
+  { id: 'users', labelEn: 'User list', labelZh: '使用者清單', detailEn: 'School identities shared by staff and students', detailZh: '教職員及學生共用的校內身份', fields: ['external_user_id','user_type','name_en','status','disabled'], template: '/templates/users-new.csv', icon: AddressBook },
+  { id: 'groups', labelEn: 'User groups', labelZh: '使用者群組', detailEn: 'Classes, staff groups and effective membership', detailZh: '班別、教職員群組及生效成員關係', fields: ['group_code','group_type','effective_from','disabled'], template: '/templates/groups-new.csv', icon: UsersThree },
+  { id: 'teachers', labelEn: 'Teacher updates', labelZh: '老師更新', detailEn: 'Staff number, position and functional assignments', detailZh: '教職員編號、職銜及功能分派', fields: ['staff_number','position_code','group_code','disabled'], template: '/templates/teachers-new.csv', icon: AddressBook },
+  { id: 'students', labelEn: 'Student updates', labelZh: '學生更新', detailEn: 'Student number, class history and consent metadata', detailZh: '學生編號、班別歷史及同意資料', fields: ['student_number','class_code','media_consent_scope','disabled'], template: '/templates/students-new.csv', icon: Student },
+  { id: 'roster', labelEn: 'Activity assignments', labelZh: '活動分派', detailEn: 'Planned participants and attendance state by activity', detailZh: '按活動記錄預定參與者及出席狀態', fields: ['activity_id','student_identifier','planned_attendance_status','disabled'], template: '/templates/activity-assignments-new.csv', icon: FileArrowUp },
+  { id: 'questions', labelEn: 'Question bank', labelZh: '題庫', detailEn: 'Supplied source instrument: 166 questions across 10 constructs', detailZh: '所提供來源工具：10 個構念共 166 題', fields: ['question_id','source_construct','prompt_zh','ability_code','disabled'], template: '/templates/question-bank-new.csv', icon: Books },
+  { id: 'rubrics', labelEn: 'Skill rubrics', labelZh: '技能 Rubric', detailEn: 'Versioned groups, skills, step definitions and optional score bands', detailZh: '有版本群組、技能、階段定義及可選分數範圍', fields: ['rubric_catalogue_id','selection_mode','score_out_of','status','disabled'], template: '', icon: ChartPolar },
+  { id: 'labels', labelEn: 'Activity ability labels', labelZh: '活動能力標籤', detailEn: 'School-active labels offered to teachers during activity creation', detailZh: '老師建立活動時可使用的校本生效標籤', fields: ['label_code','name_en','catalogue_version','status','disabled'], template: '/templates/activity-labels-new.csv', icon: Tag },
+  { id: 'media', labelEn: 'Media source paths', labelZh: '媒體來源路徑', detailEn: 'Activity-linked media locations and validation', detailZh: '活動連繫媒體位置及驗證', fields: ['activity_id','media_base_path','source_system','disabled'], template: '/templates/media-paths-new.csv', icon: FolderOpen },
 ];
 
 export function DataImports({ report, focusBatchId, onSelectBatch, onUnavailable }: { report: (value: unknown) => void; focusBatchId?: string; onSelectBatch: (batchId: string) => void; onUnavailable: () => void }) {
   const { isChinese, text } = useI18n();
   const [workspace, setWorkspace] = useState<ImportWorkspace | null>(null);
+  const [dataOperations, setDataOperations] = useState<DataOperationInventory | null>(null);
   const [staff, setStaff] = useState<Staff[]>([]);
   const [detail, setDetail] = useState<ImportBatchDetail | null>(null);
   const [activityId, setActivityId] = useState('');
@@ -64,6 +65,10 @@ export function DataImports({ report, focusBatchId, onSelectBatch, onUnavailable
 
   useEffect(() => {
     void loadWorkspace().catch(report);
+    void api.dataOperations().then(value => {
+      setDataOperations(value);
+      setPathPreview(current => Object.keys(current).length ? current : Object.fromEntries(value.mediaPaths.map(item => [item.activity_id, item.media_base_path])));
+    }).catch(report);
     void api.staff(new URLSearchParams()).then(setStaff).catch(() => undefined);
     void api.rubrics().then(async value => { setRubricWorkspace(value); const first = value.active || value.catalogues[0]; if (first) setRubricPackage(await api.rubricPackage(first.rubric_catalogue_id)); }).catch(() => undefined);
   }, []);
@@ -110,16 +115,6 @@ export function DataImports({ report, focusBatchId, onSelectBatch, onUnavailable
     finally { setBusy(false); }
   }
 
-  function exportMediaPaths() {
-    const rows = [['activity_id','activity_title','media_base_path','media_count'], ...(workspace?.activities || []).filter(item => !selectedPaths.length || selectedPaths.includes(item.activity_id)).map((item, index) => [item.activity_id, item.title_en, pathPreview[item.activity_id] || '', String((index + 1) * 4)])];
-    const content = rows.map(row => row.map(value => `"${String(value).replaceAll('"','""')}"`).join(',')).join('\n');
-    const url = URL.createObjectURL(new Blob([content], { type: 'text/csv;charset=utf-8' }));
-    const anchor = document.createElement('a');
-    anchor.href = url; anchor.download = 'activity-media-paths.csv'; anchor.click();
-    URL.revokeObjectURL(url);
-    setNotice(text('Media-path batch output exported. This does not modify stored source records.', '媒體路徑批次輸出已匯出；此操作不會修改已保存的來源紀錄。'));
-  }
-
   function previewBatchPathUpdate() {
     if (!selectedPaths.length) return report(new Error(text('Select at least one activity path.', '請至少選擇一個活動路徑。')));
     const base = pathPrefix.endsWith('/') ? pathPrefix : `${pathPrefix}/`;
@@ -127,24 +122,15 @@ export function DataImports({ report, focusBatchId, onSelectBatch, onUnavailable
     setNotice(text('Path changes are shown as a design preview only. The current POC has no protected media-path mutation endpoint.', '路徑變更只作設計預覽；目前 POC 尚未有受保護的媒體路徑修改端點。'));
   }
 
-  function exportDomain(domainId: DataOperation) {
+  async function exportDomain(domainId: DataOperation) {
     const definition = domainDefinitions.find(item => item.id === domainId)!;
-    let rows: string[][] = [];
-    if (domainId === 'users' || domainId === 'teachers' || domainId === 'students') {
-      rows = staff.map(person => [person.id, person.staffNumber, person.name, person.nameZh, 'active', 'false']);
-      rows.unshift(['user_id','school_identifier','name_en','name_zh','status','disabled']);
-    } else if (domainId === 'catalogue' || domainId === 'media' || domainId === 'roster') {
-      rows = (workspace?.activities || []).map(item => [item.activity_id, item.title_en, item.operational_status, pathPreview[item.activity_id] || '', 'false']);
-      rows.unshift(['activity_id','title_en','operational_status','media_base_path','disabled']);
-    } else {
-      rows = [definition.fields, definition.fields.map(field => field === 'disabled' ? 'false' : `example_${field}`)];
-    }
-    const content = rows.map(row => row.map(value => `"${String(value ?? '').replaceAll('"','""')}"`).join(',')).join('\n');
-    const url = URL.createObjectURL(new Blob([content], { type: 'text/csv;charset=utf-8' }));
-    const anchor = document.createElement('a');
-    anchor.href = url; anchor.download = `${domainId}-all-records.csv`; anchor.click();
-    URL.revokeObjectURL(url);
-    setNotice(text(`Exported all currently visible ${definition.labelEn.toLowerCase()} records for editing. Stable IDs and disabled state are included.`, `已匯出目前可見的${definition.labelZh}紀錄供編輯，並包括穩定 ID 及 disabled 狀態。`));
+    setBusy(true); setNotice('');
+    try {
+      const result = await api.exportDataOperation(domainId);
+      const url = URL.createObjectURL(new Blob([result.content], { type: result.mimeType }));
+      const anchor = document.createElement('a'); anchor.href = url; anchor.download = result.fileName; anchor.click(); URL.revokeObjectURL(url);
+      setNotice(text(`Exported ${result.count} real ${definition.labelEn.toLowerCase()} records from the protected school dataset.`, `已從受保護的學校數據集匯出 ${result.count} 項真實${definition.labelZh}紀錄。`));
+    } catch (error) { report(error); } finally { setBusy(false); }
   }
 
   function downloadWorkbook(result: { fileName: string; mimeType: string; contentBase64: string }) {
@@ -221,14 +207,14 @@ export function DataImports({ report, focusBatchId, onSelectBatch, onUnavailable
     {notice && <Notice tone="success">{notice}</Notice>}
 
     <section className="operations-inventory">
-      <header><div><p>{text('AVAILABLE RECORDS', '可用紀錄')}</p><h2>{text('Teachers and activities in scope', '範圍內教職員及活動')}</h2></div><span>{staff.length} {text('teachers', '位教職員')} · {workspace?.activities.length || 0} {text('activities', '項活動')}</span></header>
+      <header><div><p>{text('AVAILABLE RECORDS', '可用紀錄')}</p><h2>{text('Teachers and activities in scope', '範圍內教職員及活動')}</h2></div><span>{staff.length} {text('teachers', '位教職員')} · {dataOperations?.activities.length || 0} {text('activities', '項活動')}</span></header>
       <div>
         <section><div className="inventory-title"><UsersThree size={19} /><b>{text('Available teachers', '可用教職員')}</b></div><div className="teacher-inventory">{staff.map(person => <article key={person.id}><span><b>{isChinese ? person.nameZh : person.name}</b><small>{person.staffNumber} · {person.positions.map(position => isChinese ? position.name_zh : position.name_en).join(', ') || text('Staff', '教職員')}</small></span><Status value={person.explicitDenies.length ? 'needs_review' : 'active'} /></article>)}</div></section>
-        <section><div className="inventory-title"><FolderOpen size={19} /><b>{text('Available activities', '可用活動')}</b></div><div className="activity-inventory">{workspace?.activities.map(item => <button key={item.activity_id} className={activityId === item.activity_id ? 'selected' : ''} onClick={() => setActivityId(item.activity_id)}><span><b>{isChinese ? item.title_zh || item.title_en : item.title_en}</b><small>{item.activity_id}</small></span><Status value={item.operational_status} /></button>)}</div></section>
+        <section><div className="inventory-title"><FolderOpen size={19} /><b>{text('Available activities', '可用活動')}</b></div><div className="activity-inventory">{dataOperations?.activities.map(item => <button key={item.activity_id} className={activityId === item.activity_id ? 'selected' : ''} onClick={() => { if (workspace?.activities.some(candidate => candidate.activity_id === item.activity_id)) setActivityId(item.activity_id); }}><span><b>{isChinese ? item.title_zh || item.title_en : item.title_en}</b><small>{item.activity_id}</small></span><Status value={item.operational_status} /></button>)}</div></section>
       </div>
     </section>
 
-    <section className="data-domain-grid">{domainDefinitions.map(domain => { const Icon = domain.icon; const count = domain.id === 'rubrics' && rubricWorkspace ? `${rubricWorkspace.catalogues.length} catalogues` : domain.count; return <button key={domain.id} className={operation === domain.id ? 'selected' : ''} onClick={() => { setOperation(domain.id); setDomainFile(null); }}><Icon size={20} /><span><b>{text(domain.labelEn, domain.labelZh)}</b><small>{text(domain.detailEn, domain.detailZh)}</small></span><em>{text(count, count.replace('records','項紀錄').replace('users','位使用者').replace('groups','個群組').replace('teachers','位老師').replace('students','位學生').replace('questions','題').replace('catalogues','個目錄').replace('active set','個生效組合').replace('By activity','按活動'))}</em></button>; })}</section>
+    <section className="data-domain-grid">{domainDefinitions.map(domain => { const Icon = domain.icon; const value = dataOperations?.counts[domain.id]; const count = value == null ? text('Loading…', '載入中…') : `${value} ${text(domain.id === 'users' ? 'users' : domain.id === 'groups' ? 'groups' : domain.id === 'teachers' ? 'teachers' : domain.id === 'students' ? 'students' : domain.id === 'questions' ? 'questions' : domain.id === 'rubrics' ? 'catalogues' : domain.id === 'labels' ? 'labels' : domain.id === 'roster' ? 'assignments' : domain.id === 'media' ? 'paths' : 'records', domain.id === 'users' ? '位使用者' : domain.id === 'groups' ? '個群組' : domain.id === 'teachers' ? '位教職員' : domain.id === 'students' ? '位學生' : domain.id === 'questions' ? '題' : domain.id === 'rubrics' ? '個目錄' : domain.id === 'labels' ? '個標籤' : domain.id === 'roster' ? '項分派' : domain.id === 'media' ? '個路徑' : '項紀錄')}`; return <button key={domain.id} className={operation === domain.id ? 'selected' : ''} onClick={() => { setOperation(domain.id); setDomainFile(null); }}><Icon size={20} /><span><b>{text(domain.labelEn, domain.labelZh)}</b><small>{text(domain.detailEn, domain.detailZh)}</small></span><em>{count}</em></button>; })}</section>
 
     {operation === 'rubrics' && <section className="rubric-contract-panel">
       <header><div><p>{text('SCHOOLADMIN · VERSIONED RUBRIC PACKAGE', 'SCHOOLADMIN · 有版本 RUBRIC 套件')}</p><h2>{text('Skill rubrics', '技能 Rubric')}</h2><span>{text('Real catalogues, groups, skills, step definitions and optional score bands.', '真實目錄、群組、技能、階段定義及可選分數範圍。')}</span></div><Status value={rubricWorkspace?.active ? 'active' : 'needs_review'} /></header>
@@ -243,14 +229,14 @@ export function DataImports({ report, focusBatchId, onSelectBatch, onUnavailable
 
     {!['roster','catalogue','media','rubrics'].includes(operation) && (() => { const domain = domainDefinitions.find(item => item.id === operation)!; return <section className="domain-contract-panel">
       <header><div><p>{text('SCHOOLADMIN DATA CONTRACT', 'SCHOOLADMIN 數據合約')}</p><h2>{text(domain.labelEn, domain.labelZh)}</h2><span>{text(domain.detailEn, domain.detailZh)}</span></div><Status value="design_preview" /></header>
-      <div className="domain-contract-actions"><button onClick={() => exportDomain(operation)}><DownloadSimple />{text('Export all records for editing', '匯出全部紀錄供編輯')}<small>{text('Includes stable IDs and disabled state', '包括穩定 ID 及 disabled 狀態')}</small></button><a href={domain.template} download><FileArrowUp />{text('Download new-record template', '下載新增紀錄範本')}<small>{text('Blank/example rows and expected fields', '空白／示例列及預期欄位')}</small></a><label><Database /><span><b>{text('Import changes or new records', '匯入變更或新增紀錄')}</b><small>{text('CSV or XLSX · staged validation first', 'CSV 或 XLSX · 先作暫存驗證')}</small></span><input type="file" accept=".csv,.xlsx" onChange={event => setDomainFile(event.target.files?.[0] || null)} /></label></div>
+      <div className="domain-contract-actions"><button disabled={busy} onClick={() => void exportDomain(operation)}><DownloadSimple />{text('Export all records for editing', '匯出全部紀錄供編輯')}<small>{text('Fetched from the protected server dataset', '從受保護的伺服器數據集擷取')}</small></button><a href={domain.template} download><FileArrowUp />{text('Download new-record template', '下載新增紀錄範本')}<small>{text('Blank/example rows and expected fields', '空白／示例列及預期欄位')}</small></a><label><Database /><span><b>{text('Import changes or new records', '匯入變更或新增紀錄')}</b><small>{text('CSV or XLSX · staged validation first', 'CSV 或 XLSX · 先作暫存驗證')}</small></span><input type="file" accept=".csv,.xlsx" onChange={event => setDomainFile(event.target.files?.[0] || null)} /></label></div>
       <div className="contract-fields"><b>{text('Expected fields', '預期欄位')}</b>{domain.fields.map(field => <code key={field}>{field}</code>)}</div>
       <footer><span>{domainFile ? domainFile.name : text('No import file selected.', '未選擇匯入檔案。')}</span><button className="primary" disabled={!domainFile} onClick={stageGenericDomain}>{text('Stage and validate', '暫存及驗證')}</button></footer>
     </section>; })()}
 
     {operation === 'roster' && <section className="import-entry-grid">
       <form onSubmit={upload} className="import-entry-card">
-        <header><FileArrowUp size={24} /><div><p>{text('FILE INGESTION', '檔案匯入')}</p><h2>{text('Update people assigned to an activity', '更新活動人員分派')}</h2></div></header>
+        <header><FileArrowUp size={24} /><div><p>{text('FILE INGESTION', '檔案匯入')}</p><h2>{text('Update people assigned to an activity', '更新活動人員分派')}</h2></div><button type="button" disabled={busy} onClick={() => void exportDomain('roster')}><DownloadSimple />{text('Export all assignments', '匯出全部分派')}</button></header>
         <Field label={text('Activity receiving the roster', '接收名冊的活動')}><select aria-label={text('Upload target activity', '上載目標活動')} value={activityId} onChange={event => setActivityId(event.target.value)}>{workspace?.activities.map(item => <option key={item.activity_id} value={item.activity_id}>{isChinese ? item.title_zh || item.title_en : item.title_en} · {item.activity_id}</option>)}</select></Field>
         <Field label={text('Roster file · CSV or XLSX · maximum 4 MiB', '名冊檔案 · CSV 或 XLSX · 上限 4 MiB')}><input aria-label={text('Roster file', '名冊檔案')} type="file" accept=".csv,.xlsx" onChange={event => setFile(event.target.files?.[0] || null)} /></Field>
         <button className="primary" disabled={busy || !workspace?.activities.length}>{busy ? text('Working…', '處理中…') : text('Parse and preview assignments', '解析及預覽分派')}</button>
@@ -271,9 +257,9 @@ export function DataImports({ report, focusBatchId, onSelectBatch, onUnavailable
     </form>}
 
     {operation === 'media' && <section className="media-path-operation">
-      <header><div><p>{text('ACTIVITY-LINKED MEDIA', '活動連繫媒體')}</p><h2>{text('Batch output or update media source paths', '批次輸出或更新媒體來源路徑')}</h2><span>{text('Media retrieval is keyed by activityId. This operation does not change activity authorship or approval.', '媒體擷取以 activityId 為索引；此操作不會更改活動作者或批核。')}</span></div><button onClick={exportMediaPaths}><DownloadSimple />{text('Export batch output', '匯出批次輸出')}</button></header>
+      <header><div><p>{text('ACTIVITY-LINKED MEDIA', '活動連繫媒體')}</p><h2>{text('Batch output or update media source paths', '批次輸出或更新媒體來源路徑')}</h2><span>{text('Media retrieval is keyed by activityId. This operation does not change activity authorship or approval.', '媒體擷取以 activityId 為索引；此操作不會更改活動作者或批核。')}</span></div><button disabled={busy} onClick={() => void exportDomain('media')}><DownloadSimple />{text('Export batch output', '匯出批次輸出')}</button></header>
       <div className="media-path-toolbar"><Field label={text('New base path', '新基礎路徑')}><input value={pathPrefix} onChange={event => setPathPrefix(event.target.value)} /></Field><button className="primary" onClick={previewBatchPathUpdate}>{text('Preview path update', '預覽路徑更新')}</button></div>
-      <div className="media-path-table"><div><span></span><span>{text('Activity ID', '活動 ID')}</span><span>{text('Activity', '活動')}</span><span>{text('Media', '媒體')}</span><span>{text('Current base path', '目前基礎路徑')}</span><span>{text('Validation', '驗證')}</span></div>{workspace?.activities.map((item, index) => <article key={item.activity_id}><input type="checkbox" checked={selectedPaths.includes(item.activity_id)} onChange={() => setSelectedPaths(current => current.includes(item.activity_id) ? current.filter(id => id !== item.activity_id) : [...current, item.activity_id])} /><code>{item.activity_id}</code><span><b>{isChinese ? item.title_zh || item.title_en : item.title_en}</b><small>{item.operational_status}</small></span><b>{(index + 1) * 4}</b><input value={pathPreview[item.activity_id] || ''} onChange={event => setPathPreview(current => ({ ...current, [item.activity_id]: event.target.value }))} /><Status value={(pathPreview[item.activity_id] || '').endsWith('/') ? 'valid' : 'needs_resolution'} /></article>)}</div>
+      <div className="media-path-table"><div><span></span><span>{text('Activity ID', '活動 ID')}</span><span>{text('Activity', '活動')}</span><span>{text('Media', '媒體')}</span><span>{text('Current base path', '目前基礎路徑')}</span><span>{text('Validation', '驗證')}</span></div>{dataOperations?.mediaPaths.map(item => <article key={item.activity_id}><input type="checkbox" checked={selectedPaths.includes(item.activity_id)} onChange={() => setSelectedPaths(current => current.includes(item.activity_id) ? current.filter(id => id !== item.activity_id) : [...current, item.activity_id])} /><code>{item.activity_id}</code><span><b>{isChinese ? item.title_zh || item.title_en : item.title_en}</b><small>{item.status}</small></span><b>{item.media_count}</b><input value={pathPreview[item.activity_id] || item.media_base_path} onChange={event => setPathPreview(current => ({ ...current, [item.activity_id]: event.target.value }))} /><Status value={(pathPreview[item.activity_id] || item.media_base_path).endsWith('/') ? 'valid' : 'needs_resolution'} /></article>)}</div>
       <Notice tone="warning">{text('Design preview: path edits are local to this screen until a protected server endpoint, permission check and audit event are implemented.', '設計預覽：在受保護伺服器端點、權限檢查及稽核事件完成前，路徑修改只會保留在本畫面。')}</Notice>
     </section>}
 

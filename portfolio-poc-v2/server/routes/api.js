@@ -13,6 +13,8 @@ api.post('/policy/preview', controller.previewPolicy);
 api.post('/policy/overrides', controller.applyPolicy);
 
 api.get('/imports', controller.imports);
+api.get('/imports/data-operations', controller.dataOperationsInventory);
+api.get('/imports/data-operations/:domain/export', controller.exportDataOperation);
 api.get('/imports/activity-catalogue/export', controller.exportActivityCatalogue);
 api.get('/imports/rubrics', controller.rubrics);
 api.get('/imports/rubrics/export', controller.exportRubrics);
