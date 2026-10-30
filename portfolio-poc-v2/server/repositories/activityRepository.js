@@ -44,11 +44,19 @@ export const activityRepository = {
       ...activity,
       revisions,
       people: sql.all(`SELECT p.*,u.name_en,u.name_zh,u.student_number,u.staff_number FROM activity_people p JOIN users u ON u.user_id=p.user_id WHERE p.activity_id=? AND p.status='active' ORDER BY p.person_type,p.relationship_type,u.name_en`, activityId),
-      vaskItems: sql.all(`SELECT av.*,axis.axis_code,axis.name_en,axis.name_zh FROM activity_vask_items av JOIN rubric_axes axis ON axis.axis_id=av.vask_item_id WHERE av.activity_revision_id=? ORDER BY axis.display_order`, latestRevisionId),
+      vaskItems: sql.all(`SELECT assignment.activity_revision_id,assignment.activity_id,assignment.axis_id vask_item_id,assignment.catalogue_version vask_item_version,assignment.source,assignment.rationale,assignment.approval_state,assignment.assigned_by_user_id,assignment.assigned_at,axis.axis_code,axis.name_en,axis.name_zh
+        FROM activity_label_assignments assignment
+        JOIN rubric_axes axis ON axis.axis_id=assignment.axis_id
+        JOIN rubric_catalogues catalogue ON catalogue.rubric_catalogue_id=assignment.rubric_catalogue_id
+        WHERE assignment.activity_revision_id=? AND assignment.status='active' AND catalogue.code='VASK'
+        ORDER BY axis.display_order`, latestRevisionId),
+      labelAssignments: sql.all(`SELECT assignment.*,axis.axis_code,axis.name_en,axis.name_zh,catalogue.code catalogue_code,catalogue.name_en catalogue_name_en,catalogue.name_zh catalogue_name_zh FROM activity_label_assignments assignment JOIN rubric_axes axis ON axis.axis_id=assignment.axis_id JOIN rubric_catalogues catalogue ON catalogue.rubric_catalogue_id=assignment.rubric_catalogue_id WHERE assignment.activity_revision_id=? AND assignment.status='active' ORDER BY catalogue.code,axis.display_order`, latestRevisionId),
       riskFlags: sql.all(`SELECT flag_code FROM activity_revision_risk_flags WHERE activity_revision_id=? ORDER BY flag_code`, latestRevisionId).map(item => item.flag_code),
       changeRequests: sql.all(`SELECT c.*,u.name_en requester_name,u.name_zh requester_name_zh,resolver.name_en resolver_name,resolver.name_zh resolver_name_zh FROM activity_change_requests c JOIN users u ON u.user_id=c.requested_by_user_id LEFT JOIN users resolver ON resolver.user_id=c.resolved_by_user_id WHERE c.activity_id=? ORDER BY c.requested_at DESC`, activityId),
       approvalHistory: approvalHistory(activityId),
-      lifecycleEvents: sql.all(`SELECT event.*,actor.name_en actor_name,actor.name_zh actor_name_zh FROM activity_lifecycle_events event JOIN users actor ON actor.user_id=event.actor_user_id WHERE event.activity_id=? ORDER BY event.occurred_at DESC`, activityId),
+      lifecycleEvents: sql.all(`SELECT event.*,event.entity_lifecycle_event_id activity_lifecycle_event_id,event.entity_id activity_id,actor.name_en actor_name,actor.name_zh actor_name_zh
+        FROM entity_lifecycle_events event JOIN users actor ON actor.user_id=event.actor_user_id
+        WHERE event.entity_type='activity' AND event.entity_id=? ORDER BY event.occurred_at DESC`, activityId),
       dependencyImpacts: sql.all(`SELECT * FROM activity_dependency_impacts WHERE activity_id=? ORDER BY triggered_at DESC`, activityId),
     };
   },
@@ -59,7 +67,15 @@ export const activityRepository = {
     return sql.all(`SELECT * FROM academic_periods WHERE school_id=? AND status IN ('open','planned') AND start_date<=? AND end_date>=? ORDER BY resolution_priority DESC,sequence`, schoolId, startDate, endDate);
   },
   formVersion(formVersionId) { return sql.get('SELECT * FROM form_versions WHERE form_version_id=?', formVersionId); },
-  revisionVask(revisionId) { return sql.all(`SELECT av.*,axis.axis_code,axis.name_en,axis.name_zh FROM activity_vask_items av JOIN rubric_axes axis ON axis.axis_id=av.vask_item_id WHERE av.activity_revision_id=? ORDER BY axis.display_order`, revisionId); },
+  revisionLabels(revisionId) { return sql.all(`SELECT assignment.*,axis.axis_code,axis.name_en,axis.name_zh,catalogue.code catalogue_code,catalogue.name_en catalogue_name_en,catalogue.name_zh catalogue_name_zh FROM activity_label_assignments assignment JOIN rubric_axes axis ON axis.axis_id=assignment.axis_id JOIN rubric_catalogues catalogue ON catalogue.rubric_catalogue_id=assignment.rubric_catalogue_id WHERE assignment.activity_revision_id=? AND assignment.status='active' ORDER BY catalogue.code,axis.display_order`, revisionId); },
+  labelDefinitions(axisIds) {
+    if (!axisIds.length) return [];
+    return sql.all(`SELECT axis.axis_id,axis.status axis_status,catalogue.rubric_catalogue_id,catalogue.code catalogue_code,catalogue.version catalogue_version,catalogue.labelling_capable,catalogue.assessment_capable,catalogue.status catalogue_status,catalogue.disabled_at FROM rubric_axes axis JOIN rubric_catalogues catalogue ON catalogue.rubric_catalogue_id=axis.rubric_catalogue_id WHERE axis.axis_id IN (${axisIds.map(() => '?').join(',')})`, ...axisIds);
+  },
+  revisionVask(revisionId) { return sql.all(`SELECT assignment.axis_id vask_item_id,assignment.catalogue_version vask_item_version,assignment.*,axis.axis_code,axis.name_en,axis.name_zh
+    FROM activity_label_assignments assignment JOIN rubric_axes axis ON axis.axis_id=assignment.axis_id
+    JOIN rubric_catalogues catalogue ON catalogue.rubric_catalogue_id=assignment.rubric_catalogue_id
+    WHERE assignment.activity_revision_id=? AND assignment.status='active' AND catalogue.code='VASK' ORDER BY axis.display_order`, revisionId); },
   revisionRiskFlags(revisionId) { return sql.all(`SELECT flag_code FROM activity_revision_risk_flags WHERE activity_revision_id=? ORDER BY flag_code`, revisionId).map(item => item.flag_code); },
   referenceData(schoolId) {
     const classMemberships = sql.all(`SELECT m.class_id,u.user_id FROM student_class_memberships m JOIN users u ON u.user_id=m.student_user_id WHERE m.school_id=? AND m.status='active' AND u.status='active' ORDER BY m.class_id,u.name_en`, schoolId);
@@ -78,10 +94,12 @@ export const activityRepository = {
       students: sql.all(`SELECT user_id,name_en,name_zh,student_number FROM users WHERE school_id=? AND user_type='student' AND status='active' ORDER BY name_en`, schoolId),
       studentClasses,
       teacherGroups,
-      questionBank: sql.all(`SELECT (item.form_version_id || ':' || item.item_key) bank_item_id,item.form_version_id,item.item_key,item.prompt_en,item.prompt_zh,item.ability_code,item.ability_name_en,item.ability_name_zh,item.respondent_role_code,item.required
-        FROM form_items item JOIN form_versions form ON form.form_version_id=item.form_version_id
+      questionBank: sql.all(`SELECT item.question_block_item_id bank_item_id,form.form_version_id,item.item_key,item.prompt_en,item.prompt_zh,item.ability_code,item.ability_name_en,item.ability_name_zh,item.respondent_role_code,item.required
+        FROM form_versions form
+        JOIN form_version_blocks link ON link.form_version_id=form.form_version_id
+        JOIN question_block_items item ON item.question_block_version_id=link.question_block_version_id
         WHERE form.review_status='approved' AND form.publication_status='published' AND item.item_type NOT IN ('template_reference','label_block')
-        ORDER BY form.is_system_default DESC,item.item_order LIMIT 40`),
+        ORDER BY form.is_system_default DESC,link.display_order,item.display_order LIMIT 40`),
       groups: [
         { group_id: 'S1A-2026-27', name_en: 'S1A class', name_zh: '中一甲班' },
         { group_id: 'GRP-STUDENT-DEV', name_en: 'Student development programme', name_zh: '學生發展計劃' },
@@ -97,13 +115,16 @@ export const activityRepository = {
     return sql.all(`SELECT DISTINCT u.user_id,m.staff_group_id FROM staff_group_memberships m JOIN staff_groups g ON g.staff_group_id=m.staff_group_id JOIN users u ON u.user_id=m.user_id
       WHERE g.school_id=? AND g.status='active' AND m.status='active' AND u.status='active' AND m.staff_group_id IN (${groupIds.map(() => '?').join(',')})`, schoolId, ...groupIds);
   },
-  create({ activity, revision, owner, participants, supportingStaff, vaskItemIds, riskFlags, formDraft }) {
+  create({ activity, revision, owner, participants, supportingStaff, vaskItemIds, labelAssignments, riskFlags, formDraft }) {
     sql.transaction(() => {
       if (formDraft) {
         sql.run(`INSERT INTO form_versions(form_template_id,form_version_id,name_en,name_zh,version_number,supersedes_form_version_id,review_status,publication_status,visibility_scope,is_system_default,respondent_roles,notes)
           VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`, formDraft.templateId, formDraft.id, formDraft.nameEn, formDraft.nameZh, formDraft.version, formDraft.supersedesId, 'draft', 'unpublished', 'private_draft', 0, 'student', formDraft.notes);
-        for (const [index, question] of formDraft.questions.entries()) sql.run(`INSERT INTO form_items(form_version_id,item_order,section_code,item_key,item_type,question_id,respondent_role_code,required,prompt_zh,prompt_en,answer_scale,ability_code,ability_name_en,ability_name_zh,proof_intent)
-          VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, formDraft.id, index + 1, 'student_reflection', question.itemKey, 'free_text', question.questionId || null, 'ROLE-STUDENT', question.required ? 1 : 0, question.promptZh, question.promptEn, 'text', question.abilityCode || null, question.abilityNameEn || null, question.abilityNameZh || null, 'Teacher-curated question; accepted response becomes proof and requires later rubric-time interpretation');
+        const blockId = `QBLOCK-${formDraft.id}-student_reflection`, blockVersionId = `QBLOCKV-${formDraft.id}-student_reflection-1`;
+        sql.run(`INSERT INTO question_blocks(question_block_id,school_id,block_code,name_en,name_zh,latest_version_id,current_published_version_id,operational_status,created_by_user_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)`, blockId, activity.schoolId, `${formDraft.templateId}:student_reflection`, `${formDraft.nameEn}: Student Reflection`, `${formDraft.nameZh}：學生反思`, blockVersionId, null, 'active', revision.ownerId, activity.createdAt, activity.createdAt);
+        sql.run(`INSERT INTO question_block_versions(question_block_version_id,question_block_id,version_number,name_en,name_zh,respondent_role_code,review_status,publication_status,created_by_user_id,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)`, blockVersionId, blockId, 1, `${formDraft.nameEn}: Student Reflection`, `${formDraft.nameZh}：學生反思`, 'ROLE-STUDENT', 'draft', 'unpublished', revision.ownerId, activity.createdAt);
+        sql.run(`INSERT INTO form_version_blocks VALUES(?,?,?)`, formDraft.id, blockVersionId, 1);
+        for (const [index, question] of formDraft.questions.entries()) sql.run(`INSERT INTO question_block_items(question_block_item_id,question_block_version_id,display_order,item_key,source_question_block_item_id,question_id,question_version_id,required,item_type,prompt_en,prompt_zh,respondent_role_code,answer_scale,ability_code,ability_name_en,ability_name_zh,proof_intent) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, `${blockVersionId}-ITEM-${index + 1}`, blockVersionId, index + 1, question.itemKey, question.sourceQuestionBlockItemId || null, question.questionId || null, question.questionVersionId || null, question.required ? 1 : 0, 'free_text', question.promptEn, question.promptZh, 'ROLE-STUDENT', 'text', question.abilityCode || null, question.abilityNameEn || null, question.abilityNameZh || null, 'Teacher-curated question; accepted response becomes proof and requires later rubric-time interpretation');
       }
       sql.run(`INSERT INTO activities(activity_id,school_id,group_id,created_by_user_id,latest_revision_id,current_approved_revision_id,operational_status,resolved_period_id,period_resolution_status,period_resolved_at,created_at,updated_at)
         VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`, activity.id, activity.schoolId, activity.groupId, activity.createdBy, revision.id, null, 'draft', activity.periodId, 'resolved', activity.createdAt, activity.createdAt, activity.createdAt);
@@ -115,7 +136,7 @@ export const activityRepository = {
         VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`, participant.id, activity.id, participant.userId, 'student', 'participant', 'assigned', 'pending', 0, 0, 1, activity.createdAt.slice(0,10), owner.userId, activity.createdAt);
       for (const staff of supportingStaff) sql.run(`INSERT INTO activity_people(activity_person_id,activity_id,user_id,person_type,relationship_type,group_code,planned_attendance_status,can_edit,can_view_raw_media,can_submit_response,effective_from,assigned_by_user_id,assigned_at)
         VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`, staff.id, activity.id, staff.userId, 'staff', 'supporting_teacher', staff.groupId, 'assigned', 0, 1, 1, activity.createdAt.slice(0,10), owner.userId, activity.createdAt);
-      for (const vaskItemId of vaskItemIds) sql.run(`INSERT INTO activity_vask_items VALUES(?,?,?,?,?,?,?,?,?)`, revision.id, activity.id, vaskItemId, '2026', 'teacher_selected', 'Activity intention selected at creation', 'pending_review', owner.userId, activity.createdAt);
+      for (const label of labelAssignments) sql.run(`INSERT INTO activity_label_assignments(activity_label_assignment_id,activity_id,activity_revision_id,rubric_catalogue_id,axis_id,catalogue_version,label_role,source,rationale,approval_state,assigned_by_user_id,assigned_at,status) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`, label.id, activity.id, revision.id, label.catalogueId, label.axisId, label.catalogueVersion, label.labelRole, 'teacher_selected', label.rationale || 'Activity intention selected at creation', 'pending_review', owner.userId, activity.createdAt, 'active');
       for (const flag of riskFlags) sql.run(`INSERT INTO activity_revision_risk_flags VALUES(?,?)`, revision.id, flag);
     });
   },
@@ -123,7 +144,7 @@ export const activityRepository = {
     sql.transaction(() => {
       sql.run(`INSERT INTO activity_revisions(activity_revision_id,activity_id,revision_number,title_en,title_zh,description_en,description_zh,activity_type,subject_id,department_id,start_at,end_at,owner_user_id,requested_form_version_id,media_capture_expected,location,approval_status,publication_status,material_change_reason,supersedes_revision_id,created_by_user_id,created_at,requested_publisher_user_id)
         VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, revision.id, revision.activityId, revision.number, revision.titleEn, revision.titleZh, revision.descriptionEn, revision.descriptionZh, revision.activityType, revision.subjectId, revision.departmentId, revision.startAt, revision.endAt, revision.ownerId, revision.formVersionId, revision.mediaExpected, revision.location, 'draft', 'unpublished', revision.reason, revision.supersedesId, revision.createdBy, updatedAt, revision.publisherId || null);
-      sql.run(`INSERT INTO activity_vask_items SELECT ?,activity_id,vask_item_id,vask_item_version,source,rationale,'pending_review',?,? FROM activity_vask_items WHERE activity_revision_id=?`, revision.id, revision.createdBy, updatedAt, revision.supersedesId);
+      sql.run(`INSERT INTO activity_label_assignments(activity_label_assignment_id,activity_id,activity_revision_id,rubric_catalogue_id,axis_id,catalogue_version,label_role,source,rationale,approval_state,assigned_by_user_id,assigned_at,status) SELECT ('ALA-' || ? || '-' || axis_id || '-' || label_role),activity_id,?,rubric_catalogue_id,axis_id,catalogue_version,label_role,source,rationale,'pending_review',?,?,status FROM activity_label_assignments WHERE activity_revision_id=? AND status='active'`, revision.id, revision.id, revision.createdBy, updatedAt, revision.supersedesId);
       sql.run(`INSERT INTO activity_revision_risk_flags SELECT ?,flag_code FROM activity_revision_risk_flags WHERE activity_revision_id=?`, revision.id, revision.supersedesId);
       sql.run('UPDATE activities SET latest_revision_id=?,operational_status=?,updated_at=? WHERE activity_id=?', revision.id, 'draft', updatedAt, revision.activityId);
     });
@@ -153,7 +174,7 @@ export const activityRepository = {
     const revision = sql.get('SELECT activity_id FROM activity_revisions WHERE activity_revision_id=?', revisionId);
     if (!revision) return;
     if (outcome === 'approved') {
-      sql.run(`UPDATE activity_vask_items SET approval_state='approved' WHERE activity_revision_id=?`, revisionId);
+      sql.run(`UPDATE activity_label_assignments SET approval_state='approved' WHERE activity_revision_id=?`, revisionId);
       sql.run('UPDATE activities SET current_approved_revision_id=?,operational_status=?,updated_at=? WHERE activity_id=?', revisionId, 'approved', decidedAt, revision.activity_id);
     } else sql.run(`UPDATE activities SET operational_status='draft',updated_at=? WHERE activity_id=?`, decidedAt, revision.activity_id);
   },

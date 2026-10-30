@@ -7,7 +7,13 @@ const sectionForPerspective = {
 };
 
 function questions(formVersionId, perspective) {
-  return sql.all(`SELECT * FROM form_items WHERE form_version_id=? AND section_code=? ORDER BY item_order`, formVersionId, sectionForPerspective[perspective]);
+  return sql.all(`SELECT item.*,item.display_order item_order
+    FROM form_version_blocks form_block
+    JOIN question_block_versions block_version ON block_version.question_block_version_id=form_block.question_block_version_id
+    JOIN question_blocks block ON block.question_block_id=block_version.question_block_id
+    JOIN question_block_items item ON item.question_block_version_id=block_version.question_block_version_id
+    WHERE form_block.form_version_id=? AND block.block_code LIKE ?
+    ORDER BY form_block.display_order,item.display_order`, formVersionId, `%:${sectionForPerspective[perspective]}`);
 }
 
 function submission(submissionId) {
@@ -28,14 +34,13 @@ function recipient(recipientId) {
       activity.school_id,activity.group_id,activity.current_approved_revision_id,revision.subject_id,revision.department_id,revision.title_en,revision.title_zh,revision.description_en,revision.description_zh,revision.start_at,revision.end_at,
       subject.name_en subject_name,subject.name_zh subject_name_zh,subject.student_number,
       respondent.name_en respondent_name,respondent.name_zh respondent_name_zh,
-      peer.status peer_assignment_status,peer.moderation_required
+      r.status peer_assignment_status
     FROM assignment_recipients r
     JOIN assessment_assignments a ON a.activity_form_assignment_id=r.assessment_assignment_id
     JOIN activities activity ON activity.activity_id=a.activity_id
     JOIN activity_revisions revision ON revision.activity_revision_id=activity.current_approved_revision_id
     JOIN users subject ON subject.user_id=r.subject_user_id
     JOIN users respondent ON respondent.user_id=r.respondent_user_id
-    LEFT JOIN peer_review_assignments peer ON peer.peer_assignment_id=r.peer_assignment_id
     WHERE r.assignment_recipient_id=? AND activity.operational_status<>'disabled'`, recipientId);
   if (!row) return null;
   return { ...row, questions: questions(row.form_version_id, row.perspective), latestSubmission: latestSubmission(recipientId) };
@@ -117,7 +122,10 @@ export const assessmentRepository = {
     return sql.get(`SELECT * FROM assessment_assignments WHERE activity_id=? AND assignment_status<>'blocked' ORDER BY assigned_at DESC LIMIT 1`, activityId);
   },
   peerAssignmentExists(activityId, subjectId, reviewerId) {
-    return sql.get(`SELECT 1 FROM peer_review_assignments WHERE activity_id=? AND subject_student_id=? AND peer_reviewer_student_id=? AND status IN ('assigned','submitted','approved')`, activityId, subjectId, reviewerId);
+    return sql.get(`SELECT 1 FROM assignment_recipients recipient
+      JOIN assessment_assignments assignment ON assignment.activity_form_assignment_id=recipient.assessment_assignment_id
+      WHERE assignment.activity_id=? AND recipient.subject_user_id=? AND recipient.respondent_user_id=?
+        AND recipient.perspective='peer_observation' AND recipient.status IN ('not_submitted','draft','submitted','approved')`, activityId, subjectId, reviewerId);
   },
   teacherRecipient(activityId, studentId, respondentId) {
     return sql.get(`SELECT r.* FROM assignment_recipients r JOIN assessment_assignments a ON a.activity_form_assignment_id=r.assessment_assignment_id
@@ -133,8 +141,8 @@ export const assessmentRepository = {
     sql.transaction(() => {
       sql.run(`INSERT OR IGNORE INTO assessment_assignments VALUES(?,?,?,?,?,?,?,?,?,?)`, assignmentId, activityId, activity.form_version_id, actorId, createdAt, activity.end_at || createdAt, due, 'scheduled', 'passed', 'Created when the approved activity revision was published.');
       for (const participant of participants) {
-        sql.run(`INSERT OR IGNORE INTO assignment_recipients VALUES(?,?,?,?,?,?,?,?,?)`, `AR-SELF-${activityId}-${participant.user_id}`, assignmentId, participant.user_id, participant.user_id, owner?.user_id || actorId, null, 'student_self_report', 'not_submitted', createdAt);
-        if (owner) sql.run(`INSERT OR IGNORE INTO assignment_recipients VALUES(?,?,?,?,?,?,?,?,?)`, `AR-TEACH-${activityId}-${participant.user_id}`, assignmentId, owner.user_id, participant.user_id, owner.user_id, null, 'teacher_observation', 'not_submitted', createdAt);
+        sql.run(`INSERT OR IGNORE INTO assignment_recipients(assignment_recipient_id,assessment_assignment_id,respondent_user_id,subject_user_id,reviewer_user_id,perspective,status,created_at,assigned_by_user_id,due_at,moderation_required,notes) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`, `AR-SELF-${activityId}-${participant.user_id}`, assignmentId, participant.user_id, participant.user_id, owner?.user_id || actorId, 'student_self_report', 'not_submitted', createdAt, actorId, due, 0, 'Student self-report assignment created with the published activity form.');
+        if (owner) sql.run(`INSERT OR IGNORE INTO assignment_recipients(assignment_recipient_id,assessment_assignment_id,respondent_user_id,subject_user_id,reviewer_user_id,perspective,status,created_at,assigned_by_user_id,due_at,moderation_required,notes) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`, `AR-TEACH-${activityId}-${participant.user_id}`, assignmentId, owner.user_id, participant.user_id, owner.user_id, 'teacher_observation', 'not_submitted', createdAt, actorId, due, 0, 'Teacher observation assignment created with the published activity form.');
       }
     });
     return assignmentId;
@@ -151,19 +159,23 @@ export const assessmentRepository = {
       FROM feedback f LEFT JOIN framework_observations o ON o.feedback_id=f.feedback_id
       LEFT JOIN rubric_axes axis ON axis.axis_id=o.axis_id LEFT JOIN users observer ON observer.user_id=f.author_user_id
       WHERE f.activity_id=? AND f.subject_user_id=? ORDER BY f.observed_at DESC`, activityId, studentId);
-    const peerAssignments = sql.all(`SELECT peer.*,reviewer.name_en reviewer_name,reviewer.name_zh reviewer_name_zh
-      FROM peer_review_assignments peer JOIN users reviewer ON reviewer.user_id=peer.peer_reviewer_student_id
-      WHERE peer.activity_id=? AND peer.subject_student_id=? ORDER BY peer.assigned_at DESC`, activityId, studentId);
+    const peerAssignments = sql.all(`SELECT recipient.assignment_recipient_id peer_assignment_id,assignment.activity_id,
+        recipient.subject_user_id subject_student_id,recipient.respondent_user_id peer_reviewer_student_id,
+        recipient.assigned_by_user_id,recipient.assigner_role_assignment_id,recipient.created_at assigned_at,
+        recipient.due_at,recipient.status,assignment.form_version_id,recipient.moderation_required,recipient.notes,
+        reviewer.name_en reviewer_name,reviewer.name_zh reviewer_name_zh
+      FROM assignment_recipients recipient
+      JOIN assessment_assignments assignment ON assignment.activity_form_assignment_id=recipient.assessment_assignment_id
+      JOIN users reviewer ON reviewer.user_id=recipient.respondent_user_id
+      WHERE assignment.activity_id=? AND recipient.subject_user_id=? AND recipient.perspective='peer_observation'
+      ORDER BY recipient.created_at DESC`, activityId, studentId);
     return { activity, student, participants: this.activityParticipants(activityId), recipients, observations, peerAssignments, skillAxes: this.skillAxes() };
   },
   skillAxes() {
     return sql.all(`SELECT axis_id,axis_code,name_en,name_zh,display_order FROM rubric_axes WHERE rubric_catalogue_id='RUB-SB-UF2' AND status='active' ORDER BY display_order`);
   },
   createPeerAssignment(record) {
-    sql.transaction(() => {
-      sql.run(`INSERT INTO peer_review_assignments VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`, record.peerAssignmentId, record.activityId, record.subjectId, record.reviewerId, record.actorId, record.roleAssignmentId, record.createdAt, record.dueAt, 'assigned', record.formVersionId, 1, record.notes);
-      sql.run(`INSERT INTO assignment_recipients VALUES(?,?,?,?,?,?,?,?,?)`, record.recipientId, record.assignmentId, record.reviewerId, record.subjectId, record.actorId, record.peerAssignmentId, 'peer_observation', 'not_submitted', record.createdAt);
-    });
+    sql.run(`INSERT INTO assignment_recipients(assignment_recipient_id,assessment_assignment_id,respondent_user_id,subject_user_id,reviewer_user_id,perspective,status,created_at,assigned_by_user_id,assigner_role_assignment_id,due_at,moderation_required,notes) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`, record.recipientId, record.assignmentId, record.reviewerId, record.subjectId, record.actorId, 'peer_observation', 'not_submitted', record.createdAt, record.actorId, record.roleAssignmentId, record.dueAt, 1, record.notes);
   },
   createTeacherAssessment(record) {
     sql.transaction(() => {
@@ -172,12 +184,14 @@ export const assessmentRepository = {
       sql.run(`UPDATE assignment_recipients SET status='approved' WHERE assignment_recipient_id=?`, record.recipientId);
       sql.run(`INSERT INTO feedback VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`, record.feedbackId, record.activityId, record.studentId, record.actorId, record.submissionId, 'teacher_assessment', record.overallComment, record.createdAt, 'teacher_observation', 'confirmed', 'unpublished', record.createdAt, record.createdAt);
       for (const evidence of record.evidence) {
-        sql.run(`INSERT INTO feedback_evidence VALUES(?,?,?,?,?,?,?)`, evidence.id, record.feedbackId, evidence.type, evidence.text, evidence.proofItemId, evidence.submissionId, record.createdAt);
+        const proofItemId = evidence.proofItemId || `PRF-${evidence.id}`;
+        sql.run(`INSERT OR IGNORE INTO proof_items(proof_item_id,proof_type_id,student_id,activity_id,source_entity_type,source_entity_id,perspective,summary,occurred_at,submitted_by_user_id,provenance_status,review_status,visibility_status,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, proofItemId, evidence.type, record.studentId, record.activityId, evidence.submissionId ? 'assessment_submission' : 'feedback', evidence.submissionId || record.feedbackId, 'teacher_observation', evidence.text, record.createdAt, record.actorId, 'source_linked', 'accepted', 'reviewers_only', record.createdAt);
+        sql.run(`INSERT INTO proof_links(proof_link_id,proof_item_id,target_entity_type,target_entity_id,support_role,linked_by_user_id,linked_at,status,notes) VALUES(?,?,?,?,?,?,?,?,?)`, `PL-${evidence.id}-FDB`, proofItemId, 'feedback', record.feedbackId, evidence.type, record.actorId, record.createdAt, 'active', evidence.text);
       }
       if (record.observation) {
         const observation = record.observation;
         sql.run(`INSERT INTO framework_observations VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`, observation.id, record.feedbackId, observation.axisId, observation.step, observation.consistency, observation.comment, observation.nextStep, 'confirmed', 1, 0, null, null, record.createdAt);
-        for (const evidence of record.evidence) sql.run(`INSERT INTO observation_evidence VALUES(?,?,?)`, `OE-${observation.id}-${evidence.id}`, observation.id, evidence.id);
+        for (const evidence of record.evidence) sql.run(`INSERT INTO proof_links(proof_link_id,proof_item_id,target_entity_type,target_entity_id,support_role,linked_by_user_id,linked_at,status,notes) VALUES(?,?,?,?,?,?,?,?,?)`, `PL-${evidence.id}-${observation.id}`, evidence.proofItemId || `PRF-${evidence.id}`, 'framework_observation', observation.id, 'supports_condition', record.actorId, record.createdAt, 'active', evidence.text);
       }
     });
   },

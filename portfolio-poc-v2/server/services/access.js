@@ -27,6 +27,7 @@ export function resourceScope(resource = {}) {
       if (type === 'group') return resource.group_id === id;
       if (type === 'programme') return resource.programme_id === id;
       if (type === 'year') return resource.year_id === id;
+      if (type === 'grade') return resource.grade_id === id;
       return false;
     },
   };

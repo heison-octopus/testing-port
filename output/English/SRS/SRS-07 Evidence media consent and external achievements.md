@@ -28,6 +28,10 @@ Preserve evidence safely while keeping ownership, assessment use, portfolio disp
 | EVD-FR-018 | An assigned authorized reviewer shall be able to create a target-specific proof-use decision (`included`, `excluded`, `invalidated`, `superseded`) for an observation, Portfolio claim or generation manifest, with reason, actor and time, without deleting the original proof. | Approved System Analyst architecture decision, 27 Oct 2026 | P1 |
 | EVD-FR-019 | A globally false identity/evidence association, including an incorrect face match, shall be corrected or invalidated at the association itself; the original candidate and decision history shall remain auditable. | Approved System Analyst architecture decision, 27 Oct 2026 | P1/P2 |
 | EVD-FR-020 | Excluding, correcting or invalidating used proof shall trigger a dependency impact check and mark affected suggestions, observations, claims and current snapshots `needs_review` or `stale`; no alternative source or result is selected automatically. | Approved System Analyst architecture decision, 27 Oct 2026 | P1 |
+| EVD-FR-021 | Media metadata shall use a stable asset record and separate activity-link records. The asset shall retain title, original filename, media type, source/reference, owner, uploader/upload time, consent, visibility, moderation, processing, capture/retention, update and soft-disable metadata. | Approved System Analyst architecture decision, 30 Oct 2026; not BHSS/JC approval | P0/P1 |
+| EVD-FR-022 | Each extraction shall retain the media asset, extraction type, provider/version, requested actor/time, processing state, start time, processed-finish time, candidate content, review state, reviewer/time/reason, correction and supersession link. | Approved System Analyst architecture decision, 30 Oct 2026; not BHSS/JC approval | P1/P2 |
+| EVD-FR-023 | Media metadata queries shall be server-filtered and paginated by permitted activity, type, lifecycle, processing, consent and search term. Assignment, capability, school and consent checks shall be applied before rows are returned. Storage references and raw server paths shall not be returned in metadata responses. | Approved System Analyst architecture decision, 30 Oct 2026; not BHSS/JC approval | P0/P1 |
+| EVD-FR-024 | Media create, extraction request, extraction review and soft-disable shall be separate protected actions. A queued or incomplete extraction cannot be accepted, and an accepted extraction remains a reviewed candidate rather than an official assessment. | Approved System Analyst architecture decision, 30 Oct 2026; not BHSS/JC approval | P1/P2 |
 
 ## 3. Evidence and visibility model
 
@@ -89,4 +93,7 @@ The same control surface shall offer only the manual actions valid for the recor
 - Withdrawing consent blocks future original-media reads without erasing the historical assessment reference; the exact downstream publication response remains Policy TBD H-07.
 - Excluding a proof from one rubric observation does not remove it from unrelated valid uses.
 - Rejecting a previously confirmed false face match removes the student's derived activity/evidence association and places dependent results in impact review.
+- A metadata-only list never exposes an asset storage reference; an opaque reference resembling a local filesystem path is rejected on registration.
+- An extraction records request, start and processed-finish stages separately and cannot be reviewed before processing completes.
+- Disabling a media asset appends a lifecycle event and preserves activity links, extraction history, actor, reason and timestamp.
 

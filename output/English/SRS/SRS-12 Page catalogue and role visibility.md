@@ -70,6 +70,10 @@ Staff navigation plus Users/positions/groups/periods; Roles/capabilities/scopes;
 | UI-FR-016 | Portfolio review shall show the student's submitted version, class-teacher all/subset inclusion decision, latest approved fallback and `no_approved_version` status without presenting an unapproved draft as official. | Approved System Analyst architecture decision, 28 Oct 2026 | P1 |
 | UI-FR-017 | Approval inboxes shall filter by workflow type, school scope, assignee, unassigned/declined/overdue state, due date and escalation status. Accept, return, approve, reject and reassign actions shall require the configured reason. | Approved System Analyst architecture decision, 28 Oct 2026 | P1 |
 | UI-FR-018 | School-wide capability-policy changes shall provide a staged diff and affected-user preview before activation; an explicit deny and its source shall be visible to authorized administrators. | Approved System Analyst architecture decision, 28 Oct 2026 | P1 |
+| UI-FR-019 | Authoring selectors for teachers/staff, catalogue labels, question-bank items, reusable question blocks and media shall call dedicated filtered, paginated APIs. A page shall not download the complete domain list and then perform security-sensitive filtering in browser code. | Approved System Analyst architecture decision, 30 Oct 2026; not BHSS/JC approval | P0/P1 |
+| UI-FR-020 | Teacher/staff selector rows shall display literal bilingual positions, functional roles and groups. Internal IDs may be retained for submission but shall not be the only visible description. | Approved System Analyst architecture decision, 30 Oct 2026; not BHSS/JC approval | P1 |
+| UI-FR-021 | Label and question-block selectors shall expose lifecycle/selectability state. Disabled records may appear only when rendering or validating an existing historical reference and shall not be selectable for new work. | Approved System Analyst architecture decision, 30 Oct 2026; not BHSS/JC approval | P1 |
+| UI-FR-022 | The existing aggregate staff and activity-reference endpoints may remain temporarily for compatibility. New authoring work shall use the filtered contracts, and removal of aggregate hydration requires a separately tested frontend migration. | Approved System Analyst architecture decision, 30 Oct 2026; not BHSS/JC approval | P1 |
 
 ## 5. Current POC gap map
 
@@ -113,4 +117,7 @@ flowchart LR
 - Filtering the staff directory to English-subject activity approvers returns only in-scope, currently eligible users and does not disclose out-of-scope staff.
 - A teacher with a narrower deny sees the same Teacher layout but no forbidden activity row or action.
 - When a student has a newer unapproved draft, official Portfolio preview clearly uses the prior approved version; if none exists it shows `no_approved_version` and queues the case.
+- A teacher selector displays bilingual position and functional-role names and requests only the current server page.
+- A disabled label is rendered on an older activity with a historical-only warning but is absent from a new activity's selectable results.
+- Filtering questions or reusable blocks changes the server query; it does not filter a previously downloaded full list in the browser.
 

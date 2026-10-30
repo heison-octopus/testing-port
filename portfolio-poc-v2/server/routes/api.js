@@ -8,6 +8,10 @@ const importUpload = multer({ storage: multer.memoryStorage(), limits: { files: 
 api.get('/session', controller.session);
 api.get('/reference-data', controller.referenceData);
 api.get('/staff', controller.staff);
+api.get('/directory/teachers', controller.teacherDirectory);
+api.get('/catalogue-labels', controller.catalogueLabels);
+api.get('/question-bank', controller.questionBank);
+api.get('/question-blocks', controller.questionBlocks);
 api.get('/policy', controller.policyWorkspace);
 api.post('/policy/preview', controller.previewPolicy);
 api.post('/policy/overrides', controller.applyPolicy);
@@ -44,6 +48,13 @@ api.post('/activities/:id/change-requests', controller.requestActivityChange);
 api.post('/activities/:id/change-requests/:requestId/decision', controller.resolveActivityChange);
 api.post('/activities/:id/withdraw', controller.withdrawActivity);
 api.post('/activities/:id/submit', controller.submitActivity);
+
+api.get('/media-assets', controller.mediaAssets);
+api.post('/media-assets', controller.createMediaAsset);
+api.get('/media-assets/:mediaAssetId', controller.mediaAsset);
+api.post('/media-assets/:mediaAssetId/extractions', controller.requestMediaExtraction);
+api.post('/media-assets/:mediaAssetId/disable', controller.disableMediaAsset);
+api.post('/media-extractions/:extractionId/review', controller.reviewMediaExtraction);
 
 api.get('/response-tasks', controller.responseTasks);
 api.get('/response-tasks/:recipientId', controller.responseTask);

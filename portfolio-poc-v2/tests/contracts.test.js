@@ -56,14 +56,19 @@ test('OpenAI-compatible model discovery normalizes and sorts model IDs', () => {
   assert.deepEqual(parseModelIds({ models: [{ name: 'fallback-model' }] }), ['fallback-model']);
 });
 
-test('schema-only database applies migrations without demo domain rows', () => {
+test('schema-only database creates the clean schema without demo domain rows', () => {
   const directory = mkdtempSync(join(tmpdir(), 'bhss-v2-schema-'));
   const database = join(directory, 'empty.sqlite');
   try {
     const result = spawnSync(process.execPath, ['--experimental-sqlite', join(root, 'scripts/create-empty-database.js'), database], { encoding: 'utf8' });
     assert.equal(result.status, 0, result.stderr || result.stdout);
     const sql = new DatabaseSync(database, { readOnly: true });
-    assert(Number(sql.prepare('SELECT COUNT(*) count FROM schema_migrations').get().count) > 0);
+    assert.equal(Number(sql.prepare('PRAGMA user_version').get().user_version), 1);
+    assert.equal(sql.prepare(`SELECT COUNT(*) count FROM sqlite_master WHERE type='table' AND name='schema_migrations'`).get().count, 0);
+    const tableNames = new Set(sql.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'`).all().map(row => row.name));
+    assert.equal(tableNames.size, 76);
+    for (const table of ['activity_label_assignments', 'question_block_items', 'assignment_recipients', 'proof_links', 'source_systems', 'activity_source_bindings', 'entity_lifecycle_events']) assert(tableNames.has(table), table);
+    for (const table of ['seed_state', 'activity_vask_items', 'form_items', 'peer_review_assignments', 'feedback_evidence', 'observation_evidence', 'media_source_definitions', 'media_source_paths', 'rubric_import_drafts', 'activity_lifecycle_events', 'media_lifecycle_events']) assert.equal(tableNames.has(table), false, table);
     for (const table of ['schools', 'users', 'activities', 'portfolio_working_versions', 'proof_items']) {
       assert.equal(Number(sql.prepare(`SELECT COUNT(*) count FROM ${table}`).get().count), 0, table);
     }

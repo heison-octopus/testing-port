@@ -48,16 +48,52 @@ export const identityRepository = {
       groups: sql.all(`SELECT * FROM staff_groups WHERE school_id=? AND status='active' ORDER BY name_en`, schoolId),
     };
   },
-  staffDirectory(schoolId) {
-    const users = sql.all(`SELECT * FROM users WHERE school_id=? AND user_type='staff' AND status='active' ORDER BY name_en`, schoolId);
-    return users.map(user => ({
+  searchStaff(schoolId, filters) {
+    const clauses = ['u.school_id=?', `u.user_type='staff'`];
+    const params = [schoolId];
+    if (filters.status && filters.status !== 'all') { clauses.push('u.status=?'); params.push(filters.status); }
+    if (filters.search) {
+      clauses.push(`(LOWER(u.name_en) LIKE ? OR LOWER(u.name_zh) LIKE ? OR LOWER(COALESCE(u.staff_number,'')) LIKE ? OR LOWER(COALESCE(u.email,'')) LIKE ?)`);
+      const term = `%${String(filters.search).toLowerCase()}%`;
+      params.push(term, term, term, term);
+    }
+    if (filters.positionId) { clauses.push(`EXISTS(SELECT 1 FROM user_position_assignments a WHERE a.user_id=u.user_id AND a.position_id=? AND a.status='active')`); params.push(filters.positionId); }
+    if (filters.roleId) { clauses.push(`EXISTS(SELECT 1 FROM user_role_assignments a WHERE a.user_id=u.user_id AND a.role_id=? AND a.status='active')`); params.push(filters.roleId); }
+    if (filters.departmentId) { clauses.push(`EXISTS(SELECT 1 FROM user_position_assignments a WHERE a.user_id=u.user_id AND a.department_id=? AND a.status='active')`); params.push(filters.departmentId); }
+    if (filters.subjectId) { clauses.push(`EXISTS(SELECT 1 FROM user_position_assignments a WHERE a.user_id=u.user_id AND a.subject_id=? AND a.status='active')`); params.push(filters.subjectId); }
+    if (filters.groupId) { clauses.push(`EXISTS(SELECT 1 FROM staff_group_memberships a WHERE a.user_id=u.user_id AND a.staff_group_id=? AND a.status='active')`); params.push(filters.groupId); }
+    for (const [filterKey, scopeType] of [['classId','class'],['yearId','year'],['gradeId','grade'],['programmeId','programme']]) {
+      if (filters[filterKey]) {
+        clauses.push(`EXISTS(SELECT 1 FROM user_role_assignments a WHERE a.user_id=u.user_id AND a.scope_type=? AND a.scope_id=? AND a.status='active')`);
+        params.push(scopeType, filters[filterKey]);
+      }
+    }
+    if (filters.capabilityId || filters.capabilityKey) {
+      clauses.push(`EXISTS(SELECT 1 FROM user_role_assignments ura JOIN role_capabilities rc ON rc.role_id=ura.role_id AND rc.status='active' JOIN capability_definitions c ON c.capability_id=rc.capability_id AND c.status='active' WHERE ura.user_id=u.user_id AND ura.status='active' AND rc.effect='allow' AND ${filters.capabilityId ? 'c.capability_id=?' : 'c.capability_key=?'})`);
+      params.push(filters.capabilityId || filters.capabilityKey);
+    }
+    if (filters.approvalEligible === true) clauses.push(`EXISTS(SELECT 1 FROM user_role_assignments ura JOIN role_definitions r ON r.role_id=ura.role_id WHERE ura.user_id=u.user_id AND ura.status='active' AND r.status='active' AND r.role_category IN ('approval_function','publication_function'))`);
+    if (filters.scopeType) { clauses.push(`EXISTS(SELECT 1 FROM user_role_assignments a WHERE a.user_id=u.user_id AND a.scope_type=? AND a.status='active')`); params.push(filters.scopeType); }
+    if (filters.scopeId) { clauses.push(`EXISTS(SELECT 1 FROM user_role_assignments a WHERE a.user_id=u.user_id AND a.scope_id=? AND a.status='active')`); params.push(filters.scopeId); }
+    const where = clauses.join(' AND ');
+    const total = Number(sql.get(`SELECT COUNT(*) count FROM users u WHERE ${where}`, ...params)?.count || 0);
+    const paged = Number.isFinite(filters.limit);
+    const rows = sql.all(`SELECT u.* FROM users u WHERE ${where} ORDER BY LOWER(u.name_en),u.user_id${paged ? ' LIMIT ? OFFSET ?' : ''}`, ...params, ...(paged ? [filters.limit, filters.offset] : []));
+    return { total, rows };
+  },
+  staffProfile(user) {
+    return {
       ...user,
       positions: this.positions(user.user_id),
       roles: this.roles(user.user_id),
       capabilities: this.roleCapabilityGrants(user.user_id),
-      groups: sql.all(`SELECT g.staff_group_id,g.name_en,g.name_zh,m.membership_role FROM staff_group_memberships m JOIN staff_groups g ON g.staff_group_id=m.staff_group_id WHERE m.user_id=? AND m.status='active'`, user.user_id),
+      groups: sql.all(`SELECT g.staff_group_id,g.group_code,g.name_en,g.name_zh,m.membership_role FROM staff_group_memberships m JOIN staff_groups g ON g.staff_group_id=m.staff_group_id WHERE m.user_id=? AND m.status='active'`, user.user_id),
       overrides: this.overridesForUser(user.user_id),
-    }));
+    };
+  },
+  staffDirectory(schoolId) {
+    const users = sql.all(`SELECT * FROM users WHERE school_id=? AND user_type='staff' AND status='active' ORDER BY name_en`, schoolId);
+    return users.map(user => this.staffProfile(user));
   },
   groupMembers(groupId) { return sql.all(`SELECT u.* FROM staff_group_memberships m JOIN users u ON u.user_id=m.user_id WHERE m.staff_group_id=? AND m.status='active'`, groupId); },
   classMembership(studentId, periodId) { return sql.get(`SELECT * FROM student_class_memberships WHERE student_user_id=? AND period_id=? AND status='active'`, studentId, periodId); },

@@ -1,5 +1,6 @@
 import ExcelJS from 'exceljs';
-import { stat } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { readFile, stat } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -16,6 +17,7 @@ export async function loadQuestionBank() {
   if (cached?.path === path && cached?.modifiedAt === info.mtime.toISOString()) return cached;
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.readFile(path);
+  const sourceSha256 = createHash('sha256').update(await readFile(path)).digest('hex');
   const sheet = workbook.getWorksheet('問卷總表');
   if (!sheet) throw new Error('Question-bank source sheet 問卷總表 is unavailable');
   const rows = [];
@@ -41,6 +43,6 @@ export async function loadQuestionBank() {
       disabled: false,
     });
   });
-  cached = { path, modifiedAt: info.mtime.toISOString(), rows };
+  cached = { path, modifiedAt: info.mtime.toISOString(), sourceSha256, rows };
   return cached;
 }

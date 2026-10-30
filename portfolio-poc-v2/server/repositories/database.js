@@ -1,26 +1,26 @@
 import { DatabaseSync } from 'node:sqlite';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { migrations } from './migrations.js';
-import { seedFromContracts } from './seed.js';
+import { schema, schemaVersion } from './schema.js';
+import { loadQuestionBank } from '../adapters/questionBankSource.js';
+import { seedFromContracts, seedQuestionBankDomain } from './seed.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const defaultDatabase = resolve(here, '../../playground-v2.sqlite');
 export const db = new DatabaseSync(process.env.POC_V2_DB || defaultDatabase);
 
 db.exec('PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL;');
-db.exec('CREATE TABLE IF NOT EXISTS schema_migrations(version INTEGER PRIMARY KEY,name TEXT NOT NULL,applied_at TEXT NOT NULL)');
 
-for (const migration of migrations) {
-  if (db.prepare('SELECT 1 FROM schema_migrations WHERE version=?').get(migration.version)) continue;
-  db.exec('BEGIN');
-  try {
-    db.exec(migration.sql);
-    db.prepare('INSERT INTO schema_migrations(version,name,applied_at) VALUES(?,?,?)').run(migration.version, migration.name, new Date().toISOString());
-    db.exec('COMMIT');
-  } catch (error) {
-    db.exec('ROLLBACK');
-    throw error;
+const applicationTables = db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name`).all();
+if (!applicationTables.length) {
+  db.exec(schema);
+} else {
+  const userVersion = Number(db.prepare('PRAGMA user_version').get().user_version || 0);
+  const names = new Set(applicationTables.map(row => row.name));
+  const required = ['activity_label_assignments','activity_source_bindings','entity_lifecycle_events','question_block_items','source_systems'];
+  const retired = ['schema_migrations','activity_vask_items','form_items','peer_review_assignments','media_source_definitions'];
+  if (userVersion !== 1 || required.some(name => !names.has(name)) || retired.some(name => names.has(name))) {
+    throw new Error(`Database does not match ${schemaVersion}. This POC has no migration path; run "npm run db:reset" to rebuild it.`);
   }
 }
 
@@ -43,4 +43,9 @@ export const sql = {
 
 const seedMode = String(process.env.POC_V2_SEED_MODE || 'demo').toLowerCase();
 if (!['demo', 'none'].includes(seedMode)) throw new Error('POC_V2_SEED_MODE must be "demo" or "none"');
-if (seedMode === 'demo') seedFromContracts(sql, process.env.POC_V2_CSV_DIR || resolve(here, '../../../output/import-examples'));
+if (seedMode === 'demo') {
+  const csvDirectory = process.env.POC_V2_CSV_DIR || resolve(here, '../../../output/import-examples');
+  seedFromContracts(sql, csvDirectory);
+  const questionBank = await loadQuestionBank();
+  sql.transaction(() => seedQuestionBankDomain(sql, questionBank, csvDirectory));
+}

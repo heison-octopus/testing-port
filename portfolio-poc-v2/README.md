@@ -68,19 +68,19 @@ Open <http://127.0.0.1:3000>. Playground v1 remains on port 5173 and Playground 
 
 ## Standalone data lifecycle
 
-The default database is `portfolio-poc-v2/playground-v2.sqlite`. On first start, additive migrations build the database and the current contracts under `output/import-examples/` seed it once. Runtime changes are then independent of the CSV files. Every file in `00_upload_manifest.csv` is also registered in the provenance ledger with its repository-relative source path, declared upload time, seed time and SHA-256 digest—even when that contract is only catalogued and not loaded into a domain table.
+The default database is `portfolio-poc-v2/playground-v2.sqlite`. Because this remains a disposable POC, an empty database is created directly from one clean schema and the current contracts under `output/import-examples/` seed it once. There is no migration ledger or upgrade path. A database from an older schema is rejected with an instruction to run the explicit reset command instead of being mutated at server start. Runtime changes are independent of the CSV files after seeding. Every file in `00_upload_manifest.csv` is also registered in the provenance ledger with its repository-relative source path, declared upload time, seed time and SHA-256 digest—even when that contract is only catalogued and not loaded into a domain table.
 
 Import rows are never hard-deleted. Pre-commit exceptions are excluded or restored through appended decisions. A post-commit exclusion leaves the linked activity assignment intact and marks the link for human review. A committed batch is immutable; a source or uncommitted batch can only be disabled with actor, reason and timestamp.
 
 ### Create a schema-only database
 
-To create a separate SQLite database containing every current migration and table but no demo school or domain rows, run:
+To create a separate SQLite database containing the clean schema but no demo school or domain rows, run:
 
 ```bash
 npm run db:create-empty
 ```
 
-The default output is `portfolio-poc-v2/playground-v2-empty.sqlite`. The migration ledger remains populated because it records which schema versions were applied; all domain tables are empty.
+The default output is `portfolio-poc-v2/playground-v2-empty.sqlite`. It contains no migration or seed-state tables; all domain tables are empty.
 
 Supply another filename after `--` when required:
 
@@ -96,7 +96,13 @@ POC_V2_DB=./playground-v2-empty.sqlite POC_V2_SEED_MODE=none npm run dev
 
 This schema-only instance has no school or demo account, so the account picker is empty until initial school, user, role and policy data are loaded. Use the normal `npm run dev` command for the seeded demonstration.
 
-To create a fresh local demo database, stop the v2 server, remove only `portfolio-poc-v2/playground-v2.sqlite` plus its `-shm` and `-wal` companions, and start it again. This reset is intentionally not automated because it deletes local demonstration changes.
+To destructively rebuild the local demo database, stop the v2 server and run:
+
+```bash
+npm run db:reset
+```
+
+The command removes only the configured SQLite file and its exact `-wal`／`-shm` companions, then recreates and seeds it. It deletes local demonstration changes and is never run automatically at server start. Set `POC_V2_DB` to reset a different explicit POC database path.
 
 Tests use a temporary database and deterministic fake LLM instead of the working POC database or LAN provider:
 
@@ -120,6 +126,6 @@ route -> controller -> service/use-case -> repository -> SQLite
 
 Provider calls use a second server-only boundary: `service/use-case -> provider adapter -> local LLM`. The provider cannot query SQLite or publish platform records.
 
-SQL is confined to `server/repositories/`. Adding a new table should normally require an additive migration and a repository/service change; existing pages continue consuming their current API response contracts. A breaking API meaning should use a new endpoint or API version rather than silently repurposing an existing field.
+SQL is confined to `server/repositories/`. During this disposable POC stage, a schema change updates the single create-from-zero schema, repositories/services, seed and tests together, followed by an explicit database reset. Existing pages continue consuming their current API response contracts. Before production or retained school data is introduced, this must be replaced by an approved migration and backup policy. A breaking API meaning should use a new endpoint or API version rather than silently repurposing an existing field.
 
 This is future-compatible isolation, not a claim that every future schema change will require no code. The goal is to prevent a new table from coupling directly into React pages or breaking unrelated bounded contexts.

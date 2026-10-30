@@ -9,5 +9,7 @@ import { llmPlaygroundApi } from './llmPlayground';
 import { assessmentsApi } from './assessments';
 import { memorableApi } from './memorable';
 import { importsApi } from './imports';
+import { authoringApi } from './authoring';
+import { mediaApi } from './media';
 
-export const api = { ...sessionApi, ...staffApi, ...activitiesApi, ...assessmentsApi, ...memorableApi, ...importsApi, ...approvalsApi, ...portfoliosApi, ...policyApi, ...aiDraftsApi, ...llmPlaygroundApi };
+export const api = { ...sessionApi, ...staffApi, ...authoringApi, ...activitiesApi, ...mediaApi, ...assessmentsApi, ...memorableApi, ...importsApi, ...approvalsApi, ...portfoliosApi, ...policyApi, ...aiDraftsApi, ...llmPlaygroundApi };

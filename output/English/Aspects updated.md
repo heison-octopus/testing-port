@@ -130,7 +130,7 @@ The stable root of one actual activity. Governed display/content fields belong t
 | `current_approved_revision_id` | UUID, nullable | Official content revision; may trail latest revision |
 | `operational_status` | enum | `planned`, `scheduled`, `active`, `completed`, `cancelled`, `archived`, `disabled`; `disabled` is an explicit soft lifecycle state, never inferred from a missing import row |
 | `disabled_previous_status` | enum, nullable | State to restore after a new authorized restore decision |
-| `disabled_reason`, `disabled_by_user_id`, `disabled_at` | mixed, nullable | Current soft-disable context; full history remains in `activity_lifecycle_events` |
+| `disabled_reason`, `disabled_by_user_id`, `disabled_at` | mixed, nullable | Current soft-disable context; full history remains in generic `entity_lifecycle_events` |
 | `created_at` | timestamp | Required |
 | `updated_at` | timestamp | Required |
 
@@ -1055,7 +1055,7 @@ When staff resolve an imported response with an incorrect student ID, keep the o
 
 #### Activity catalogue import and lifecycle records
 
-**Confirmed System Analyst direction, 29 Oct 2026; not BHSS/JC approval.** `import_batches` identifies the `activity_catalogue` contract and delta mode. `import_records` preserves original and normalized rows, expected revision, lifecycle action and row decision; `import_record_links` connects a committed row to the stable activity and any successor revision. `activity_lifecycle_events` append explicit disable/restore decisions with prior/new state, reason, actor, import row and time. `activity_dependency_impacts` registers affected proof, submissions, observations, curation and Portfolio items as `needs_review`/`stale`. Omission from a file creates no row and no lifecycle effect.
+**Confirmed System Analyst direction, 29 Oct 2026; storage consolidated 30 Oct 2026; not BHSS/JC approval.** `import_batches` identifies the `activity_catalogue` contract and delta mode. `import_records` preserves original and normalized rows, expected revision, lifecycle action and row decision; `import_record_links` connects a committed row to the stable activity and any successor revision. Generic `entity_lifecycle_events` append explicit activity disable/restore decisions with prior/new state, reason, actor, import row and time. `activity_dependency_impacts` registers affected proof, submissions, observations, curation and Portfolio items as `needs_review`/`stale`. Omission from a file creates no row and no lifecycle effect.
 
 ---
 
@@ -1169,9 +1169,9 @@ If human confirmation is missing, keep the value missing. Do not convert it to z
 
 `proof_use_decisions` records target type/ID, proof or proof-link ID, decision (`included`, `excluded`, `invalidated`, `superseded`), reason, actor and time. If a used source or identity association is later invalidated, linked observations, claims, generation runs and current snapshots become `needs_review`/`stale`; published output is withdrawn or replaced through a successor snapshot, while history remains reproducible.
 
-### `peer_review_assignments`
+### Peer assignments through `assignment_recipients`
 
-Peer review requires an explicit assignment containing the subject student, peer reviewer, assigning teacher or teaching assistant, activity, form version, due date, status, and moderation requirement. The school still needs to choose the assignment policy.
+Peer review uses the same assignment-recipient relation as student self-report and teacher observation. A row with `perspective = peer_observation` contains the subject student, peer reviewer/respondent, assigning teacher or teaching assistant, due date, status, moderation requirement and notes; its parent assessment assignment supplies the activity and form version. The school still needs to choose the assignment policy.
 
 ### AI drafting provenance
 

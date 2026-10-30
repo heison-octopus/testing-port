@@ -792,3 +792,102 @@ test('rubric XLSX exports real linked records and successor activation changes o
   assert.equal(oldVersion.rubric_catalogue_id, 'RUB-SB-UF2');
   assert.equal(created.body.official.version.rubric_catalogue_id, 'RUB-SB-UF2');
 });
+
+test('filtered teacher directory is paged, bilingual and available to scoped activity authors', async () => {
+  const schoolDirectoryUser = await signIn('USR-T-001');
+  const page = await schoolDirectoryUser('/directory/teachers?positionId=POS-SUBJECT-TEACHER&limit=1&page=1');
+  assert.equal(page.status, 200);
+  assert.equal(page.body.pageSize, 1);
+  assert.equal(page.body.items.length, 1);
+  assert.equal(page.body.total, 2);
+  assert(page.body.items[0].positions.every(position => position.name_en && position.name_zh));
+  assert(page.body.items[0].roles.every(role => role.name_en && role.name_zh));
+  const scopedAuthor = await signIn('USR-T-002');
+  assert.deepEqual((await scopedAuthor('/directory/teachers?programmeId=student_development')).body.items.map(item => item.id), ['USR-T-002']);
+  assert.equal((await scopedAuthor('/directory/teachers?classId=S1A-2026-27')).status, 403);
+  assert.equal((await scopedAuthor('/directory/teachers?limit=1')).status, 403);
+
+  const legacy = await scopedAuthor('/staff?positionId=POS-SUBJECT-TEACHER');
+  assert.equal(legacy.status, 403, 'the filtered assignment picker does not broaden access to the staff-administration endpoint');
+
+  const student = await signIn('USR-S-001');
+  assert.equal((await student('/directory/teachers?limit=1')).status, 403);
+});
+
+test('authoring catalogues filter persisted labels, questions and reusable blocks', async () => {
+  const author = await signIn('USR-T-002');
+
+  const labels = await author('/catalogue-labels?capability=labelling&search=communication&limit=5');
+  assert.equal(labels.status, 200);
+  assert(labels.body.items.some(item => item.axis_id === 'AX-VASK-COMMUNICATION' && item.selectable));
+  assert(labels.body.items.every(item => item.labelling_capable === 1));
+  assert(labels.body.items.every(item => item.historicalReferenceAllowed));
+
+  const assessmentAxes = await author('/catalogue-labels?capability=assessment&search=listening&limit=5');
+  assert.equal(assessmentAxes.status, 200);
+  assert.deepEqual(assessmentAxes.body.items.map(item => item.axis_code), ['listening']);
+  assert(assessmentAxes.body.items.every(item => item.assessment_capable === 1));
+
+  const questionBank = await author('/question-bank?limit=25');
+  assert.equal(questionBank.status, 200);
+  assert.equal(questionBank.body.total, 166);
+  assert.match(questionBank.body.items[0].content_sha256, /^[a-f0-9]{64}$/);
+
+  const definedAbility = await author('/question-bank?abilityCode=AB-ATTENTIVE-LISTENING');
+  assert.equal(definedAbility.status, 200);
+  assert.equal(definedAbility.body.total, 1);
+  assert.equal(definedAbility.body.items[0].abilityDefinitionComplete, true);
+  assert.equal(definedAbility.body.items[0].selectable, true);
+
+  const blocks = await author('/question-blocks?audience=student&abilityCode=AB-SELF-AWARENESS&limit=10');
+  assert.equal(blocks.status, 200);
+  assert(blocks.body.items.length > 0);
+  assert(blocks.body.items.every(item => item.respondent_role_code === 'ROLE-STUDENT'));
+  assert(blocks.body.items.every(item => item.itemCount === item.items.length && item.forms.length > 0));
+
+  const student = await signIn('USR-S-001');
+  assert.equal((await student('/question-bank?limit=1')).status, 403);
+});
+
+test('media metadata, extraction and soft-disable stay server-scoped and auditable', async () => {
+  const author = await signIn('USR-T-002');
+  const listed = await author('/media-assets?activityId=ACT-SELF-001&limit=1');
+  assert.equal(listed.status, 200);
+  assert.equal(listed.body.pageSize, 1);
+  assert(listed.body.total >= 2);
+  assert.equal(Object.hasOwn(listed.body.items[0], 'storage_reference'), false);
+
+  const unsafe = await author('/media-assets', { method: 'POST', body: JSON.stringify({
+    activityId: 'ACT-SELF-001', title: 'Unsafe path test', originalFileName: 'unsafe.jpg', mediaType: 'image',
+    storageReference: '/private/student/unsafe.jpg', consentStatus: 'granted', visibility: 'staff_review_only',
+  }) });
+  assert.equal(unsafe.status, 400);
+
+  const created = await author('/media-assets', { method: 'POST', body: JSON.stringify({
+    activityId: 'ACT-SELF-001', ownerUserId: 'USR-S-001', title: 'Reflection recording', originalFileName: 'reflection.m4a', mediaType: 'audio',
+    mimeType: 'audio/mp4', storageReference: 'asset:reflection-recording', consentStatus: 'granted', visibility: 'staff_review_only',
+    reason: 'Registered for the filtered media and extraction contract test.',
+  }) });
+  assert.equal(created.status, 201);
+  assert.equal(Object.hasOwn(created.body, 'storage_reference'), false);
+  assert(created.body.lifecycleEvents.some(event => event.action === 'created'));
+
+  const extraction = await author(`/media-assets/${created.body.media_asset_id}/extractions`, { method: 'POST', body: JSON.stringify({
+    extractionType: 'speech_transcription', providerKey: 'test-provider', providerVersion: '1.0', reason: 'Queue a traceable extraction request.',
+  }) });
+  assert.equal(extraction.status, 201);
+  assert.equal(extraction.body.processing_status, 'queued');
+  assert.equal((await author(`/media-extractions/${extraction.body.media_extraction_id}/review`, { method: 'POST', body: JSON.stringify({ outcome: 'accepted', reason: 'A queued extraction cannot be accepted.' }) })).status, 400);
+
+  const reviewed = await author('/media-extractions/TR-001/review', { method: 'POST', body: JSON.stringify({ outcome: 'accepted', reason: 'Compared the completed transcript with the permitted recording.' }) });
+  assert.equal(reviewed.status, 200);
+  assert.equal(reviewed.body.review_status, 'accepted');
+
+  const disabled = await author(`/media-assets/${created.body.media_asset_id}/disable`, { method: 'POST', body: JSON.stringify({ reason: 'The test asset is no longer required.' }) });
+  assert.equal(disabled.status, 200);
+  assert.equal(disabled.body.operational_status, 'disabled');
+  assert(disabled.body.lifecycleEvents.some(event => event.action === 'disabled'));
+
+  const student = await signIn('USR-S-001');
+  assert.equal((await student('/media-assets', { method: 'POST', body: JSON.stringify({ activityId: 'ACT-SELF-001' }) })).status, 403);
+});

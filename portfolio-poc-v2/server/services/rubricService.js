@@ -111,7 +111,7 @@ export const rubricService = {
     if (draft.validation_status !== 'ready' || draft.validationErrors.length) fail(400, 'Only a valid staged rubric package can create a successor draft');
     if (draft.committed_at) fail(400, 'This staged package already created a successor');
     const record = successorRecord(draft, input.sourceRubricCatalogueId); const at = new Date().toISOString();
-    rubricRepository.createSuccessor({ ...record, sourceId: input.sourceRubricCatalogueId, draftId, at });
+    rubricRepository.createSuccessor({ ...record, sourceId: input.sourceRubricCatalogueId, draftId, actorId: user.user_id, at });
     identityRepository.audit(user.school_id, user.user_id, 'rubric.successor.created', 'rubric_catalogue', record.catalogue.rubric_catalogue_id, `Supersedes ${input.sourceRubricCatalogueId}`);
     return rubricRepository.package(record.catalogue.rubric_catalogue_id);
   },

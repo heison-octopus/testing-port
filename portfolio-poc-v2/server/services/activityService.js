@@ -46,6 +46,7 @@ function project(user, activity) {
       revisions: [currentApprovedRevision],
       people: ownParticipant ? [ownParticipant] : [],
       vaskItems: activityRepository.revisionVask(currentApprovedRevision.activity_revision_id),
+      labelAssignments: activityRepository.revisionLabels(currentApprovedRevision.activity_revision_id),
       riskFlags: [],
       changeRequests: [],
       approvalHistory: [],
@@ -83,16 +84,30 @@ function resolvePeriod(user, startAt, endAt) {
 function validatePackage(user, input) {
   const participantIds = [...new Set((input.participantIds || []).filter(Boolean))];
   const vaskItemIds = [...new Set((input.vaskItemIds || []).filter(Boolean))];
+  const requestedLabels = Array.isArray(input.labelAssignments) && input.labelAssignments.length
+    ? input.labelAssignments.map(item => ({ axisId: item.axisId, labelRole: item.labelRole || 'descriptor', rationale: item.rationale || null, questionBlockCode: item.questionBlockCode || null }))
+    : vaskItemIds.map(axisId => ({ axisId, labelRole: 'descriptor', rationale: null, questionBlockCode: null }));
   const riskFlags = [...new Set((input.riskFlags || []).filter(Boolean))];
   const teacherGroupIds = [...new Set((input.teacherGroupIds || []).filter(Boolean))];
   if (!participantIds.length) fail(400, 'Select at least one participant');
-  if (!vaskItemIds.length) fail(400, 'Select at least one VASK intention');
+  if (!requestedLabels.length || requestedLabels.some(item => !item.axisId)) fail(400, 'Select at least one activity label');
   if (!riskFlags.length || riskFlags.some(flag => !allowedRiskFlags.has(flag)) || (riskFlags.includes('none') && riskFlags.length > 1)) fail(400, 'Select valid activity risk flags; “none” cannot be combined with another flag');
   const students = activityRepository.activeStudents(user.school_id, participantIds);
   if (students.length !== participantIds.length) fail(400, 'Every participant must be an active student in this school');
   const reference = activityRepository.referenceData(user.school_id);
   const validVask = new Set(reference.vaskItems.map(item => item.axis_id));
   if (vaskItemIds.some(id => !validVask.has(id))) fail(400, 'Select VASK items from the active catalogue');
+  const definitions = activityRepository.labelDefinitions([...new Set(requestedLabels.map(item => item.axisId))]);
+  if (definitions.length !== new Set(requestedLabels.map(item => item.axisId)).size) fail(400, 'Every activity label must resolve to an existing catalogue definition');
+  const byAxis = new Map(definitions.map(item => [item.axis_id, item]));
+  const labelAssignments = requestedLabels.map(item => {
+    const definition = byAxis.get(item.axisId);
+    if (definition.catalogue_status !== 'active' || definition.disabled_at || definition.axis_status !== 'active') fail(400, 'Disabled labels may remain on historical revisions but cannot be newly selected');
+    if (item.labelRole === 'descriptor' && !definition.labelling_capable) fail(400, 'A descriptive activity label must come from a labelling-capable catalogue');
+    if (item.labelRole === 'intended_assessment_axis' && !definition.assessment_capable) fail(400, 'An intended assessment axis must come from an assessment-capable catalogue');
+    if (!['descriptor','intended_assessment_axis'].includes(item.labelRole)) fail(400, 'Unsupported activity-label role');
+    return { ...item, id: `ALA-DEMO-${randomUUID()}`, catalogueId: definition.rubric_catalogue_id, catalogueVersion: definition.catalogue_version };
+  });
   const form = activityRepository.formVersion(input.formVersionId);
   if (!form || form.review_status !== 'approved' || form.publication_status !== 'published') fail(400, 'Select one approved and published form version');
   const supportingStaff = activityRepository.activeStaffGroupMembers(user.school_id, teacherGroupIds);
@@ -102,7 +117,7 @@ function validatePackage(user, input) {
   questionnaire.forEach((question, index) => {
     if (!question?.promptEn?.trim() || question.promptEn.trim().length > 2_000 || String(question.promptZh || '').length > 2_000) fail(400, `Question ${index + 1} requires valid text within 2,000 characters`);
   });
-  return { participantIds, vaskItemIds, riskFlags, teacherGroupIds, supportingStaff, questionnaire, form };
+  return { participantIds, vaskItemIds, labelAssignments, riskFlags, teacherGroupIds, supportingStaff, questionnaire, form };
 }
 
 export const activityService = {
@@ -125,7 +140,8 @@ export const activityService = {
   },
   approvalCandidates(user) {
     requireWorkspace(user);
-    return identityRepository.staffDirectory(user.school_id).map(person => {
+    const candidates = identityRepository.searchStaff(user.school_id, { status: 'active', approvalEligible: true, limit: 100, offset: 0 }).rows.map(person => identityRepository.staffProfile(person));
+    return candidates.map(person => {
       const keys = new Set(person.capabilities.filter(item => item.effect === 'allow').map(item => item.capability_key));
       return { id: person.user_id, name: person.name_en, nameZh: person.name_zh, canApprove: keys.has('activity.approve'), canPublish: keys.has('activity.publish') };
     }).filter(item => item.canApprove || item.canPublish);
@@ -147,6 +163,7 @@ export const activityService = {
       participants: activityPackage.participantIds.map(userId => ({ id: `AP-DEMO-${randomUUID()}`, userId })),
       supportingStaff: [...new Map(activityPackage.supportingStaff.filter(item => item.user_id !== user.user_id).map(item => [item.user_id, item])).values()].map(item => ({ id: `AP-DEMO-${randomUUID()}`, userId: item.user_id, groupId: item.staff_group_id })),
       vaskItemIds: activityPackage.vaskItemIds,
+      labelAssignments: activityPackage.labelAssignments,
       riskFlags: activityPackage.riskFlags,
       formDraft: formDraftId ? {
         id: formDraftId,
@@ -158,7 +175,8 @@ export const activityService = {
         notes: 'Activity-specific successor draft created from the active question bank; requires separate form approval and publication before activity activation.',
         questions: activityPackage.questionnaire.map((question, index) => ({
           itemKey: `activity_question_${String(index + 1).padStart(2, '0')}`,
-          questionId: question.bankItemId || null,
+          sourceQuestionBlockItemId: question.bankItemId || null,
+          questionId: null,
           promptEn: question.promptEn.trim(),
           promptZh: question.promptZh?.trim() || question.promptEn.trim(),
           required: Boolean(question.required),

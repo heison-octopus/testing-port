@@ -33,11 +33,11 @@ function batchRow(batchId) {
 
 export const importRepository = {
   sources(schoolId) {
-    return sql.all(`SELECT source_system_id,school_id,source_code,name_en,name_zh,connector_type,status,disabled_reason,disabled_by_user_id,disabled_at,created_at,updated_at,
+    return sql.all(`SELECT source_system_id,school_id,source_code,name_en,name_zh,connector_type,COALESCE(import_status,status) status,disabled_reason,disabled_by_user_id,disabled_at,created_at,updated_at,
       CASE WHEN endpoint_env_key IS NOT NULL THEN 1 ELSE 0 END connector_configured
       FROM source_systems WHERE school_id=? ORDER BY name_en`, schoolId);
   },
-  source(sourceId) { return sql.get('SELECT * FROM source_systems WHERE source_system_id=?', sourceId); },
+  source(sourceId) { return sql.get(`SELECT *,COALESCE(import_status,status) effective_import_status FROM source_systems WHERE source_system_id=?`, sourceId); },
   contract(code = 'activity_roster') { return sql.get(`SELECT * FROM import_contract_versions WHERE contract_code=? AND status='active' ORDER BY created_at DESC LIMIT 1`, code); },
   listBatches(schoolId) {
     return sql.all(`SELECT b.import_batch_id,b.target_entity_id,b.ingress_channel,b.original_file_name,b.source_relative_path,b.content_sha256,b.processing_status,b.declared_processing_status,b.received_at,b.seeded_at,b.total_rows,b.valid_rows,b.warning_rows,b.error_rows,b.excluded_rows,b.committed_rows,b.disabled_at,
@@ -171,7 +171,9 @@ export const importRepository = {
           }
           sql.run(`INSERT INTO activity_revisions(activity_revision_id,activity_id,revision_number,title_en,title_zh,description_en,description_zh,activity_type,subject_id,department_id,start_at,end_at,owner_user_id,requested_form_version_id,media_capture_expected,location,approval_status,publication_status,material_change_reason,supersedes_revision_id,created_by_user_id,created_at,requested_publisher_user_id)
             VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, entityVersionId, activity.activity_id, current.revision_number + 1, payload.title_en, payload.title_zh || null, payload.description_en, payload.description_zh || null, payload.activity_type || null, payload.subject_id || null, payload.department_id || null, payload.start_at, payload.end_at, record.resolved_user_id, payload.requested_form_version_id || null, Number(payload.media_capture_expected || 0), payload.location || null, 'draft', 'unpublished', payload.change_reason, current.activity_revision_id, actorId, committedAt, current.requested_publisher_user_id || null);
-          sql.run(`INSERT INTO activity_vask_items SELECT ?,activity_id,vask_item_id,vask_item_version,source,rationale,'pending_review',?,? FROM activity_vask_items WHERE activity_revision_id=?`, entityVersionId, actorId, committedAt, current.activity_revision_id);
+          sql.run(`INSERT INTO activity_label_assignments(activity_label_assignment_id,activity_id,activity_revision_id,rubric_catalogue_id,axis_id,catalogue_version,label_role,source,rationale,approval_state,assigned_by_user_id,assigned_at,status)
+            SELECT ('ALA-' || ? || '-' || axis_id || '-' || label_role),activity_id,?,rubric_catalogue_id,axis_id,catalogue_version,label_role,source,rationale,'pending_review',?,?,status
+            FROM activity_label_assignments WHERE activity_revision_id=? AND status='active'`, entityVersionId, entityVersionId, actorId, committedAt, current.activity_revision_id);
           sql.run(`INSERT INTO activity_revision_risk_flags SELECT ?,flag_code FROM activity_revision_risk_flags WHERE activity_revision_id=?`, entityVersionId, current.activity_revision_id);
           if (current.owner_user_id !== record.resolved_user_id) {
             const previousOwner = sql.get(`SELECT * FROM activity_people WHERE activity_id=? AND relationship_type='owner' AND status='active' ORDER BY assigned_at DESC LIMIT 1`, activity.activity_id);
@@ -184,7 +186,7 @@ export const importRepository = {
         } else if (payload.lifecycle_action === 'disable' && activity.operational_status !== 'disabled') {
           action = 'disabled';
           sql.run(`UPDATE activities SET disabled_previous_status=operational_status,operational_status='disabled',disabled_reason=?,disabled_by_user_id=?,disabled_at=?,updated_at=? WHERE activity_id=?`, payload.change_reason, actorId, committedAt, committedAt, activity.activity_id);
-          sql.run(`INSERT INTO activity_lifecycle_events VALUES(?,?,?,?,?,?,?,?,?)`, `ALE-${record.import_record_id}`, activity.activity_id, 'disable', activity.operational_status, 'disabled', payload.change_reason, actorId, record.import_record_id, committedAt);
+          sql.run(`INSERT INTO entity_lifecycle_events(entity_lifecycle_event_id,school_id,entity_type,entity_id,action,from_status,to_status,reason,actor_user_id,source_entity_type,source_entity_id,occurred_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`, `ALE-${record.import_record_id}`, activity.school_id, 'activity', activity.activity_id, 'disable', activity.operational_status, 'disabled', payload.change_reason, actorId, 'import_record', record.import_record_id, committedAt);
           const impactReason = `Activity disabled by explicit catalogue action: ${payload.change_reason}`;
           for (const item of sql.all('SELECT proof_item_id id FROM proof_items WHERE activity_id=?', activity.activity_id)) addImpact(activity.activity_id, record.import_record_id, 'proof_item', item.id, 'needs_review', impactReason);
           for (const item of sql.all(`SELECT submission.assessment_submission_id id FROM assessment_submissions submission JOIN assignment_recipients recipient ON recipient.assignment_recipient_id=submission.assignment_recipient_id JOIN assessment_assignments assignment ON assignment.activity_form_assignment_id=recipient.assessment_assignment_id WHERE assignment.activity_id=?`, activity.activity_id)) addImpact(activity.activity_id, record.import_record_id, 'assessment_submission', item.id, 'needs_review', impactReason);
@@ -195,7 +197,7 @@ export const importRepository = {
           action = 'restored';
           const restoredStatus = activity.disabled_previous_status || (current.publication_status === 'published' ? 'scheduled' : current.approval_status === 'approved' ? 'approved' : 'draft');
           sql.run(`UPDATE activities SET operational_status=?,disabled_previous_status=NULL,disabled_reason=NULL,disabled_by_user_id=NULL,disabled_at=NULL,updated_at=? WHERE activity_id=?`, restoredStatus, committedAt, activity.activity_id);
-          sql.run(`INSERT INTO activity_lifecycle_events VALUES(?,?,?,?,?,?,?,?,?)`, `ALE-${record.import_record_id}`, activity.activity_id, 'restore', 'disabled', restoredStatus, payload.change_reason, actorId, record.import_record_id, committedAt);
+          sql.run(`INSERT INTO entity_lifecycle_events(entity_lifecycle_event_id,school_id,entity_type,entity_id,action,from_status,to_status,reason,actor_user_id,source_entity_type,source_entity_id,occurred_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`, `ALE-${record.import_record_id}`, activity.school_id, 'activity', activity.activity_id, 'restore', 'disabled', restoredStatus, payload.change_reason, actorId, 'import_record', record.import_record_id, committedAt);
         }
         sql.run(`INSERT INTO import_record_links VALUES(?,?,?,?,?,?,?,?,?,?)`, `IRL-${record.import_record_id}`, record.import_record_id, 'activity', activity.activity_id, entityVersionId, action, action === 'disabled' ? 'needs_review' : 'current', actorId, committedAt, reason);
         sql.run(`UPDATE import_records SET current_status='committed',updated_at=? WHERE import_record_id=?`, committedAt, record.import_record_id);

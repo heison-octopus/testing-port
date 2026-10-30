@@ -53,13 +53,14 @@ export const dataOperationsRepository = {
       ORDER BY catalogue.code,axis.display_order`);
   },
   media(schoolId) {
-    return sql.all(`SELECT path.activity_id,revision.title_en,revision.title_zh,path.media_base_path,path.source_system,path.validation_mode,path.status,
-      CASE WHEN path.disabled_at IS NULL AND path.status='active' THEN 0 ELSE 1 END disabled,
+    return sql.all(`SELECT binding.activity_id,revision.title_en,revision.title_zh,binding.base_reference media_base_path,source.source_code source_system,binding.validation_mode,binding.status,
+      CASE WHEN binding.disabled_at IS NULL AND binding.status='active' THEN 0 ELSE 1 END disabled,
       COUNT(proof.proof_item_id) media_count
-      FROM media_source_paths path JOIN activities activity ON activity.activity_id=path.activity_id
+      FROM activity_source_bindings binding JOIN activities activity ON activity.activity_id=binding.activity_id
+      JOIN source_systems source ON source.source_system_id=binding.source_system_id
       JOIN activity_revisions revision ON revision.activity_revision_id=activity.latest_revision_id
-      LEFT JOIN proof_items proof ON proof.activity_id=path.activity_id AND proof.disabled_at IS NULL
-      WHERE path.school_id=? GROUP BY path.media_source_path_id ORDER BY path.activity_id`, schoolId);
+      LEFT JOIN proof_items proof ON proof.activity_id=binding.activity_id AND proof.disabled_at IS NULL
+      WHERE binding.school_id=? GROUP BY binding.activity_source_binding_id ORDER BY binding.activity_id`, schoolId);
   },
   activityCount(schoolId) { return Number(sql.get('SELECT COUNT(*) count FROM activities WHERE school_id=?', schoolId)?.count || 0); },
 };

@@ -9,6 +9,8 @@ import { memorableService } from '../services/memorableService.js';
 import { importService } from '../services/importService.js';
 import { rubricService } from '../services/rubricService.js';
 import { dataOperationsService } from '../services/dataOperationsService.js';
+import { authoringService } from '../services/authoringService.js';
+import { mediaService } from '../services/mediaService.js';
 import { openAiCompatibleChat } from '../adapters/openAiCompatibleChat.js';
 
 const response = (status, work) => async (req, res, next) => { try { res.status(status).json(await work(req)); } catch (error) { next(error); } };
@@ -19,6 +21,10 @@ export const controller = {
   session: ok(req => identityService.session(req.user)),
   referenceData: ok(req => identityService.referenceData(req.user)),
   staff: ok(req => identityService.directory(req.user, req.query)),
+  teacherDirectory: ok(req => identityService.teacherDirectory(req.user, req.query)),
+  catalogueLabels: ok(req => authoringService.labels(req.user, req.query)),
+  questionBank: ok(req => authoringService.questions(req.user, req.query)),
+  questionBlocks: ok(req => authoringService.questionBlocks(req.user, req.query)),
   policyWorkspace: ok(req => identityService.policyWorkspace(req.user)),
   previewPolicy: ok(req => identityService.previewPolicy(req.user, req.body)),
   applyPolicy: created(req => identityService.applyPolicy(req.user, req.body)),
@@ -53,6 +59,12 @@ export const controller = {
   resolveActivityChange: ok(req => activityService.resolveChangeRequest(req.user, req.params.id, req.params.requestId, req.body)),
   withdrawActivity: ok(req => activityService.withdraw(req.user, req.params.id, req.body)),
   submitActivity: created(req => activityService.submit(req.user, req.params.id, req.body)),
+  mediaAssets: ok(req => mediaService.list(req.user, req.query)),
+  createMediaAsset: created(req => mediaService.create(req.user, req.body)),
+  mediaAsset: ok(req => mediaService.detail(req.user, req.params.mediaAssetId)),
+  requestMediaExtraction: created(req => mediaService.requestExtraction(req.user, req.params.mediaAssetId, req.body)),
+  disableMediaAsset: ok(req => mediaService.disable(req.user, req.params.mediaAssetId, req.body)),
+  reviewMediaExtraction: ok(req => mediaService.reviewExtraction(req.user, req.params.extractionId, req.body)),
   responseTasks: ok(req => assessmentService.responseTasks(req.user)),
   responseTask: ok(req => assessmentService.responseTask(req.user, req.params.recipientId)),
   saveResponseDraft: ok(req => assessmentService.saveResponseDraft(req.user, req.params.recipientId, req.body)),

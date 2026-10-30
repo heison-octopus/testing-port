@@ -289,7 +289,7 @@ flowchart LR
 
 ### Peer-review assignment
 
-Peer review is not automatically available to every participant. `peer_review_assignments` records the subject student, named peer reviewer, assigning teacher or teaching assistant, due date, form version, status, and whether moderation is required. The policy for how teachers choose peers remains an open school decision.
+Peer review is not automatically available to every participant. The canonical `assignment_recipients` row records the subject student, named peer reviewer, assigning teacher or teaching assistant, due date, form version through its parent assignment, status, and whether moderation is required. `perspective = peer_observation` distinguishes it from student self-report and teacher observation without a second peer-assignment table. The policy for how teachers choose peers remains an open school decision.
 
 ## Operational requirements identified in Questions docx
 
@@ -2087,6 +2087,31 @@ Student-authored introductions, reflections and selections use `authorship_origi
 `portfolio_snapshots` freeze one approved Portfolio working version for a reporting period. The live student timeline and later draft may continue to change, while an issued SLP or period report remains reproducible. The visualization/export layer reads this approved snapshot contract; it does not call a generation provider or reinterpret raw extraction output.
 
 For the lean MVP, an external authority is a `recipient_category`, not an authenticated role. The platform produces a printable PDF/SLP and, where audit detail is required, an XLSX evidence register. Any later external portal requires a separate identity, consent, access, expiry, and audit design.
+
+## 9.1 Approved backend authoring foundation — 30 October 2026
+
+**Status:** approved System Analyst architecture decision for Portfolio v2; this is not represented as BHSS or JC approval.
+
+The requirements are expressed by component and data responsibility rather than as user stories. The browser composes these components through authenticated APIs; it does not download a full school catalogue and then make privileged filtering decisions locally.
+
+| Component | Authoritative records | Responsibility and relationship rule |
+|---|---|---|
+| Teacher/staff assignment directory | `users`, `user_position_assignments`, `user_role_assignments`, `staff_group_memberships`, capability grants/overrides | Returns a scoped, paginated result with literal bilingual position, functional-role and group names. Activity-authoring access to this picker does not grant staff-administration access. |
+| Definition source and label catalogue | `definition_sources`, `rubric_catalogues`, `rubric_axes`, optional `rubric_groups` | One catalogue declares labelling and assessment capability independently. A label/axis retains source and version; an assessment-capable axis still does not create a result merely because it is assigned to an activity. |
+| Activity label assignment | `activity_label_assignments` | Joins one stable activity revision to one version-pinned catalogue axis and records label role, source, rationale, approval state, actor, time and lifecycle. New work selects active labels only; unchanged historical references may resolve disabled labels with a warning. |
+| Question bank | `question_bank_versions`, `question_definitions`, `question_versions` | Preserves the supplied whole instrument as a versioned source bank while each stable question owns immutable wording/scale/ability versions. Source reference and content hash make the imported bank reproducible. |
+| Reusable question block | `question_blocks`, `question_block_versions`, `question_block_items`, `form_version_blocks` | Stores a stable block, immutable versions, audience, ordered questions and the form versions that use it. Question abilities stay independent from activity labels and rubrics; optional discovery links do not become weights or automatic scoring rules. |
+| Media metadata | `source_systems`, `external_media_references`, `media_assets`, `activity_media` | Uses one connector/source definition for import and media purposes while separating the asset from its activity relationships. Metadata and consent may be queried without revealing a storage path or raw-media access token. |
+| Media extraction and lifecycle | `media_extractions`, `entity_lifecycle_events` | Preserves requested/start/processed-finish times, provider/version, candidate content, review/correction/supersession and generic soft-disable history. A completed extraction remains a reviewable candidate and cannot publish an assessment. |
+
+The approved cross-component decisions are:
+
+1. Activity approval verifies that the selected questionnaire is already approved and published; it does not approve or publish that questionnaire. The two workflows retain separate approval assignments and decisions.
+2. Question-owned ability definitions remain separate from activity labels and assessment rubrics. Search/discovery assistance may be added, but no discovery relation becomes a fixed mapping, weight or score.
+3. Disabled labels, questions and blocks are invalid for new selection. An unchanged historical reference may still match the disabled definition and must be returned as `historical_reference_only`, never silently replaced.
+4. Existing aggregate APIs may remain temporarily for frontend compatibility. New authoring surfaces use server-filtered, paginated teacher/staff, label, question, question-block and media contracts; the aggregate routes can be retired only after a separately tested frontend migration.
+
+The existing Portfolio structure does not require one physical table per display category. `portfolio_working_versions` owns the version and approval lifecycle; `portfolio_version_items` owns ordered typed items with `section_key`, `source_type`, `source_id`, authorship and review decision. A new display category is data, not a new table, unless it introduces materially different integrity or lifecycle rules.
 
 ## 10 What is intentionally excluded
 

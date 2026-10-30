@@ -32,6 +32,11 @@
 | FRM-FR-015 | Unassigned, declined or overdue form reviews shall enter the configured default/escalation queue with reason and audit history. | Approved System Analyst architecture decision, 28 Oct 2026 | P1 |
 | FRM-FR-016 | The supplied source instrument shall be represented visibly as a versioned question bank. The current workbook evidence contains 166 questions across ten source constructs; each question retains its own source and ability definition and remains separate from VASK and rubric mappings. | Confirmed source evidence and System Analyst direction, 29 Oct 2026; not BHSS/JC approval | P1 |
 | FRM-FR-017 | SchoolAdmin shall control whether a validated question-bank version is available to staff building form versions. Activating or disabling a bank version changes future selection only and shall not rewrite published forms or historical responses. | Confirmed System Analyst direction, 29 Oct 2026; not BHSS/JC approval | P1 |
+| FRM-FR-018 | Question ability definitions shall remain independent from activity labels and assessment rubrics. The system may expose optional discovery links to help an author search related material, but shall not treat a discovery link as a scoring rule, weight or automatic mapping. | Approved System Analyst architecture decision, 30 Oct 2026; not BHSS/JC approval | P0/P1 |
+| FRM-FR-019 | The question bank shall be persisted as stable questions and immutable question versions within a versioned source bank, including the source reference and content hash. Authoring queries shall support server-side search, source, construct, ability, lifecycle and pagination filters. | Approved System Analyst architecture decision, 30 Oct 2026; not BHSS/JC approval | P1 |
+| FRM-FR-020 | Reusable question blocks shall be stable records with immutable ordered versions, respondent audience, optional ability context, item links, review state, publication state and form-version usage links. Authoring queries shall support search, audience, ability, form version, lifecycle and pagination filters. | Approved System Analyst architecture decision, 30 Oct 2026; not BHSS/JC approval | P1 |
+| FRM-FR-021 | Disabled questions and blocks shall be unavailable for new selection while unchanged published forms retain their exact historical references. Historical validation may match disabled definitions but shall report that the reference is historical-only. | Approved System Analyst architecture decision, 30 Oct 2026; not BHSS/JC approval | P0/P1 |
+| FRM-FR-022 | Activity submission and approval shall fail when its selected form version is not already approved and published. Successful activity approval shall never mutate the form review/publication lifecycle. | Approved System Analyst architecture decision, 30 Oct 2026; not BHSS/JC approval | P0/P1 |
 
 ## 3. Question and form-definition fields
 
@@ -94,6 +99,9 @@ Role membership and a named workflow approval assignment are separate records.
 - Publishing a form does not accept proof or publish a rubric level.
 - A student cannot see a teacher block or unpublished successor version.
 - A question with no valid ability definition cannot be published.
+- Filtering the question bank by construct or ability returns a bounded server page rather than downloading the complete bank.
+- Filtering reusable blocks by audience and ability returns the ordered block items and the published form versions that use them.
+- An old form containing a subsequently disabled question remains reproducible, while the disabled question is absent from new authoring choices.
 
 ## 8. Open dependencies
 
