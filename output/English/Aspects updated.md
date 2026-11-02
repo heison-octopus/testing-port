@@ -965,8 +965,8 @@ The pair `school_id + feature_key` is unique. A disabled school, retired/unknown
 The earlier single `roles`/`user_roles` sketch is superseded. Follow Core's authoritative decomposition:
 
 - `staff_position_definitions` and `user_position_assignments` describe effective-dated job titles only.
-- `role_definitions` and `user_role_assignments` define stackable functional roles with `scope_type`/`scope_id` and effective dates.
-- `capability_definitions`, `role_capabilities` and `capability_policy_overrides` calculate effective actions; an applicable explicit deny wins.
+- `role_definitions`, immutable `role_definition_versions` and `user_role_assignments` define stackable functional roles. Each user assignment pins the exact role version, `scope_type`/`scope_id` and effective dates.
+- `capability_definitions`, `role_version_capabilities` and `capability_policy_overrides` calculate effective actions; an applicable explicit deny wins. Legacy `role_capabilities` is only a seed/import compatibility source and is not the runtime resolver.
 - `departments`, `subjects`, `department_subjects`, `staff_groups` and `staff_group_memberships` provide teacher organization/scope records. Learner/class groups remain separate.
 - `approval_policy_versions`, `approval_policy_steps`, `approval_assignments`, `approval_decisions` and `approval_escalations` govern named decisions. There is no `approval_staff` user type.
 
@@ -1228,18 +1228,20 @@ The first database release does not need every optional table. A workable minimu
 23. `feedback_evidence`
 24. `feedback_skill_observations`
 25. `questionnaire_constructs`
-26. `role_definitions`
+26. `role_definitions`, `role_definition_versions` and `role_version_capabilities`
 27. `user_role_assignments`
-28. `rubric_catalogues`, axes, levels and level conditions
+28. `rubric_catalogues`, axes, explicit levels, level conditions and `school_rubric_assignments`
 29. `rubric_aggregation_policies`
-30. `proof_type_definitions`
-31. `proof_items`
-32. `proof_links`
-33. `proof_use_decisions`
-34. `rubric_observations`
-35. `published_rubric_results`
-36. `review_outlook_memory_settings` and frozen memory items
-37. `source_systems`, import batches, import records and correction history
+30. `portfolio_templates`, immutable template versions/sections and school template assignments
+31. `portfolio_working_versions`, ordered items and published snapshots with pinned template version/hash
+32. `proof_type_definitions`
+33. `proof_items`
+34. `proof_links`
+35. `proof_use_decisions`
+36. `rubric_observations`
+37. `published_rubric_results`
+38. `review_outlook_memory_settings` and frozen memory items
+39. `source_systems`, import batches, import records and correction history
 
 The provider-neutral extraction and Portfolio-generation contracts, validation and test doubles are also P1 requirements; production provider adapters remain P2. Add media processing, shared collections, detailed access grants, VASK tables, cached radar snapshots, and advanced audit data as the corresponding product features are implemented.
 

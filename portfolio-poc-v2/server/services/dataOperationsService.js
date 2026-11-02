@@ -41,7 +41,7 @@ export const dataOperationsService = {
       roster: dataOperationsRepository.roster(user.school_id).length,
       questions: questionBank.rows.length,
       rubrics: rubricRepository.exportData().catalogues.length,
-      labels: dataOperationsRepository.labels().length,
+      labels: dataOperationsRepository.labels(user.school_id).length,
       media: mediaPaths.length,
     } };
   },

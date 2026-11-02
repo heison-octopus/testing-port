@@ -42,7 +42,7 @@ export function capabilityDecision(user, capabilityKey, resource) {
   const allowedOverride = overrides.find(item => item.effect === 'allow');
   if (allowedOverride) return { allowed: true, source: 'override', scopeType: allowedOverride.scope_type, scopeId: allowedOverride.scope_id };
   const grant = grants.find(item => item.effect === 'allow');
-  return grant ? { allowed: true, source: 'role', roleAssignmentId: grant.user_role_assignment_id, scopeType: grant.scope_type, scopeId: grant.scope_id, capabilityId: grant.capability_id } : { allowed: false, source: 'none' };
+  return grant ? { allowed: true, source: 'role', roleAssignmentId: grant.user_role_assignment_id, roleDefinitionVersionId: grant.role_definition_version_id, scopeType: grant.scope_type, scopeId: grant.scope_id, capabilityId: grant.capability_id } : { allowed: false, source: 'none' };
 }
 
 export function requireCapability(user, capabilityKey, resource) {
@@ -63,6 +63,26 @@ export function sessionProfile(user) {
   const canOpenAssessments = keys.includes('assessment.submit') || keys.includes('evidence.review');
   const canOpenImports = keys.includes('import.view') || keys.includes('import.source.manage');
   const canReviewPortfolios = keys.includes('portfolio.review') || keys.includes('portfolio.approve') || keys.includes('portfolio.publish') || keys.includes('approval.coordinate');
+  const pageAccess = {
+    activities: canOpenActivities,
+    responses: user.user_type === 'student',
+    assessments: canOpenAssessments,
+    approvals: canOpenApprovals,
+    portfolios: canOpenPortfolios,
+    portfolioEditor: user.user_type === 'student',
+    portfolioReview: canReviewPortfolios,
+    memorable: user.user_type === 'student',
+    imports: canOpenImports,
+    aiDrafts: keys.includes('portfolio.ai_draft.review'),
+    staff: capabilityDecision(user, 'staff.directory.search', schoolResource).allowed || capabilityDecision(user, 'policy.manage', schoolResource).allowed || capabilityDecision(user, 'approval.coordinate', schoolResource).allowed,
+    policy: capabilityDecision(user, 'policy.manage', schoolResource).allowed,
+    catalogue: capabilityDecision(user, 'policy.manage', schoolResource).allowed,
+  };
+  const schoolActions = {
+    canSearchStaff: capabilityDecision(user, 'staff.directory.search', schoolResource).allowed || capabilityDecision(user, 'policy.manage', schoolResource).allowed || capabilityDecision(user, 'approval.coordinate', schoolResource).allowed,
+    canManagePolicy: capabilityDecision(user, 'policy.manage', schoolResource).allowed,
+    canCoordinateApprovals: capabilityDecision(user, 'approval.coordinate', schoolResource).allowed,
+  };
   return {
     id: user.user_id,
     schoolId: user.school_id,
@@ -72,24 +92,10 @@ export function sessionProfile(user) {
     positions: identityRepository.positions(user.user_id),
     roles,
     capabilityKeys: keys,
-    canSearchStaff: capabilityDecision(user, 'staff.directory.search', schoolResource).allowed || capabilityDecision(user, 'policy.manage', schoolResource).allowed || capabilityDecision(user, 'approval.coordinate', schoolResource).allowed,
-    canManagePolicy: capabilityDecision(user, 'policy.manage', schoolResource).allowed,
-    canCoordinateApprovals: capabilityDecision(user, 'approval.coordinate', schoolResource).allowed,
-    pageAccess: {
-      activities: canOpenActivities,
-      responses: user.user_type === 'student',
-      assessments: canOpenAssessments,
-      approvals: canOpenApprovals,
-      portfolios: canOpenPortfolios,
-      portfolioEditor: user.user_type === 'student',
-      portfolioReview: canReviewPortfolios,
-      memorable: user.user_type === 'student',
-      imports: canOpenImports,
-      aiDrafts: keys.includes('portfolio.ai_draft.review'),
-      staff: capabilityDecision(user, 'staff.directory.search', schoolResource).allowed || capabilityDecision(user, 'policy.manage', schoolResource).allowed || capabilityDecision(user, 'approval.coordinate', schoolResource).allowed,
-      policy: capabilityDecision(user, 'policy.manage', schoolResource).allowed,
-      catalogue: capabilityDecision(user, 'policy.manage', schoolResource).allowed,
-    },
+    ...schoolActions,
+    pageAccess,
+    affordances: { pages: pageAccess, schoolActions },
+    authorizationModel: 'server_enforced_v1',
   };
 }
 

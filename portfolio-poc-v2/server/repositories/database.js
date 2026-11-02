@@ -17,7 +17,7 @@ if (!applicationTables.length) {
 } else {
   const userVersion = Number(db.prepare('PRAGMA user_version').get().user_version || 0);
   const names = new Set(applicationTables.map(row => row.name));
-  const required = ['activity_label_assignments','activity_source_bindings','entity_lifecycle_events','question_block_items','source_systems'];
+  const required = ['activity_label_assignments','activity_source_bindings','entity_lifecycle_events','portfolio_template_versions','role_definition_versions','school_rubric_assignments','source_systems'];
   const retired = ['schema_migrations','activity_vask_items','form_items','peer_review_assignments','media_source_definitions'];
   if (userVersion !== 1 || required.some(name => !names.has(name)) || retired.some(name => names.has(name))) {
     throw new Error(`Database does not match ${schemaVersion}. This POC has no migration path; run "npm run db:reset" to rebuild it.`);

@@ -26,9 +26,17 @@ export const authoringRepository = {
     if (filters.catalogueId) { clauses.push('catalogue.rubric_catalogue_id=?'); params.push(filters.catalogueId); }
     if (filters.groupId) { clauses.push('axis.rubric_group_id=?'); params.push(filters.groupId); }
     if (filters.sourceId) { clauses.push('catalogue.definition_source_id=?'); params.push(filters.sourceId); }
-    if (filters.capability === 'labelling') clauses.push('catalogue.labelling_capable=1');
-    else if (filters.capability === 'assessment') clauses.push('catalogue.assessment_capable=1');
-    else if (filters.capability === 'both') clauses.push('catalogue.labelling_capable=1 AND catalogue.assessment_capable=1');
+    const assignmentDate = process.env.POC_V2_AS_OF || '2027-01-20';
+    if (filters.capability === 'labelling') {
+      clauses.push(`catalogue.labelling_capable=1 AND EXISTS(SELECT 1 FROM school_rubric_assignments assignment WHERE assignment.school_id=? AND assignment.purpose='activity_labelling' AND assignment.rubric_catalogue_id=catalogue.rubric_catalogue_id AND assignment.status='active' AND assignment.effective_from<=? AND (assignment.effective_until IS NULL OR assignment.effective_until>=?))`);
+      params.push(schoolId, assignmentDate, assignmentDate);
+    } else if (filters.capability === 'assessment') {
+      clauses.push(`catalogue.assessment_capable=1 AND EXISTS(SELECT 1 FROM school_rubric_assignments assignment WHERE assignment.school_id=? AND assignment.purpose='assessment_rubric' AND assignment.rubric_catalogue_id=catalogue.rubric_catalogue_id AND assignment.status='active' AND assignment.effective_from<=? AND (assignment.effective_until IS NULL OR assignment.effective_until>=?))`);
+      params.push(schoolId, assignmentDate, assignmentDate);
+    } else if (filters.capability === 'both') {
+      clauses.push(`catalogue.labelling_capable=1 AND catalogue.assessment_capable=1 AND EXISTS(SELECT 1 FROM school_rubric_assignments assignment WHERE assignment.school_id=? AND assignment.rubric_catalogue_id=catalogue.rubric_catalogue_id AND assignment.status='active' AND assignment.effective_from<=? AND (assignment.effective_until IS NULL OR assignment.effective_until>=?))`);
+      params.push(schoolId, assignmentDate, assignmentDate);
+    }
     if (filters.status === 'active') clauses.push(`catalogue.status='active' AND catalogue.disabled_at IS NULL AND axis.status='active'`);
     else if (filters.status === 'disabled') clauses.push(`(catalogue.status<>'active' OR catalogue.disabled_at IS NOT NULL OR axis.status<>'active')`);
     const select = `SELECT axis.axis_id,axis.axis_code,axis.name_en,axis.name_zh,axis.axis_kind,axis.display_order,axis.status axis_status,axis.notes,

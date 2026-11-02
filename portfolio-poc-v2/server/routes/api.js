@@ -13,6 +13,7 @@ api.get('/catalogue-labels', controller.catalogueLabels);
 api.get('/question-bank', controller.questionBank);
 api.get('/question-blocks', controller.questionBlocks);
 api.get('/policy', controller.policyWorkspace);
+api.get('/policy/templates', controller.templatePolicyWorkspace);
 api.post('/policy/preview', controller.previewPolicy);
 api.post('/policy/overrides', controller.applyPolicy);
 

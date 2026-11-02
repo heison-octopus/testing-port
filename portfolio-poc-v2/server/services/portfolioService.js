@@ -4,11 +4,13 @@ import { approvalRepository } from '../repositories/approvalRepository.js';
 import { identityRepository } from '../repositories/identityRepository.js';
 import { memorableRepository } from '../repositories/memorableRepository.js';
 import { rubricRepository } from '../repositories/rubricRepository.js';
+import { portfolioTemplateRepository } from '../repositories/portfolioTemplateRepository.js';
 import { capabilityDecision, fail, requireCapability, sessionProfile } from './access.js';
 
 function accessResource(studentId, periodId) {
   const membership = identityRepository.classMembership(studentId, periodId);
-  return { school_id: 'BHSS', student_user_id: studentId, student_id: studentId, class_id: membership?.class_id };
+  const student = identityRepository.user(studentId);
+  return { school_id: membership?.school_id || student?.school_id, student_user_id: studentId, student_id: studentId, class_id: membership?.class_id };
 }
 
 function canSee(user, studentId, periodId) {
@@ -29,8 +31,12 @@ export const portfolioService = {
     const student = identityRepository.user(studentId);
     if (!student) fail(404, 'Student not found');
     const versions = portfolioRepository.versions(studentId, periodId).map(item => portfolioRepository.version(item.portfolio_working_version_id));
-    const official = portfolioRepository.official(studentId, periodId), rubricId = versions[0]?.rubric_catalogue_id || official?.version?.rubric_catalogue_id || rubricRepository.activeAssessment()?.rubric_catalogue_id;
-    return { student: { id: student.user_id, name: student.name_en, nameZh: student.name_zh }, periodId, rubric: rubricId ? rubricRepository.catalogue(rubricId) : null, skillSummary: rubricId ? portfolioRepository.skillSummary(studentId, periodId, rubricId) : [], versions, official };
+    const official = portfolioRepository.official(studentId, periodId);
+    const activeRubric = rubricRepository.activeAssessment(student.school_id);
+    const rubricId = versions[0]?.rubric_catalogue_id || official?.version?.rubric_catalogue_id || activeRubric?.rubric_catalogue_id;
+    const templateId = versions[0]?.portfolio_template_version_id || official?.version?.portfolio_template_version_id;
+    const template = templateId ? portfolioTemplateRepository.version(templateId) : portfolioTemplateRepository.assigned(student.school_id);
+    return { student: { id: student.user_id, name: student.name_en, nameZh: student.name_zh }, periodId, rubric: rubricId ? rubricRepository.catalogue(rubricId) : null, template, skillSummary: rubricId ? portfolioRepository.skillSummary(studentId, periodId, rubricId) : [], versions, official };
   },
   editor(user, studentId, periodId = '2026-27-P1') {
     if (user.user_type !== 'student' || user.user_id !== studentId) fail(404, 'Portfolio editor not found');
@@ -42,8 +48,10 @@ export const portfolioService = {
     const student = identityRepository.user(studentId);
     if (!student) fail(404, 'Student not found');
     const official = portfolioRepository.official(studentId, periodId);
-    const rubricId = official?.version?.rubric_catalogue_id || rubricRepository.activeAssessment()?.rubric_catalogue_id;
-    return { student: { id: student.user_id, name: student.name_en, nameZh: student.name_zh }, periodId, rubric: rubricId ? rubricRepository.catalogue(rubricId) : null, skillSummary: rubricId ? portfolioRepository.skillSummary(studentId, periodId, rubricId) : [], official };
+    const rubricId = official?.version?.rubric_catalogue_id || rubricRepository.activeAssessment(student.school_id)?.rubric_catalogue_id;
+    const templateId = official?.version?.portfolio_template_version_id;
+    const template = templateId ? portfolioTemplateRepository.version(templateId) : portfolioTemplateRepository.assigned(student.school_id);
+    return { student: { id: student.user_id, name: student.name_en, nameZh: student.name_zh }, periodId, rubric: rubricId ? rubricRepository.catalogue(rubricId) : null, template, skillSummary: rubricId ? portfolioRepository.skillSummary(studentId, periodId, rubricId) : [], official };
   },
   createDraft(user, input) {
     if (user.user_type !== 'student' || user.user_id !== input.studentId) fail(403, 'Students may edit only their own working Portfolio');
@@ -51,10 +59,12 @@ export const portfolioService = {
     const periodId = input.periodId || '2026-27-P1';
     const memorableSelections = memorableRepository.selections(user.user_id, periodId).filter(item => ['submitted','approved'].includes(item.submission_status));
     const versions = portfolioRepository.versions(user.user_id, periodId), latest = versions[0];
-    const activeRubric = rubricRepository.activeAssessment();
+    const activeRubric = rubricRepository.activeAssessment(user.school_id);
     if (!activeRubric) fail(400, 'No validated active assessment rubric is available');
+    const activeTemplate = portfolioTemplateRepository.assigned(user.school_id);
+    if (!activeTemplate) fail(400, 'No published Portfolio template is assigned for this student scope');
     const id = `PWV-DEMO-${randomUUID()}`;
-    portfolioRepository.createDraft({ id, schoolId: user.school_id, studentId: user.user_id, periodId, number: (latest?.version_number || 0) + 1, supersedesId: latest?.portfolio_working_version_id || null, rubricCatalogueId: activeRubric.rubric_catalogue_id, selfIntroduction: input.selfIntroduction.trim(), memorableSelections, createdAt: new Date().toISOString() });
+    portfolioRepository.createDraft({ id, schoolId: user.school_id, studentId: user.user_id, periodId, number: (latest?.version_number || 0) + 1, supersedesId: latest?.portfolio_working_version_id || null, rubricCatalogueId: activeRubric.rubric_catalogue_id, portfolioTemplateVersionId: activeTemplate.portfolio_template_version_id, templateManifestSha256: activeTemplate.manifest_sha256, selfIntroduction: input.selfIntroduction.trim(), memorableSelections, createdAt: new Date().toISOString() });
     identityRepository.audit(user.school_id, user.user_id, 'portfolio.draft.created', 'portfolio_working_version', id);
     return this.editor(user, user.user_id, periodId);
   },

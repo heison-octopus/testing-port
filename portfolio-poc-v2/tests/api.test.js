@@ -134,7 +134,7 @@ test('Data Operations inventory and every generic CSV export use the same real s
     students: 3,
     roster: 8,
     questions: 166,
-    rubrics: 2,
+    rubrics: 1,
     labels: 10,
     media: 4,
   });
@@ -185,6 +185,8 @@ test('server session drives the complete role navigation matrix', async () => {
     const session = await request('/session');
     assert.equal(session.status, 200);
     assert.deepEqual(session.body.pageAccess, pageAccess, userId);
+    assert.deepEqual(session.body.affordances.pages, pageAccess, userId);
+    assert.equal(session.body.authorizationModel, 'server_enforced_v1');
   }
 });
 
@@ -193,7 +195,7 @@ test('the import ledger preserves source custody and keeps students outside the 
   const ledger = await admin('/imports');
   assert.equal(ledger.status, 200);
   const seeded = ledger.body.batches.filter(item => item.import_batch_id.startsWith('SEED-'));
-  assert.equal(seeded.length, 58);
+  assert.equal(seeded.length, 64);
   assert.ok(seeded.every(item => item.source_relative_path.startsWith('output/import-examples/')));
   assert.ok(seeded.every(item => item.seeded_at && /^[a-f0-9]{64}$/.test(item.content_sha256)));
   assert.ok(seeded.every(item => !item.source_relative_path.startsWith('/') && !item.source_relative_path.includes('..')));
@@ -503,6 +505,7 @@ test('staff filters keep positions, roles, capabilities and approval eligibility
   const session = await teacher('/session');
   assert.deepEqual(session.body.positions.map(item => item.position_code).sort(), ['mentoring_teacher', 'subject_teacher']);
   assert(session.body.roles.some(item => item.role_code === 'class_teacher'));
+  assert(session.body.roles.every(item => item.role_definition_version_id && item.role_version_number === 1));
 
   const cases = [
     ['roleId=ROLE-CLASS-TEACHER&subjectId=SUB-ENG', ['USR-T-001']],
@@ -516,6 +519,21 @@ test('staff filters keep positions, roles, capabilities and approval eligibility
     assert.equal(result.status, 200);
     assert.deepEqual(result.body.map(item => item.id).sort(), ids.sort(), query);
   }
+});
+
+test('SchoolAdmin template policy read model keeps role, rubric and Portfolio assignments separate', async () => {
+  const administrator = await signIn('USR-ADM-001');
+  const workspace = await administrator('/policy/templates');
+  assert.equal(workspace.status, 200);
+  assert(workspace.body.roleTemplates.some(role => role.role_code === 'school_admin' && role.versions[0].capabilities.some(item => item.capability_key === 'policy.manage')));
+  assert.deepEqual(workspace.body.rubricTemplates.assignments.filter(item => item.status === 'active').map(item => item.purpose).sort(), ['activity_labelling','assessment_rubric']);
+  const neutral = workspace.body.portfolioTemplates.packages.find(item => item.template_code === 'neutral_core');
+  assert(neutral);
+  assert.deepEqual([...new Set(neutral.versions[0].sections.map(item => item.presentation_mode))].sort(), ['disclosure','inline','link_button']);
+  assert.equal(workspace.body.portfolioTemplates.assignments[0].portfolio_template_version_id, 'PTPLV-NEUTRAL-CORE-1');
+
+  const student = await signIn('USR-S-001');
+  assert.equal((await student('/policy/templates')).status, 403);
 });
 
 test('explicit scoped deny wins while permitted activity rows remain visible', async () => {
@@ -745,20 +763,22 @@ test('rubric XLSX exports real linked records and successor activation changes o
   const administrator = await signIn('USR-ADM-001');
   const workspace = await administrator('/imports/rubrics');
   assert.equal(workspace.status, 200);
-  assert.equal(workspace.body.catalogues.length, 2);
+  assert.equal(workspace.body.catalogues.length, 1);
+  assert.equal(workspace.body.catalogues.some(item => item.code === 'RC360'), false);
   assert.equal(workspace.body.active.rubric_catalogue_id, 'RUB-SB-UF2');
   assert.equal(workspace.body.active.skill_count, 8);
   assert.equal(workspace.body.active.step_count, 128);
 
   const downloaded = await administrator('/imports/rubrics/export');
   assert.equal(downloaded.status, 200);
-  assert.deepEqual(downloaded.body.counts, { catalogues: 2, groups: 4, skills: 8, steps: 128 });
+  assert.deepEqual(downloaded.body.counts, { catalogues: 1, groups: 4, skills: 8, levels: 16, steps: 128 });
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.load(Buffer.from(downloaded.body.contentBase64, 'base64'));
-  assert.deepEqual(workbook.worksheets.map(sheet => sheet.name), ['rubric_catalogues','rubric_groups','rubric_skills','rubric_steps']);
-  assert.equal(workbook.getWorksheet('rubric_catalogues').rowCount, 3);
+  assert.deepEqual(workbook.worksheets.map(sheet => sheet.name), ['rubric_catalogues','rubric_groups','rubric_skills','rubric_levels','rubric_steps']);
+  assert.equal(workbook.getWorksheet('rubric_catalogues').rowCount, 2);
   assert.equal(workbook.getWorksheet('rubric_groups').rowCount, 5);
   assert.equal(workbook.getWorksheet('rubric_skills').rowCount, 9);
+  assert.equal(workbook.getWorksheet('rubric_levels').rowCount, 17);
   assert.equal(workbook.getWorksheet('rubric_steps').rowCount, 129);
   assert.equal(workbook.getWorksheet('rubric_catalogues').getCell('A2').value === 'example_rubric', false);
 
@@ -774,6 +794,7 @@ test('rubric XLSX exports real linked records and successor activation changes o
   assert.equal(successor.body.catalogue.status, 'draft');
   assert.equal(successor.body.groups.length, 4);
   assert.equal(successor.body.skills.length, 8);
+  assert.equal(successor.body.levels.length, 16);
   assert.equal(successor.body.steps.length, 128);
 
   const existingStudent = await signIn('USR-S-001');
@@ -781,13 +802,17 @@ test('rubric XLSX exports real linked records and successor activation changes o
   const previousVersionId = before.body.versions[0].portfolio_working_version_id;
   assert.equal(before.body.versions[0].rubric_catalogue_id, 'RUB-SB-UF2');
 
-  const activated = await administrator(`/imports/rubrics/${successor.body.catalogue.rubric_catalogue_id}/activate`, { method: 'POST', body: JSON.stringify({ reason: 'Validated four-sheet successor package.' }) });
+  const activated = await administrator(`/imports/rubrics/${successor.body.catalogue.rubric_catalogue_id}/activate`, { method: 'POST', body: JSON.stringify({ reason: 'Validated explicit-level successor package.' }) });
   assert.equal(activated.status, 200);
   assert.equal(activated.body.active.rubric_catalogue_id, successor.body.catalogue.rubric_catalogue_id);
 
   const created = await existingStudent('/portfolios/USR-S-001/drafts', { method: 'POST', body: JSON.stringify({ selfIntroduction: 'This version checks immutable rubric pinning.', periodId: '2026-27-P1' }) });
   assert.equal(created.status, 201);
   assert.equal(created.body.versions[0].rubric_catalogue_id, successor.body.catalogue.rubric_catalogue_id);
+  assert.equal(created.body.versions[0].portfolio_template_version_id, 'PTPLV-NEUTRAL-CORE-1');
+  assert.equal(created.body.template.manifest_sha256, created.body.versions[0].template_manifest_sha256);
+  assert.deepEqual([...new Set(created.body.template.sections.map(section => section.presentation_mode))].sort(), ['disclosure','inline','link_button']);
+  assert(created.body.template.sections.some(section => section.parent_section_id === 'PTSEC-NEUTRAL-EVIDENCE' && section.section_key === 'memorable_activity'));
   const oldVersion = created.body.versions.find(item => item.portfolio_working_version_id === previousVersionId);
   assert.equal(oldVersion.rubric_catalogue_id, 'RUB-SB-UF2');
   assert.equal(created.body.official.version.rubric_catalogue_id, 'RUB-SB-UF2');

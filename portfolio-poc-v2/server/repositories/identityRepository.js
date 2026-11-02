@@ -9,19 +9,21 @@ export const identityRepository = {
       WHERE upa.user_id=? AND upa.status='active' ORDER BY upa.is_primary DESC,p.sort_order`, userId);
   },
   roles(userId) {
-    return sql.all(`SELECT ura.*,r.role_code,r.name_en,r.name_zh,r.role_category
+    return sql.all(`SELECT ura.*,r.role_code,r.name_en,r.name_zh,r.role_category,rv.version_number role_version_number,rv.lifecycle_status role_version_status
       FROM user_role_assignments ura JOIN role_definitions r ON r.role_id=ura.role_id
-      WHERE ura.user_id=? AND ura.status='active' AND r.status='active' ORDER BY r.role_category,r.name_en`, userId);
+      JOIN role_definition_versions rv ON rv.role_definition_version_id=ura.role_definition_version_id
+      WHERE ura.user_id=? AND ura.status='active' AND r.status='active' AND rv.lifecycle_status='active' ORDER BY r.role_category,r.name_en`, userId);
   },
   roleCapabilityGrants(userId, capabilityKey = null) {
     const params = [userId];
     const capabilityClause = capabilityKey ? ' AND c.capability_key=?' : '';
     if (capabilityKey) params.push(capabilityKey);
-    return sql.all(`SELECT c.capability_id,c.capability_key,c.name_en,c.name_zh,c.resource_type,rc.effect,rc.condition_key,
-        ura.user_role_assignment_id,ura.role_id,ura.scope_type,ura.scope_id
+    return sql.all(`SELECT c.capability_id,c.capability_key,c.name_en,c.name_zh,c.resource_type,rvc.effect,rvc.condition_key,
+        ura.user_role_assignment_id,ura.role_id,ura.role_definition_version_id,rv.version_number role_version_number,ura.scope_type,ura.scope_id
       FROM user_role_assignments ura
-      JOIN role_capabilities rc ON rc.role_id=ura.role_id AND rc.status='active'
-      JOIN capability_definitions c ON c.capability_id=rc.capability_id AND c.status='active'
+      JOIN role_definition_versions rv ON rv.role_definition_version_id=ura.role_definition_version_id AND rv.lifecycle_status='active'
+      JOIN role_version_capabilities rvc ON rvc.role_definition_version_id=rv.role_definition_version_id AND rvc.status='active'
+      JOIN capability_definitions c ON c.capability_id=rvc.capability_id AND c.status='active'
       WHERE ura.user_id=? AND ura.status='active'${capabilityClause}`, ...params);
   },
   overridesForUser(userId, capabilityKey = null) {
@@ -41,12 +43,21 @@ export const identityRepository = {
   referenceData(schoolId) {
     return {
       positions: sql.all(`SELECT * FROM staff_position_definitions WHERE school_id=? AND status='active' ORDER BY sort_order`, schoolId),
-      roles: sql.all(`SELECT * FROM role_definitions WHERE status='active' ORDER BY role_category,name_en`),
+      roles: sql.all(`SELECT role.*,version.role_definition_version_id,version.version_number FROM role_definitions role JOIN role_definition_versions version ON version.role_id=role.role_id AND version.lifecycle_status='active' WHERE role.status='active' ORDER BY role.role_category,role.name_en`),
       capabilities: sql.all(`SELECT * FROM capability_definitions WHERE status='active' ORDER BY resource_type,name_en`),
       departments: sql.all(`SELECT * FROM departments WHERE school_id=? AND status='active' ORDER BY name_en`, schoolId),
       subjects: sql.all(`SELECT * FROM subjects WHERE school_id=? AND status='active' ORDER BY name_en`, schoolId),
       groups: sql.all(`SELECT * FROM staff_groups WHERE school_id=? AND status='active' ORDER BY name_en`, schoolId),
     };
+  },
+  roleTemplatePackages() {
+    return sql.all(`SELECT * FROM role_definitions ORDER BY role_category,name_en`).map(role => ({
+      ...role,
+      versions: sql.all(`SELECT * FROM role_definition_versions WHERE role_id=? ORDER BY version_number DESC`, role.role_id).map(version => ({
+        ...version,
+        capabilities: sql.all(`SELECT grant.*,capability.capability_key,capability.name_en capability_name_en,capability.name_zh capability_name_zh,capability.resource_type FROM role_version_capabilities grant JOIN capability_definitions capability ON capability.capability_id=grant.capability_id WHERE grant.role_definition_version_id=? ORDER BY capability.capability_key`, version.role_definition_version_id),
+      })),
+    }));
   },
   searchStaff(schoolId, filters) {
     const clauses = ['u.school_id=?', `u.user_type='staff'`];
@@ -69,7 +80,7 @@ export const identityRepository = {
       }
     }
     if (filters.capabilityId || filters.capabilityKey) {
-      clauses.push(`EXISTS(SELECT 1 FROM user_role_assignments ura JOIN role_capabilities rc ON rc.role_id=ura.role_id AND rc.status='active' JOIN capability_definitions c ON c.capability_id=rc.capability_id AND c.status='active' WHERE ura.user_id=u.user_id AND ura.status='active' AND rc.effect='allow' AND ${filters.capabilityId ? 'c.capability_id=?' : 'c.capability_key=?'})`);
+      clauses.push(`EXISTS(SELECT 1 FROM user_role_assignments ura JOIN role_version_capabilities rvc ON rvc.role_definition_version_id=ura.role_definition_version_id AND rvc.status='active' JOIN capability_definitions c ON c.capability_id=rvc.capability_id AND c.status='active' WHERE ura.user_id=u.user_id AND ura.status='active' AND rvc.effect='allow' AND ${filters.capabilityId ? 'c.capability_id=?' : 'c.capability_key=?'})`);
       params.push(filters.capabilityId || filters.capabilityKey);
     }
     if (filters.approvalEligible === true) clauses.push(`EXISTS(SELECT 1 FROM user_role_assignments ura JOIN role_definitions r ON r.role_id=ura.role_id WHERE ura.user_id=u.user_id AND ura.status='active' AND r.status='active' AND r.role_category IN ('approval_function','publication_function'))`);

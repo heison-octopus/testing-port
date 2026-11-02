@@ -11,6 +11,7 @@ import { rubricService } from '../services/rubricService.js';
 import { dataOperationsService } from '../services/dataOperationsService.js';
 import { authoringService } from '../services/authoringService.js';
 import { mediaService } from '../services/mediaService.js';
+import { templatePolicyService } from '../services/templatePolicyService.js';
 import { openAiCompatibleChat } from '../adapters/openAiCompatibleChat.js';
 
 const response = (status, work) => async (req, res, next) => { try { res.status(status).json(await work(req)); } catch (error) { next(error); } };
@@ -26,6 +27,7 @@ export const controller = {
   questionBank: ok(req => authoringService.questions(req.user, req.query)),
   questionBlocks: ok(req => authoringService.questionBlocks(req.user, req.query)),
   policyWorkspace: ok(req => identityService.policyWorkspace(req.user)),
+  templatePolicyWorkspace: ok(req => templatePolicyService.workspace(req.user)),
   previewPolicy: ok(req => identityService.previewPolicy(req.user, req.body)),
   applyPolicy: created(req => identityService.applyPolicy(req.user, req.body)),
   imports: ok(req => importService.workspace(req.user)),

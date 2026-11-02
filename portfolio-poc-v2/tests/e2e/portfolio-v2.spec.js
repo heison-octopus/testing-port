@@ -355,7 +355,7 @@ test.describe.serial('Portfolio POC v2 implemented workflows', () => {
     await expect(page.getByRole('button', { name: /Export all records for editing/ })).toBeVisible();
 
     await page.locator('.data-domain-grid').getByRole('button', { name: /Skill rubrics/ }).click();
-    await expect(page.locator('.rubric-package-layout > aside > button')).toHaveCount(2);
+    await expect(page.locator('.rubric-package-layout > aside > button')).toHaveCount(1);
     await expect(page.locator('.rubric-package-heading')).toContainText('definition_only');
     await expect(page.locator('.rubric-package-layout')).toContainText('8 skills · 128 steps');
     const rubricDownloadPromise = page.waitForEvent('download');
@@ -363,8 +363,9 @@ test.describe.serial('Portfolio POC v2 implemented workflows', () => {
     const rubricDownload = await rubricDownloadPromise;
     const rubricWorkbook = new ExcelJS.Workbook();
     await rubricWorkbook.xlsx.load(await readFile(await rubricDownload.path()));
-    expect(rubricWorkbook.worksheets.map(sheet => sheet.name)).toEqual(['rubric_catalogues','rubric_groups','rubric_skills','rubric_steps']);
-    expect(rubricWorkbook.getWorksheet('rubric_catalogues').rowCount).toBe(3);
+    expect(rubricWorkbook.worksheets.map(sheet => sheet.name)).toEqual(['rubric_catalogues','rubric_groups','rubric_skills','rubric_levels','rubric_steps']);
+    expect(rubricWorkbook.getWorksheet('rubric_catalogues').rowCount).toBe(2);
+    expect(rubricWorkbook.getWorksheet('rubric_levels').rowCount).toBe(17);
     expect(rubricWorkbook.getWorksheet('rubric_steps').rowCount).toBe(129);
 
     await page.locator('nav').getByRole('button', { name: 'School controls' }).click();

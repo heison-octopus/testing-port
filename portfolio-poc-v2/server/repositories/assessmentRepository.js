@@ -169,10 +169,11 @@ export const assessmentRepository = {
       JOIN users reviewer ON reviewer.user_id=recipient.respondent_user_id
       WHERE assignment.activity_id=? AND recipient.subject_user_id=? AND recipient.perspective='peer_observation'
       ORDER BY recipient.created_at DESC`, activityId, studentId);
-    return { activity, student, participants: this.activityParticipants(activityId), recipients, observations, peerAssignments, skillAxes: this.skillAxes() };
+    return { activity, student, participants: this.activityParticipants(activityId), recipients, observations, peerAssignments, skillAxes: this.skillAxes(activity.school_id) };
   },
-  skillAxes() {
-    return sql.all(`SELECT axis_id,axis_code,name_en,name_zh,display_order FROM rubric_axes WHERE rubric_catalogue_id='RUB-SB-UF2' AND status='active' ORDER BY display_order`);
+  skillAxes(schoolId) {
+    const asOf = process.env.POC_V2_AS_OF || '2027-01-20';
+    return sql.all(`SELECT axis.axis_id,axis.axis_code,axis.name_en,axis.name_zh,axis.display_order FROM rubric_axes axis JOIN school_rubric_assignments policy ON policy.rubric_catalogue_id=axis.rubric_catalogue_id WHERE policy.school_id=? AND policy.purpose='assessment_rubric' AND policy.status='active' AND policy.effective_from<=? AND (policy.effective_until IS NULL OR policy.effective_until>=?) AND axis.status='active' ORDER BY axis.display_order`, schoolId, asOf, asOf);
   },
   createPeerAssignment(record) {
     sql.run(`INSERT INTO assignment_recipients(assignment_recipient_id,assessment_assignment_id,respondent_user_id,subject_user_id,reviewer_user_id,perspective,status,created_at,assigned_by_user_id,assigner_role_assignment_id,due_at,moderation_required,notes) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`, record.recipientId, record.assignmentId, record.reviewerId, record.subjectId, record.actorId, 'peer_observation', 'not_submitted', record.createdAt, record.actorId, record.roleAssignmentId, record.dueAt, 1, record.notes);

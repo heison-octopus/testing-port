@@ -1,5 +1,7 @@
 import { sql } from './database.js';
 
+const policyDate = process.env.POC_V2_AS_OF || '2027-01-20';
+
 function approvalHistory(activityId) {
   return sql.all(`SELECT a.approval_assignment_id,a.target_version_id,a.status,a.assigned_at,a.due_at,
       p.workflow_type,s.name_en step_name,s.name_zh step_name_zh,
@@ -48,8 +50,9 @@ export const activityRepository = {
         FROM activity_label_assignments assignment
         JOIN rubric_axes axis ON axis.axis_id=assignment.axis_id
         JOIN rubric_catalogues catalogue ON catalogue.rubric_catalogue_id=assignment.rubric_catalogue_id
-        WHERE assignment.activity_revision_id=? AND assignment.status='active' AND catalogue.code='VASK'
-        ORDER BY axis.display_order`, latestRevisionId),
+        WHERE assignment.activity_revision_id=? AND assignment.status='active' AND EXISTS(
+          SELECT 1 FROM school_rubric_assignments policy WHERE policy.school_id=? AND policy.purpose='activity_labelling' AND policy.rubric_catalogue_id=catalogue.rubric_catalogue_id AND policy.status='active' AND policy.effective_from<=? AND (policy.effective_until IS NULL OR policy.effective_until>=?)
+        ) ORDER BY axis.display_order`, latestRevisionId, activity.school_id, policyDate, policyDate),
       labelAssignments: sql.all(`SELECT assignment.*,axis.axis_code,axis.name_en,axis.name_zh,catalogue.code catalogue_code,catalogue.name_en catalogue_name_en,catalogue.name_zh catalogue_name_zh FROM activity_label_assignments assignment JOIN rubric_axes axis ON axis.axis_id=assignment.axis_id JOIN rubric_catalogues catalogue ON catalogue.rubric_catalogue_id=assignment.rubric_catalogue_id WHERE assignment.activity_revision_id=? AND assignment.status='active' ORDER BY catalogue.code,axis.display_order`, latestRevisionId),
       riskFlags: sql.all(`SELECT flag_code FROM activity_revision_risk_flags WHERE activity_revision_id=? ORDER BY flag_code`, latestRevisionId).map(item => item.flag_code),
       changeRequests: sql.all(`SELECT c.*,u.name_en requester_name,u.name_zh requester_name_zh,resolver.name_en resolver_name,resolver.name_zh resolver_name_zh FROM activity_change_requests c JOIN users u ON u.user_id=c.requested_by_user_id LEFT JOIN users resolver ON resolver.user_id=c.resolved_by_user_id WHERE c.activity_id=? ORDER BY c.requested_at DESC`, activityId),
@@ -75,7 +78,10 @@ export const activityRepository = {
   revisionVask(revisionId) { return sql.all(`SELECT assignment.axis_id vask_item_id,assignment.catalogue_version vask_item_version,assignment.*,axis.axis_code,axis.name_en,axis.name_zh
     FROM activity_label_assignments assignment JOIN rubric_axes axis ON axis.axis_id=assignment.axis_id
     JOIN rubric_catalogues catalogue ON catalogue.rubric_catalogue_id=assignment.rubric_catalogue_id
-    WHERE assignment.activity_revision_id=? AND assignment.status='active' AND catalogue.code='VASK' ORDER BY axis.display_order`, revisionId); },
+    JOIN activity_revisions revision ON revision.activity_revision_id=assignment.activity_revision_id JOIN activities activity ON activity.activity_id=revision.activity_id
+    WHERE assignment.activity_revision_id=? AND assignment.status='active' AND EXISTS(
+      SELECT 1 FROM school_rubric_assignments policy WHERE policy.school_id=activity.school_id AND policy.purpose='activity_labelling' AND policy.rubric_catalogue_id=catalogue.rubric_catalogue_id AND policy.status='active' AND policy.effective_from<=? AND (policy.effective_until IS NULL OR policy.effective_until>=?)
+    ) ORDER BY axis.display_order`, revisionId, policyDate, policyDate); },
   revisionRiskFlags(revisionId) { return sql.all(`SELECT flag_code FROM activity_revision_risk_flags WHERE activity_revision_id=? ORDER BY flag_code`, revisionId).map(item => item.flag_code); },
   referenceData(schoolId) {
     const classMemberships = sql.all(`SELECT m.class_id,u.user_id FROM student_class_memberships m JOIN users u ON u.user_id=m.student_user_id WHERE m.school_id=? AND m.status='active' AND u.status='active' ORDER BY m.class_id,u.name_en`, schoolId);
@@ -89,8 +95,8 @@ export const activityRepository = {
       subjects: sql.all(`SELECT * FROM subjects WHERE school_id=? AND status='active' ORDER BY name_en`, schoolId),
       departments: sql.all(`SELECT * FROM departments WHERE school_id=? AND status='active' ORDER BY name_en`, schoolId),
       forms: sql.all(`SELECT * FROM form_versions WHERE review_status='approved' AND publication_status='published' ORDER BY is_system_default DESC,name_en`),
-      activeLabelling: sql.get(`SELECT rubric_catalogue_id,code,name_en,name_zh,version FROM rubric_catalogues WHERE code='VASK' AND labelling_capable=1 AND status='active' ORDER BY version DESC LIMIT 1`) || null,
-      vaskItems: sql.all(`SELECT axis.* FROM rubric_axes axis JOIN rubric_catalogues catalogue ON catalogue.rubric_catalogue_id=axis.rubric_catalogue_id WHERE catalogue.code='VASK' AND axis.status='active' ORDER BY axis.display_order`),
+      activeLabelling: sql.get(`SELECT catalogue.rubric_catalogue_id,catalogue.code,catalogue.name_en,catalogue.name_zh,catalogue.version FROM school_rubric_assignments policy JOIN rubric_catalogues catalogue ON catalogue.rubric_catalogue_id=policy.rubric_catalogue_id WHERE policy.school_id=? AND policy.purpose='activity_labelling' AND policy.scope_type='school' AND policy.scope_id=? AND policy.status='active' AND policy.effective_from<=? AND (policy.effective_until IS NULL OR policy.effective_until>=?) AND catalogue.labelling_capable=1 ORDER BY policy.assigned_at DESC LIMIT 1`, schoolId, schoolId, policyDate, policyDate) || null,
+      vaskItems: sql.all(`SELECT axis.* FROM rubric_axes axis JOIN school_rubric_assignments policy ON policy.rubric_catalogue_id=axis.rubric_catalogue_id WHERE policy.school_id=? AND policy.purpose='activity_labelling' AND policy.status='active' AND policy.effective_from<=? AND (policy.effective_until IS NULL OR policy.effective_until>=?) AND axis.status='active' ORDER BY axis.display_order`, schoolId, policyDate, policyDate),
       students: sql.all(`SELECT user_id,name_en,name_zh,student_number FROM users WHERE school_id=? AND user_type='student' AND status='active' ORDER BY name_en`, schoolId),
       studentClasses,
       teacherGroups,

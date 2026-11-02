@@ -1,4 +1,4 @@
-export const schemaVersion = 'poc-v2-2026-10-30';
+export const schemaVersion = 'poc-v2-2026-11-02-template-foundation';
 
 export const schema = String.raw`
 CREATE TABLE academic_periods(
@@ -469,11 +469,73 @@ CREATE TABLE media_extractions(
         disabled_at TEXT
       );
 
-CREATE TABLE portfolio_snapshots(portfolio_snapshot_id TEXT PRIMARY KEY,school_id TEXT NOT NULL,student_user_id TEXT NOT NULL,period_id TEXT NOT NULL,approved_portfolio_working_version_id TEXT NOT NULL,version_number INTEGER NOT NULL,publication_status TEXT NOT NULL,approved_by_user_id TEXT NOT NULL,published_at TEXT NOT NULL, rubric_catalogue_id TEXT REFERENCES rubric_catalogues(rubric_catalogue_id));
+CREATE TABLE portfolio_templates(
+        portfolio_template_id TEXT PRIMARY KEY,
+        owner_scope_type TEXT NOT NULL CHECK(owner_scope_type IN ('system','school')),
+        school_id TEXT REFERENCES schools(school_id),
+        template_code TEXT NOT NULL,
+        name_en TEXT NOT NULL,
+        name_zh TEXT NOT NULL,
+        description_en TEXT,
+        description_zh TEXT,
+        status TEXT NOT NULL,
+        created_by_user_id TEXT NOT NULL REFERENCES users(user_id),
+        created_at TEXT NOT NULL,
+        UNIQUE(school_id,template_code)
+      );
+
+CREATE TABLE portfolio_template_versions(
+        portfolio_template_version_id TEXT PRIMARY KEY,
+        portfolio_template_id TEXT NOT NULL REFERENCES portfolio_templates(portfolio_template_id),
+        version_number INTEGER NOT NULL,
+        lifecycle_status TEXT NOT NULL,
+        manifest_sha256 TEXT NOT NULL,
+        supersedes_template_version_id TEXT REFERENCES portfolio_template_versions(portfolio_template_version_id),
+        created_by_user_id TEXT NOT NULL REFERENCES users(user_id),
+        created_at TEXT NOT NULL,
+        published_by_user_id TEXT REFERENCES users(user_id),
+        published_at TEXT,
+        UNIQUE(portfolio_template_id,version_number)
+      );
+
+CREATE TABLE portfolio_template_sections(
+        portfolio_template_section_id TEXT PRIMARY KEY,
+        portfolio_template_version_id TEXT NOT NULL REFERENCES portfolio_template_versions(portfolio_template_version_id),
+        section_key TEXT NOT NULL,
+        title_en TEXT NOT NULL,
+        title_zh TEXT NOT NULL,
+        content_type TEXT NOT NULL,
+        source_type TEXT NOT NULL,
+        display_order INTEGER NOT NULL,
+        parent_section_id TEXT REFERENCES portfolio_template_sections(portfolio_template_section_id),
+        layout_region TEXT NOT NULL,
+        visual_variant TEXT NOT NULL,
+        presentation_mode TEXT NOT NULL CHECK(presentation_mode IN ('inline','disclosure','link_button')),
+        default_expanded INTEGER NOT NULL,
+        visible INTEGER NOT NULL,
+        status TEXT NOT NULL,
+        UNIQUE(portfolio_template_version_id,section_key)
+      );
+
+CREATE TABLE school_portfolio_template_assignments(
+        school_portfolio_template_assignment_id TEXT PRIMARY KEY,
+        school_id TEXT NOT NULL REFERENCES schools(school_id),
+        portfolio_template_version_id TEXT NOT NULL REFERENCES portfolio_template_versions(portfolio_template_version_id),
+        scope_type TEXT NOT NULL CHECK(scope_type IN ('school','grade','programme')),
+        scope_id TEXT NOT NULL,
+        effective_from TEXT NOT NULL,
+        effective_until TEXT,
+        status TEXT NOT NULL,
+        assigned_by_user_id TEXT NOT NULL REFERENCES users(user_id),
+        assigned_at TEXT NOT NULL,
+        reason TEXT NOT NULL
+      );
+
+CREATE TABLE portfolio_snapshots(portfolio_snapshot_id TEXT PRIMARY KEY,school_id TEXT NOT NULL,student_user_id TEXT NOT NULL,period_id TEXT NOT NULL,approved_portfolio_working_version_id TEXT NOT NULL,version_number INTEGER NOT NULL,publication_status TEXT NOT NULL,approved_by_user_id TEXT NOT NULL,published_at TEXT NOT NULL, rubric_catalogue_id TEXT REFERENCES rubric_catalogues(rubric_catalogue_id),portfolio_template_version_id TEXT NOT NULL REFERENCES portfolio_template_versions(portfolio_template_version_id),template_manifest_sha256 TEXT NOT NULL);
 
 CREATE TABLE portfolio_version_items(portfolio_version_item_id TEXT PRIMARY KEY,portfolio_working_version_id TEXT NOT NULL REFERENCES portfolio_working_versions(portfolio_working_version_id),section_key TEXT NOT NULL,source_type TEXT NOT NULL,source_id TEXT,student_selected INTEGER NOT NULL,class_teacher_decision TEXT NOT NULL,display_order INTEGER NOT NULL,authorship_origin TEXT NOT NULL,student_text TEXT,decision_reason TEXT,decided_by_user_id TEXT,decided_at TEXT);
 
-CREATE TABLE portfolio_working_versions(portfolio_working_version_id TEXT PRIMARY KEY,school_id TEXT NOT NULL,student_user_id TEXT NOT NULL REFERENCES users(user_id),period_id TEXT NOT NULL,version_number INTEGER NOT NULL,supersedes_version_id TEXT,status TEXT NOT NULL,created_by_user_id TEXT NOT NULL,created_at TEXT NOT NULL,student_submitted_at TEXT,class_teacher_user_id TEXT,class_teacher_reviewed_at TEXT,approved_by_user_id TEXT,approved_at TEXT,published_snapshot_id TEXT,is_student_latest INTEGER NOT NULL, rubric_catalogue_id TEXT REFERENCES rubric_catalogues(rubric_catalogue_id),UNIQUE(student_user_id,period_id,version_number));
+CREATE TABLE portfolio_working_versions(portfolio_working_version_id TEXT PRIMARY KEY,school_id TEXT NOT NULL,student_user_id TEXT NOT NULL REFERENCES users(user_id),period_id TEXT NOT NULL,version_number INTEGER NOT NULL,supersedes_version_id TEXT,status TEXT NOT NULL,created_by_user_id TEXT NOT NULL,created_at TEXT NOT NULL,student_submitted_at TEXT,class_teacher_user_id TEXT,class_teacher_reviewed_at TEXT,approved_by_user_id TEXT,approved_at TEXT,published_snapshot_id TEXT,is_student_latest INTEGER NOT NULL, rubric_catalogue_id TEXT REFERENCES rubric_catalogues(rubric_catalogue_id),portfolio_template_version_id TEXT NOT NULL REFERENCES portfolio_template_versions(portfolio_template_version_id),template_manifest_sha256 TEXT NOT NULL,UNIQUE(student_user_id,period_id,version_number));
 
 CREATE TABLE proof_items(
         proof_item_id TEXT PRIMARY KEY,
@@ -694,6 +756,33 @@ CREATE TABLE role_capabilities(role_capability_id TEXT PRIMARY KEY,role_id TEXT 
 
 CREATE TABLE role_definitions(role_id TEXT PRIMARY KEY,role_code TEXT NOT NULL,name_en TEXT NOT NULL,name_zh TEXT NOT NULL,role_category TEXT NOT NULL,assignable INTEGER NOT NULL,description_en TEXT,description_zh TEXT,status TEXT NOT NULL);
 
+CREATE TABLE role_definition_versions(
+        role_definition_version_id TEXT PRIMARY KEY,
+        role_id TEXT NOT NULL REFERENCES role_definitions(role_id),
+        version_number INTEGER NOT NULL,
+        lifecycle_status TEXT NOT NULL,
+        effective_from TEXT NOT NULL,
+        effective_until TEXT,
+        supersedes_role_definition_version_id TEXT REFERENCES role_definition_versions(role_definition_version_id),
+        created_by_user_id TEXT NOT NULL REFERENCES users(user_id),
+        created_at TEXT NOT NULL,
+        activated_by_user_id TEXT REFERENCES users(user_id),
+        activated_at TEXT,
+        UNIQUE(role_id,version_number)
+      );
+
+CREATE TABLE role_version_capabilities(
+        role_version_capability_id TEXT PRIMARY KEY,
+        role_definition_version_id TEXT NOT NULL REFERENCES role_definition_versions(role_definition_version_id),
+        capability_id TEXT NOT NULL REFERENCES capability_definitions(capability_id),
+        effect TEXT NOT NULL CHECK(effect IN ('allow','deny')),
+        condition_key TEXT,
+        status TEXT NOT NULL,
+        configured_by_user_id TEXT NOT NULL REFERENCES users(user_id),
+        configured_at TEXT NOT NULL,
+        UNIQUE(role_definition_version_id,capability_id,effect,condition_key)
+      );
+
 CREATE TABLE rubric_axes(
         axis_id TEXT PRIMARY KEY,
         rubric_catalogue_id TEXT NOT NULL REFERENCES rubric_catalogues(rubric_catalogue_id),
@@ -743,6 +832,21 @@ CREATE TABLE rubric_levels(
         name_zh TEXT NOT NULL,
         is_prerequisite_chain INTEGER NOT NULL,
         status TEXT NOT NULL
+      );
+
+CREATE TABLE school_rubric_assignments(
+        school_rubric_assignment_id TEXT PRIMARY KEY,
+        school_id TEXT NOT NULL REFERENCES schools(school_id),
+        purpose TEXT NOT NULL CHECK(purpose IN ('activity_labelling','assessment_rubric')),
+        rubric_catalogue_id TEXT NOT NULL REFERENCES rubric_catalogues(rubric_catalogue_id),
+        scope_type TEXT NOT NULL CHECK(scope_type IN ('school','grade','programme')),
+        scope_id TEXT NOT NULL,
+        effective_from TEXT NOT NULL,
+        effective_until TEXT,
+        status TEXT NOT NULL,
+        assigned_by_user_id TEXT NOT NULL REFERENCES users(user_id),
+        assigned_at TEXT NOT NULL,
+        reason TEXT NOT NULL
       );
 
 CREATE TABLE rubric_step_definitions(
@@ -808,7 +912,7 @@ CREATE TABLE subjects(subject_id TEXT PRIMARY KEY,school_id TEXT NOT NULL REFERE
 
 CREATE TABLE user_position_assignments(user_position_assignment_id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(user_id),position_id TEXT NOT NULL REFERENCES staff_position_definitions(position_id),school_id TEXT NOT NULL,department_id TEXT,subject_id TEXT,effective_from TEXT,effective_until TEXT,is_primary INTEGER,status TEXT NOT NULL,assigned_by_user_id TEXT,assigned_at TEXT);
 
-CREATE TABLE user_role_assignments(user_role_assignment_id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(user_id),role_id TEXT NOT NULL REFERENCES role_definitions(role_id),school_id TEXT NOT NULL,scope_type TEXT NOT NULL,scope_id TEXT NOT NULL,effective_from TEXT,effective_until TEXT,status TEXT NOT NULL,assigned_by_user_id TEXT,assigned_at TEXT,ended_reason TEXT);
+CREATE TABLE user_role_assignments(user_role_assignment_id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(user_id),role_id TEXT NOT NULL REFERENCES role_definitions(role_id),role_definition_version_id TEXT NOT NULL REFERENCES role_definition_versions(role_definition_version_id),school_id TEXT NOT NULL,scope_type TEXT NOT NULL,scope_id TEXT NOT NULL,effective_from TEXT,effective_until TEXT,status TEXT NOT NULL,assigned_by_user_id TEXT,assigned_at TEXT,ended_reason TEXT);
 
 CREATE TABLE users(user_id TEXT PRIMARY KEY,school_id TEXT NOT NULL REFERENCES schools(school_id),external_user_id TEXT,user_type TEXT NOT NULL,student_number TEXT,staff_number TEXT,name_en TEXT NOT NULL,name_zh TEXT,email TEXT,status TEXT NOT NULL,created_at TEXT NOT NULL);
 
@@ -879,6 +983,10 @@ CREATE INDEX idx_portfolio_rubric ON portfolio_working_versions(rubric_catalogue
 
 CREATE INDEX idx_portfolio_student ON portfolio_working_versions(student_user_id,period_id,version_number DESC);
 
+CREATE INDEX idx_portfolio_template_assignment ON school_portfolio_template_assignments(school_id,status,effective_from,effective_until,scope_type,scope_id);
+
+CREATE INDEX idx_portfolio_template_sections ON portfolio_template_sections(portfolio_template_version_id,parent_section_id,display_order);
+
 CREATE INDEX idx_proud_student ON proud_moment_selections(student_id,period_id);
 
 CREATE INDEX idx_published_result_student ON published_rubric_results(student_id,period_id,status);
@@ -893,9 +1001,13 @@ CREATE INDEX idx_rubric_groups_catalogue ON rubric_groups(rubric_catalogue_id,di
 
 CREATE INDEX idx_rubric_steps_axis ON rubric_step_definitions(rubric_catalogue_id,axis_id,step_number);
 
+CREATE INDEX idx_school_rubric_assignment ON school_rubric_assignments(school_id,purpose,status,effective_from,effective_until,scope_type,scope_id);
+
 CREATE INDEX idx_submissions_recipient ON assessment_submissions(assignment_recipient_id,revision_number DESC);
 
 CREATE INDEX idx_user_roles_user ON user_role_assignments(user_id,status);
+
+CREATE INDEX idx_role_version_capabilities ON role_version_capabilities(role_definition_version_id,status,capability_id);
 
 CREATE INDEX idx_recipients_respondent ON assignment_recipients(respondent_user_id,status);
 

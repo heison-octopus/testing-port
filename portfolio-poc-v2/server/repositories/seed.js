@@ -25,6 +25,7 @@ const contracts = [
   ['01_users_import.csv', 'users', ['user_id','school_id','external_user_id','user_type','student_number','staff_number','name_en','name_zh','email','status','created_at']],
   ['03_reporting_periods.csv', 'academic_periods'],
   ['22_role_definitions.csv', 'role_definitions'],
+  ['60_role_definition_versions.csv', 'role_definition_versions'],
   ['23_user_role_assignments.csv', 'user_role_assignments'],
   ['38_staff_position_definitions.csv', 'staff_position_definitions'],
   ['39_user_position_assignments.csv', 'user_position_assignments'],
@@ -43,13 +44,18 @@ const contracts = [
   ['05_activity_people.csv', 'activity_people'],
   ['51_activity_revisions.csv', 'activity_revisions'],
   ['52_activity_change_requests.csv', 'activity_change_requests'],
+  ['24_rubric_catalogues.csv', 'rubric_catalogues'],
+  ['61_school_rubric_assignments.csv', 'school_rubric_assignments'],
+  ['62_portfolio_templates.csv', 'portfolio_templates'],
+  ['63_portfolio_template_versions.csv', 'portfolio_template_versions'],
+  ['64_portfolio_template_sections.csv', 'portfolio_template_sections'],
+  ['65_school_portfolio_template_assignments.csv', 'school_portfolio_template_assignments'],
   ['53_portfolio_working_versions.csv', 'portfolio_working_versions'],
   ['54_portfolio_version_items.csv', 'portfolio_version_items'],
   ['55_learner_narrative_versions.csv', 'learner_narrative_versions'],
   ['56_staff_groups.csv', 'staff_groups'],
   ['57_staff_group_memberships.csv', 'staff_group_memberships'],
   ['06_form_templates.csv', 'form_versions'],
-  ['24_rubric_catalogues.csv', 'rubric_catalogues'],
   ['25_rubric_axes.csv', 'rubric_axes'],
   ['26_rubric_levels.csv', 'rubric_levels'],
   ['36_published_rubric_results.csv', 'published_rubric_results'],
@@ -81,7 +87,7 @@ function insertRows(sql, table, rows, selectedColumns) {
 const loadedSeedFiles = new Set([
   ...contracts.map(([file]) => file),
   '07_form_template_items.csv','08_media_evidence.csv','09_question_bank_example.csv','13_activity_form_assignments.csv','17_proud_moment_selections.csv','19_peer_review_assignments.csv','20_activity_rubric_labels.csv','30_proof_items.csv','31_proof_links.csv','34_media_source_definitions.csv','35_external_media_references.csv',
-  '58_rubric_groups.csv','59_rubric_step_definitions.csv',
+  '58_rubric_groups.csv','59_rubric_step_definitions.csv','60_role_definition_versions.csv','61_school_rubric_assignments.csv','62_portfolio_templates.csv','63_portfolio_template_versions.csv','64_portfolio_template_sections.csv','65_school_portfolio_template_assignments.csv',
 ]);
 
 const slug = value => String(value).toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -102,8 +108,7 @@ function ensureBackendAuthoringSeed(sql, csvDirectory) {
     ['DS-QUESTION-BANK-SUPPLIED','BHSS','question_bank','SUPPLIED-QUESTION-BANK','Supplied ten-construct question bank','原始十項能力問卷題庫','2026','Assessment/10份技能問卷整理總表.xlsx',null,'active','USR-ADM-001',stamp],
   ];
   for (const row of definitions) sql.run(`INSERT OR IGNORE INTO definition_sources(definition_source_id,school_id,source_kind,source_code,name_en,name_zh,version,source_reference,content_sha256,status,uploaded_by_user_id,uploaded_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`, ...row);
-  sql.run(`UPDATE rubric_catalogues SET definition_source_id='DS-VASK-2026' WHERE code='VASK' AND definition_source_id IS NULL`);
-  sql.run(`UPDATE rubric_catalogues SET definition_source_id='DS-SKILLS-BUILDER-UF2' WHERE code<>'VASK' AND assessment_capable=1 AND definition_source_id IS NULL`);
+  sql.run(`UPDATE rubric_catalogues AS catalogue SET definition_source_id=(SELECT source.definition_source_id FROM definition_sources source WHERE source.school_id='BHSS' AND source.source_reference=catalogue.source_reference AND source.status='active' ORDER BY source.uploaded_at DESC LIMIT 1) WHERE catalogue.definition_source_id IS NULL`);
 
   const capabilityRows = [
     ['CAP-CATALOGUE-LABEL-SEARCH','catalogue.label.search','Search activity labels','搜尋活動標籤','catalogue',0,'active'],
@@ -137,6 +142,9 @@ function ensureBackendAuthoringSeed(sql, csvDirectory) {
     ['RC-ADMIN-MEDIA-METADATA','ROLE-SCHOOL-ADMIN','CAP-MEDIA-METADATA-VIEW','allow','policy_metadata_only'],
   ];
   for (const row of grantRows) sql.run(`INSERT OR IGNORE INTO role_capabilities(role_capability_id,role_id,capability_id,effect,condition_key,status,configured_by_user_id,configured_at) VALUES(?,?,?,?,?,'active','USR-ADM-001',?)`, ...row, stamp);
+  sql.run(`INSERT OR IGNORE INTO role_version_capabilities(role_version_capability_id,role_definition_version_id,capability_id,effect,condition_key,status,configured_by_user_id,configured_at)
+    SELECT 'RVC-' || rc.role_capability_id,rv.role_definition_version_id,rc.capability_id,rc.effect,rc.condition_key,rc.status,rc.configured_by_user_id,rc.configured_at
+    FROM role_capabilities rc JOIN role_definition_versions rv ON rv.role_id=rc.role_id AND rv.lifecycle_status='active'`);
 
   const formItems = parseCsv(readFileSync(join(csvDirectory, '07_form_template_items.csv'), 'utf8'));
   const blocks = [...new Set(formItems.map(item => `${item.form_version_id}\u0000${item.section_code}`))].map(key => {
@@ -244,7 +252,7 @@ export function seedFromContracts(sql, csvDirectory) {
       for (const studentId of ['USR-S-001','USR-S-002','USR-S-003']) {
         sql.run('INSERT INTO student_class_memberships VALUES(?,?,?,?,?,?,?,?)', `SCM-${studentId}`, studentId, 'BHSS', 'S1A-2026-27', '2026-27-P1', '2026-09-01', '2027-08-31', 'active');
       }
-      sql.run('INSERT INTO portfolio_snapshots(portfolio_snapshot_id,school_id,student_user_id,period_id,approved_portfolio_working_version_id,version_number,publication_status,approved_by_user_id,published_at,rubric_catalogue_id) VALUES(?,?,?,?,?,?,?,?,?,?)', 'PSNAP-S1-P1-v1', 'BHSS', 'USR-S-001', '2026-27-P1', 'PWV-S1-001', 1, 'published', 'USR-ST-001', '2026-12-20T15:00:00+08:00', 'RUB-SB-UF2');
+      sql.run('INSERT INTO portfolio_snapshots(portfolio_snapshot_id,school_id,student_user_id,period_id,approved_portfolio_working_version_id,version_number,publication_status,approved_by_user_id,published_at,rubric_catalogue_id,portfolio_template_version_id,template_manifest_sha256) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)', 'PSNAP-S1-P1-v1', 'BHSS', 'USR-S-001', '2026-27-P1', 'PWV-S1-001', 1, 'published', 'USR-ST-001', '2026-12-20T15:00:00+08:00', 'RUB-SB-UF2', 'PTPLV-NEUTRAL-CORE-1', 'a48c14c78e608ec84498177501a4a94f7ef6dfe43f667c810c0a1cf96048215c');
     });
   }
   ensurePocV2Extensions(sql, csvDirectory);
@@ -267,6 +275,12 @@ function ensurePocV2Extensions(sql, csvDirectory) {
       ['36_published_rubric_results.csv', 'published_rubric_results'],
       ['43_capability_definitions.csv', 'capability_definitions'],
       ['44_role_capabilities.csv', 'role_capabilities'],
+      ['60_role_definition_versions.csv', 'role_definition_versions'],
+      ['61_school_rubric_assignments.csv', 'school_rubric_assignments'],
+      ['62_portfolio_templates.csv', 'portfolio_templates'],
+      ['63_portfolio_template_versions.csv', 'portfolio_template_versions'],
+      ['64_portfolio_template_sections.csv', 'portfolio_template_sections'],
+      ['65_school_portfolio_template_assignments.csv', 'school_portfolio_template_assignments'],
     ];
     for (const [file, table] of extensionContracts) insertRows(sql, table, parseCsv(readFileSync(join(csvDirectory, file), 'utf8')));
     const axisGroups = [

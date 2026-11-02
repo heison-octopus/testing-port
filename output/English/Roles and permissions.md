@@ -76,11 +76,12 @@ A SchoolAdmin manages the school tenant, account identities, reusable role defin
 
 - Import, create, update, suspend, and archive users.
 - Maintain position definitions and assignments; assign functional roles, departments, subjects, classes, groups, programmes, activities and student scopes.
+- Publish immutable role-template versions and assign an exact version, scope and effective period to a user. A later role-template version affects only new or explicitly migrated assignments.
 - Configure school-wide role capability rules and narrower group/user overrides, including explicit denies for a TA or junior teacher who would otherwise inherit access through a group.
 - Configure academic years, reporting periods, and period transitions.
 - Configure the default activity form and separate approval policy for each workflow type.
 - Assign any eligible teacher/staff user to review a submitted form version when the administrator has approval-coordination authority; the assignee still needs the required capability and scope.
-- Manage activity, questionnaire, and framework version status.
+- Manage activity, questionnaire, rubric and Portfolio-template version status, plus the effective school/grade/programme assignments that select them.
 - Publish, withdraw, or retire approved form versions and configure their visibility and validity dates.
 - Configure consent categories, media access scopes, retention periods, and deletion workflows.
 - Review import batches, Time Infinity staging records, audit logs, and failed validations.
@@ -90,6 +91,8 @@ A SchoolAdmin manages the school tenant, account identities, reusable role defin
 - View school-wide administrative metadata and published summaries.
 - Raw media access is still policy-controlled and should not be assumed merely because the user is an administrator.
 - SchoolAdmin configures approval/assessment authority and audit policy but does not approve content or choose a student's level merely by holding the administrator role; a separate eligible role and workflow assignment are required.
+
+**Confirmed System Analyst direction, 2 Nov 2026; not BHSS/JC approval.** Account creation does not copy a mutable “example user class” or calculate authority in browser code. The account stores identity only. A separate effective assignment pins an immutable role-template version and scope; the server resolves that version, explicit overrides and record context for every protected request. Frontend navigation/buttons are advisory server-computed affordances and never replace endpoint authorization.
 
 ### Platform operations administrator
 
@@ -245,11 +248,11 @@ Each school configures activity approval independently from form, submission, Po
 5. If no approved version exists, the Portfolio is marked `no_approved_version` and appears in a filterable staff queue and escalation view.
 6. Student-authored text retains declared authorship and does not need external proof merely to be shown as the student's own statement. LLM/system-generated claims and rubric-derived statements require resolvable sources/proof and versioned provenance.
 7. For `Me as a learner`, preserve generated, teacher-edited and final-approved versions. A class teacher or other authorized editor may edit only that generated narrative field, and the final text still requires the configured teacher/staff approval.
-8. The working version pins the SchoolAdmin-active rubric ID/version when it is generated. Review, approval and publication cannot silently switch that version; activating a successor affects only later generated working versions.
+8. The working version pins both the effective school rubric ID/version and Portfolio-template version/manifest hash when it is generated. Review, approval and publication cannot silently switch either; changing an effective assignment affects only later generated working versions.
 
 ## Rubric catalogue authority
 
-**Confirmed System Analyst direction, 29 Oct 2026; not BHSS/JC approval.** An import operator with `import.export` may download the real four-sheet rubric package or a separate new-record template. `import.run` may stage and validate a package; `import.commit` may create a successor draft. None of these capabilities activates the rubric or grants assessment authority. SchoolAdmin with `policy.manage` may activate only a validated successor and must record a reason. An assigned reviewer with assessment-review capability selects evidence/steps for a particular learner; SchoolAdmin does not receive that learner-assessment power merely by managing the active catalogue.
+**Confirmed System Analyst direction, 29 Oct and 2 Nov 2026; not BHSS/JC approval.** An import operator with `import.export` may download the real five-sheet rubric package (including explicit `rubric_levels`) or a separate new-record template. `import.run` may stage and validate a package; `import.commit` may create a successor draft. None of these capabilities assigns the rubric to a school or grants assessment authority. SchoolAdmin with `policy.manage` may assign only a validated successor, by purpose/scope/effective period, and must record a reason. An assigned reviewer with assessment-review capability selects evidence/steps for a particular learner; SchoolAdmin does not receive that learner-assessment power merely by managing the school assignment.
 
 ## Form authority and publication rule
 

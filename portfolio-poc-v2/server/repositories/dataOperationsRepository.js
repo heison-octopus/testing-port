@@ -44,13 +44,15 @@ export const dataOperationsRepository = {
       WHERE a.school_id=? AND p.person_type='student' AND p.relationship_type='participant'
       ORDER BY p.activity_id,u.name_en,p.assigned_at`, schoolId);
   },
-  labels() {
+  labels(schoolId) {
+    const asOf = process.env.POC_V2_AS_OF || '2027-01-20';
     return sql.all(`SELECT axis.axis_code label_code,axis.name_en,axis.name_zh,COALESCE(axis.notes,'') description_en,'' description_zh,
       catalogue.code catalogue_code,catalogue.version catalogue_version,axis.status,
       CASE WHEN axis.status='active' THEN 0 ELSE 1 END disabled
       FROM rubric_axes axis JOIN rubric_catalogues catalogue ON catalogue.rubric_catalogue_id=axis.rubric_catalogue_id
-      WHERE catalogue.code='VASK' AND catalogue.labelling_capable=1 AND catalogue.status='active'
-      ORDER BY catalogue.code,axis.display_order`);
+      JOIN school_rubric_assignments policy ON policy.rubric_catalogue_id=catalogue.rubric_catalogue_id
+      WHERE policy.school_id=? AND policy.purpose='activity_labelling' AND policy.status='active' AND policy.effective_from<=? AND (policy.effective_until IS NULL OR policy.effective_until>=?) AND catalogue.labelling_capable=1 AND catalogue.status='active'
+      ORDER BY catalogue.code,axis.display_order`, schoolId, asOf, asOf);
   },
   media(schoolId) {
     return sql.all(`SELECT binding.activity_id,revision.title_en,revision.title_zh,binding.base_reference media_base_path,source.source_code source_system,binding.validation_mode,binding.status,
