@@ -55,7 +55,6 @@ export const portfolioService = {
   },
   createDraft(user, input) {
     if (user.user_type !== 'student' || user.user_id !== input.studentId) fail(403, 'Students may edit only their own working Portfolio');
-    if (!input.selfIntroduction?.trim()) fail(400, 'Self-introduction is required');
     const periodId = input.periodId || '2026-27-P1';
     const memorableSelections = memorableRepository.selections(user.user_id, periodId).filter(item => ['submitted','approved'].includes(item.submission_status));
     const versions = portfolioRepository.versions(user.user_id, periodId), latest = versions[0];
@@ -64,7 +63,14 @@ export const portfolioService = {
     const activeTemplate = portfolioTemplateRepository.assigned(user.school_id);
     if (!activeTemplate) fail(400, 'No published Portfolio template is assigned for this student scope');
     const id = `PWV-DEMO-${randomUUID()}`;
-    portfolioRepository.createDraft({ id, schoolId: user.school_id, studentId: user.user_id, periodId, number: (latest?.version_number || 0) + 1, supersedesId: latest?.portfolio_working_version_id || null, rubricCatalogueId: activeRubric.rubric_catalogue_id, portfolioTemplateVersionId: activeTemplate.portfolio_template_version_id, templateManifestSha256: activeTemplate.manifest_sha256, selfIntroduction: input.selfIntroduction.trim(), memorableSelections, createdAt: new Date().toISOString() });
+    const portfolioItemSections = activeTemplate.sections.filter(section => section.visible && section.status === 'active' && section.source_type === 'portfolio_item');
+    const introductionSection = portfolioItemSections.find(section => section.section_key === 'self_introduction');
+    if (introductionSection && !input.selfIntroduction?.trim()) fail(400, 'Self-introduction is required by the active Portfolio template');
+    const items = [];
+    if (introductionSection) items.push({ id: `${id}-INTRO`, sectionKey: introductionSection.section_key, sourceType: 'student_text', sourceId: null, displayOrder: introductionSection.display_order * 100, authorshipOrigin: 'human_authored', studentText: input.selfIntroduction.trim() });
+    const memorableSection = portfolioItemSections.find(section => section.section_key === 'memorable_activity');
+    if (memorableSection) memorableSelections.forEach((selection, index) => items.push({ id: `${id}-PM-${index + 1}`, sectionKey: memorableSection.section_key, sourceType: 'proud_moment_selection', sourceId: selection.selection_id, displayOrder: memorableSection.display_order * 100 + index, authorshipOrigin: 'human_authored', studentText: selection.selection_reason }));
+    portfolioRepository.createDraft({ id, schoolId: user.school_id, studentId: user.user_id, periodId, number: (latest?.version_number || 0) + 1, supersedesId: latest?.portfolio_working_version_id || null, rubricCatalogueId: activeRubric.rubric_catalogue_id, portfolioTemplateVersionId: activeTemplate.portfolio_template_version_id, templateManifestSha256: activeTemplate.manifest_sha256, items, createdAt: new Date().toISOString() });
     identityRepository.audit(user.school_id, user.user_id, 'portfolio.draft.created', 'portfolio_working_version', id);
     return this.editor(user, user.user_id, periodId);
   },

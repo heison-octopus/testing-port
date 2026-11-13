@@ -83,7 +83,7 @@ export const activityRepository = {
       SELECT 1 FROM school_rubric_assignments policy WHERE policy.school_id=activity.school_id AND policy.purpose='activity_labelling' AND policy.rubric_catalogue_id=catalogue.rubric_catalogue_id AND policy.status='active' AND policy.effective_from<=? AND (policy.effective_until IS NULL OR policy.effective_until>=?)
     ) ORDER BY axis.display_order`, revisionId, policyDate, policyDate); },
   revisionRiskFlags(revisionId) { return sql.all(`SELECT flag_code FROM activity_revision_risk_flags WHERE activity_revision_id=? ORDER BY flag_code`, revisionId).map(item => item.flag_code); },
-  referenceData(schoolId) {
+  referenceData(schoolId, { includeAuthoring = true } = {}) {
     const classMemberships = sql.all(`SELECT m.class_id,u.user_id FROM student_class_memberships m JOIN users u ON u.user_id=m.student_user_id WHERE m.school_id=? AND m.status='active' AND u.status='active' ORDER BY m.class_id,u.name_en`, schoolId);
     const studentClasses = [...new Set(classMemberships.map(item => item.class_id))].map(classId => ({ class_id: classId, name_en: classId.replace(/-2026-27$/, ' class'), name_zh: classId.replace('S1A', '中一甲班').replace('S1B', '中一乙班').replace(/-2026-27$/, ''), student_ids: classMemberships.filter(item => item.class_id === classId).map(item => item.user_id) }));
     const teacherGroups = sql.all(`SELECT * FROM staff_groups WHERE school_id=? AND status='active' ORDER BY name_en`, schoolId).map(group => ({
@@ -96,16 +96,16 @@ export const activityRepository = {
       departments: sql.all(`SELECT * FROM departments WHERE school_id=? AND status='active' ORDER BY name_en`, schoolId),
       forms: sql.all(`SELECT * FROM form_versions WHERE review_status='approved' AND publication_status='published' ORDER BY is_system_default DESC,name_en`),
       activeLabelling: sql.get(`SELECT catalogue.rubric_catalogue_id,catalogue.code,catalogue.name_en,catalogue.name_zh,catalogue.version FROM school_rubric_assignments policy JOIN rubric_catalogues catalogue ON catalogue.rubric_catalogue_id=policy.rubric_catalogue_id WHERE policy.school_id=? AND policy.purpose='activity_labelling' AND policy.scope_type='school' AND policy.scope_id=? AND policy.status='active' AND policy.effective_from<=? AND (policy.effective_until IS NULL OR policy.effective_until>=?) AND catalogue.labelling_capable=1 ORDER BY policy.assigned_at DESC LIMIT 1`, schoolId, schoolId, policyDate, policyDate) || null,
-      vaskItems: sql.all(`SELECT axis.* FROM rubric_axes axis JOIN school_rubric_assignments policy ON policy.rubric_catalogue_id=axis.rubric_catalogue_id WHERE policy.school_id=? AND policy.purpose='activity_labelling' AND policy.status='active' AND policy.effective_from<=? AND (policy.effective_until IS NULL OR policy.effective_until>=?) AND axis.status='active' ORDER BY axis.display_order`, schoolId, policyDate, policyDate),
+      vaskItems: includeAuthoring ? sql.all(`SELECT axis.* FROM rubric_axes axis JOIN school_rubric_assignments policy ON policy.rubric_catalogue_id=axis.rubric_catalogue_id WHERE policy.school_id=? AND policy.purpose='activity_labelling' AND policy.status='active' AND policy.effective_from<=? AND (policy.effective_until IS NULL OR policy.effective_until>=?) AND axis.status='active' ORDER BY axis.display_order`, schoolId, policyDate, policyDate) : [],
       students: sql.all(`SELECT user_id,name_en,name_zh,student_number FROM users WHERE school_id=? AND user_type='student' AND status='active' ORDER BY name_en`, schoolId),
       studentClasses,
       teacherGroups,
-      questionBank: sql.all(`SELECT item.question_block_item_id bank_item_id,form.form_version_id,item.item_key,item.prompt_en,item.prompt_zh,item.ability_code,item.ability_name_en,item.ability_name_zh,item.respondent_role_code,item.required
+      questionBank: includeAuthoring ? sql.all(`SELECT item.question_block_item_id bank_item_id,form.form_version_id,item.item_key,item.prompt_en,item.prompt_zh,item.ability_code,item.ability_name_en,item.ability_name_zh,item.respondent_role_code,item.required
         FROM form_versions form
         JOIN form_version_blocks link ON link.form_version_id=form.form_version_id
         JOIN question_block_items item ON item.question_block_version_id=link.question_block_version_id
         WHERE form.review_status='approved' AND form.publication_status='published' AND item.item_type NOT IN ('template_reference','label_block')
-        ORDER BY form.is_system_default DESC,link.display_order,item.display_order LIMIT 40`),
+        ORDER BY form.is_system_default DESC,link.display_order,item.display_order LIMIT 40`) : [],
       groups: [
         { group_id: 'S1A-2026-27', name_en: 'S1A class', name_zh: '中一甲班' },
         { group_id: 'GRP-STUDENT-DEV', name_en: 'Student development programme', name_zh: '學生發展計劃' },
@@ -120,6 +120,15 @@ export const activityRepository = {
     if (!groupIds.length) return [];
     return sql.all(`SELECT DISTINCT u.user_id,m.staff_group_id FROM staff_group_memberships m JOIN staff_groups g ON g.staff_group_id=m.staff_group_id JOIN users u ON u.user_id=m.user_id
       WHERE g.school_id=? AND g.status='active' AND m.status='active' AND u.status='active' AND m.staff_group_id IN (${groupIds.map(() => '?').join(',')})`, schoolId, ...groupIds);
+  },
+  activeQuestionVersions(schoolId, versionIds) {
+    if (!versionIds.length) return [];
+    return sql.all(`SELECT version.question_version_id,version.question_id
+      FROM question_versions version
+      JOIN question_definitions question ON question.question_id=version.question_id
+      JOIN question_bank_versions bank ON bank.question_bank_version_id=version.question_bank_version_id
+      WHERE question.school_id=? AND question.operational_status='active' AND version.status='active' AND version.disabled_at IS NULL AND bank.status='active'
+        AND version.question_version_id IN (${versionIds.map(() => '?').join(',')})`, schoolId, ...versionIds);
   },
   create({ activity, revision, owner, participants, supportingStaff, vaskItemIds, labelAssignments, riskFlags, formDraft }) {
     sql.transaction(() => {

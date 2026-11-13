@@ -31,10 +31,8 @@ export const portfolioRepository = {
       sql.run('UPDATE portfolio_working_versions SET is_student_latest=0 WHERE student_user_id=? AND period_id=?', record.studentId, record.periodId);
       sql.run(`INSERT INTO portfolio_working_versions(portfolio_working_version_id,school_id,student_user_id,period_id,version_number,supersedes_version_id,status,created_by_user_id,created_at,is_student_latest,rubric_catalogue_id,portfolio_template_version_id,template_manifest_sha256)
         VALUES(?,?,?,?,?,?,?,?,?,1,?,?,?)`, record.id, record.schoolId, record.studentId, record.periodId, record.number, record.supersedesId, 'draft', record.studentId, record.createdAt, record.rubricCatalogueId, record.portfolioTemplateVersionId, record.templateManifestSha256);
-      sql.run(`INSERT INTO portfolio_version_items(portfolio_version_item_id,portfolio_working_version_id,section_key,source_type,source_id,student_selected,class_teacher_decision,display_order,authorship_origin,student_text)
-        VALUES(?,?,?,?,?,?,?,?,?,?)`, `${record.id}-INTRO`, record.id, 'self_introduction', 'student_text', null, 1, 'pending', 1, 'human_authored', record.selfIntroduction);
-      for (const [index, selection] of record.memorableSelections.entries()) sql.run(`INSERT INTO portfolio_version_items(portfolio_version_item_id,portfolio_working_version_id,section_key,source_type,source_id,student_selected,class_teacher_decision,display_order,authorship_origin,student_text)
-        VALUES(?,?,?,?,?,?,?,?,?,?)`, `${record.id}-PM-${index + 1}`, record.id, 'memorable_activity', 'proud_moment_selection', selection.selection_id, 1, 'pending', index + 2, 'human_authored', selection.selection_reason);
+      for (const item of record.items) sql.run(`INSERT INTO portfolio_version_items(portfolio_version_item_id,portfolio_working_version_id,section_key,source_type,source_id,student_selected,class_teacher_decision,display_order,authorship_origin,student_text)
+        VALUES(?,?,?,?,?,?,?,?,?,?)`, item.id, record.id, item.sectionKey, item.sourceType, item.sourceId, 1, 'pending', item.displayOrder, item.authorshipOrigin, item.studentText);
     });
   },
   submit(versionId, submittedAt) { sql.run(`UPDATE portfolio_working_versions SET status='student_submitted',student_submitted_at=? WHERE portfolio_working_version_id=?`, submittedAt, versionId); },

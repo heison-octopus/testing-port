@@ -14,13 +14,50 @@ The selector registry is intentionally declarative. A future stage can be added 
 
 ## Extension rules
 
-1. Add schema changes as a new numbered migration; never rewrite an already-applied migration.
+1. Playground v2 does not use database migrations. While it remains a disposable POC with no retained school data, update the single create-from-zero schema, seed, repositories/services and tests together, then rebuild the local database with the explicit reset command. Introduce an approved numbered-migration and backup policy only before retained or production data is accepted.
 2. Keep persistence and SQL in repositories.
 3. Enforce lifecycle, assignment scope and approval policy in services.
 4. Keep controllers limited to HTTP translation.
 5. Return stable response models through `/api/v2`; do not expose raw table rows as an accidental contract.
 6. Add a new API route or version for incompatible meaning changes.
 7. Keep each workflow policy independent so a school can choose activity approval, Portfolio approval and publication approval separately.
+
+## Authentication and API test access plan
+
+Status: recommended production direction for internal planning. It is not presented as BHSS or JC approval. The final production identity source and API-token policy remain open decisions.
+
+### Current Playground v2 behaviour
+
+- Playground v2 does not use JWT. `POST /api/v2/demo/session` accepts a selected demonstration user ID and creates a random opaque session held in server memory.
+- The server returns the opaque session identifier in an `HttpOnly`, `SameSite=Strict` cookie and returns a separate request-protection key to the browser. Protected `/api/v2` requests require both values.
+- Authentication identifies the actor; it does not grant an action by itself. Services independently enforce school, effective capability, assignment scope, explicit deny, lifecycle state and named workflow assignment.
+- The account picker, in-memory session store and demonstration login endpoint are local POC mechanisms only and shall not be deployed as production identity management.
+
+### Recommended production login and authorization flow
+
+1. A user signs in through a production login endpoint using the configured identity source. Local school credentials and an external identity provider are interchangeable authentication adapters; selecting the production source remains open.
+2. After successful authentication, the server creates a cryptographically random, revocable opaque session. The database stores only a hash of the session secret together with `user_id`, the single resolved `school_id`, issue time, idle expiry, absolute expiry, revocation state and relevant authentication metadata.
+3. The browser receives the session secret only in a `Secure`, `HttpOnly`, `SameSite` cookie. State-changing requests also require CSRF/request protection. Logout, account suspension, school disablement and security-sensitive role/scope changes revoke affected sessions server-side.
+4. Every protected request reloads or safely refreshes the active user and school state. Authorization is calculated from current capability grants, effective scope, explicit overrides, record lifecycle, consent/media rules and named workflow assignments. Authorization claims are not trusted from browser-supplied IDs and do not need to be embedded in a JWT.
+5. The authenticated actor comes from the session, never from a submitted `user_id`. Period IDs come from school configuration and are resolved or validated by the server. Reviewer and publisher IDs come from a server-filtered eligibility endpoint and are revalidated when the workflow assignment is created; the client shall not use hard-coded fallback IDs.
+6. Each sensitive decision records the actor, school, applicable role/capability assignment, scope, target, outcome and time. If several grants could authorize an action, the server records the exact effective grant/assignment used instead of trusting a free-form role header.
+
+JWT is not required for this design. If a future external integration requires a signed access token, it should be short-lived and narrowly scoped; the receiving service must still check current school state, feature availability and action authorization rather than treating token possession as permanent authority.
+
+### Postman and automated API testing
+
+- For the current local POC, Postman can call `POST /api/v2/demo/session`, retain the returned cookie in its cookie jar, save the returned request key as a collection/environment variable and send it as `x-request-key` on later requests. No JWT is involved.
+- Production and shared test environments shall not expose a tokenless Developer or DeveloperAdmin bypass. A role describes authorization after authentication; it is not a substitute for proving the caller's identity.
+- If Postman access is required after production login is introduced, use either the normal login flow with Postman's cookie jar or an explicitly approved, expiring personal/service access token. Such a token must be stored hashed, scoped to one environment and school or platform-operations purpose, revocable, rate-limited and audited. It must not silently grant school content or raw-media access.
+- The platform-operations administrator manages hosted-service school availability and feature policy only by default. It remains authenticated and does not automatically receive school Portfolio, assessment or media access.
+- A test-only identity shortcut, if still needed for automated tests, must refuse to start outside an explicit test environment, bind to loopback, use fixture data only and be absent or disabled in production builds. It shall not become a general no-token route.
+
+Open decisions before production implementation:
+
+- local username/password, school SSO or another identity provider as the first production sign-in source;
+- the canonical sign-in identifier and invitation/account-recovery process;
+- whether personal/service access tokens are permitted outside local and automated test environments;
+- final idle/absolute session duration and re-authentication rules for sensitive actions.
 
 ## Activity-to-Portfolio workflow boundaries
 

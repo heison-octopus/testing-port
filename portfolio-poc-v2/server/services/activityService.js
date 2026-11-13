@@ -116,6 +116,17 @@ function validatePackage(user, input) {
   if (questionnaire.length > 50) fail(400, 'An activity questionnaire may contain at most 50 questions');
   questionnaire.forEach((question, index) => {
     if (!question?.promptEn?.trim() || question.promptEn.trim().length > 2_000 || String(question.promptZh || '').length > 2_000) fail(400, `Question ${index + 1} requires valid text within 2,000 characters`);
+    const hasQuestionId = Boolean(question.questionId), hasVersionId = Boolean(question.questionVersionId);
+    if (hasQuestionId !== hasVersionId) fail(400, `Question ${index + 1} must supply both questionId and questionVersionId`);
+  });
+  const sourceVersionIds = [...new Set(questionnaire.map(question => question.questionVersionId).filter(Boolean))];
+  const sourceVersions = activityRepository.activeQuestionVersions(user.school_id, sourceVersionIds);
+  if (sourceVersions.length !== sourceVersionIds.length) fail(400, 'Every sourced question must use an active question version from this school');
+  const sourceByVersion = new Map(sourceVersions.map(question => [question.question_version_id, question]));
+  questionnaire.forEach((question, index) => {
+    if (!question.questionVersionId) return;
+    const source = sourceByVersion.get(question.questionVersionId);
+    if (!source || source.question_id !== question.questionId) fail(400, `Question ${index + 1} does not match its selected source version`);
   });
   return { participantIds, vaskItemIds, labelAssignments, riskFlags, teacherGroupIds, supportingStaff, questionnaire, form };
 }
@@ -134,9 +145,9 @@ export const activityService = {
     if (!activity || activity.school_id !== user.school_id || !visible(user, activity)) fail(404, 'Activity not found');
     return project(user, activity);
   },
-  referenceData(user) {
+  referenceData(user, input = {}) {
     requireWorkspace(user);
-    return activityRepository.referenceData(user.school_id);
+    return activityRepository.referenceData(user.school_id, { includeAuthoring: input.includeAuthoring !== 'false' });
   },
   approvalCandidates(user) {
     requireWorkspace(user);
@@ -176,7 +187,8 @@ export const activityService = {
         questions: activityPackage.questionnaire.map((question, index) => ({
           itemKey: `activity_question_${String(index + 1).padStart(2, '0')}`,
           sourceQuestionBlockItemId: question.bankItemId || null,
-          questionId: null,
+          questionId: question.questionId || null,
+          questionVersionId: question.questionVersionId || null,
           promptEn: question.promptEn.trim(),
           promptZh: question.promptZh?.trim() || question.promptEn.trim(),
           required: Boolean(question.required),

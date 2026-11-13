@@ -604,7 +604,7 @@ test('activity identity remains stable across revision and named approval', asyn
   assert.deepEqual(official.approvalHistory, []);
 });
 
-test('activity builder resolves active VASK, group selections and a versioned questionnaire draft', async () => {
+test('activity builder pages authoring data and retains the stable source question version', async () => {
   const teacher = await signIn('USR-T-001');
   const reference = await teacher('/activities/reference-data');
   assert.equal(reference.status, 200);
@@ -613,12 +613,31 @@ test('activity builder resolves active VASK, group selections and a versioned qu
   assert(reference.body.teacherGroups.some(item => item.staff_group_id === 'GRP-ENG-TEACHERS' && item.member_ids.includes('USR-ST-001')));
   assert(reference.body.questionBank.length > 0);
 
-  const sourceQuestion = reference.body.questionBank[0];
-  const created = await teacher('/activities', { method: 'POST', body: JSON.stringify({
+  const compactReference = await teacher('/activities/reference-data?includeAuthoring=false');
+  assert.equal(compactReference.status, 200);
+  assert.deepEqual(compactReference.body.vaskItems, []);
+  assert.deepEqual(compactReference.body.questionBank, []);
+
+  const bank = await teacher('/question-bank?status=active&page=1&limit=2');
+  assert.equal(bank.status, 200);
+  assert.equal(bank.body.items.length, 2);
+  assert.equal(bank.body.pageSize, 2);
+  assert.equal(bank.body.total, 166);
+
+  const sourceQuestion = bank.body.items[0];
+  const mismatchedQuestion = bank.body.items[1];
+  const commonPackage = {
     titleEn: 'VASK question builder', titleZh: 'VASK 題目建立器', descriptionEn: 'Test the active labelling and editable question workflow.',
     subjectId: 'SUB-ENG', departmentId: 'DEPT-LANG', groupId: 'S1A-2026-27', activityNature: 'non_academic', activitySetting: 'outside_school',
     startAt: '2027-02-22T09:00', endAt: '2027-02-22T11:00', formVersionId: 'FV-CORE-001', participantIds: ['USR-S-001','USR-S-002','USR-S-003'], teacherGroupIds: ['GRP-ENG-TEACHERS'], vaskItemIds: ['AX-VASK-V1','AX-VASK-S1'], riskFlags: ['off_site'],
-    questionnaire: [{ bankItemId: sourceQuestion.bank_item_id, promptEn: `${sourceQuestion.prompt_en} (teacher edited)`, promptZh: sourceQuestion.prompt_zh, required: true, abilityCode: sourceQuestion.ability_code, abilityNameEn: sourceQuestion.ability_name_en, abilityNameZh: sourceQuestion.ability_name_zh }],
+  };
+  const mismatched = await teacher('/activities', { method: 'POST', body: JSON.stringify({ ...commonPackage, titleEn: 'Mismatched source must fail', questionnaire: [{ questionId: sourceQuestion.question_id, questionVersionId: mismatchedQuestion.question_version_id, promptEn: sourceQuestion.prompt_en || sourceQuestion.prompt_zh, promptZh: sourceQuestion.prompt_zh }] }) });
+  assert.equal(mismatched.status, 400);
+  assert.match(mismatched.body.error, /does not match its selected source version/);
+
+  const created = await teacher('/activities', { method: 'POST', body: JSON.stringify({
+    ...commonPackage,
+    questionnaire: [{ questionId: sourceQuestion.question_id, questionVersionId: sourceQuestion.question_version_id, promptEn: `${sourceQuestion.prompt_en || sourceQuestion.prompt_zh} (teacher edited)`, promptZh: sourceQuestion.prompt_zh, required: true, abilityCode: sourceQuestion.ability_code, abilityNameEn: sourceQuestion.ability_name_en, abilityNameZh: sourceQuestion.ability_name_zh }],
   }) });
   assert.equal(created.status, 201);
   assert.match(created.body.latestRevision.requested_form_version_id, /^FV-ACT-/);
@@ -626,6 +645,11 @@ test('activity builder resolves active VASK, group selections and a versioned qu
   assert.equal(created.body.people.filter(item => item.relationship_type === 'participant').length, 3);
   assert(created.body.people.some(item => item.relationship_type === 'supporting_teacher' && item.user_id === 'USR-ST-001'));
   assert.deepEqual(created.body.vaskItems.map(item => item.vask_item_id).sort(), ['AX-VASK-S1','AX-VASK-V1']);
+  const savedBlock = await teacher(`/question-blocks?status=all&formVersionId=${encodeURIComponent(created.body.latestRevision.requested_form_version_id)}&limit=10`);
+  assert.equal(savedBlock.status, 200);
+  assert.equal(savedBlock.body.items.length, 1);
+  assert.equal(savedBlock.body.items[0].items[0].question_id, sourceQuestion.question_id);
+  assert.equal(savedBlock.body.items[0].items[0].question_version_id, sourceQuestion.question_version_id);
 });
 
 test('coordinators can inspect all assignments but decide only their own', async () => {
@@ -813,6 +837,9 @@ test('rubric XLSX exports real linked records and successor activation changes o
   assert.equal(created.body.template.manifest_sha256, created.body.versions[0].template_manifest_sha256);
   assert.deepEqual([...new Set(created.body.template.sections.map(section => section.presentation_mode))].sort(), ['disclosure','inline','link_button']);
   assert(created.body.template.sections.some(section => section.parent_section_id === 'PTSEC-NEUTRAL-EVIDENCE' && section.section_key === 'memorable_activity'));
+  const configuredItemSections = new Set(created.body.template.sections.filter(section => section.visible && section.status === 'active' && section.source_type === 'portfolio_item').map(section => section.section_key));
+  assert(created.body.versions[0].items.every(item => configuredItemSections.has(item.section_key)));
+  assert.equal(created.body.versions[0].items.find(item => item.section_key === 'self_introduction').student_text, 'This version checks immutable rubric pinning.');
   const oldVersion = created.body.versions.find(item => item.portfolio_working_version_id === previousVersionId);
   assert.equal(oldVersion.rubric_catalogue_id, 'RUB-SB-UF2');
   assert.equal(created.body.official.version.rubric_catalogue_id, 'RUB-SB-UF2');

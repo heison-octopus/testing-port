@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowClockwise, ArrowDown, ArrowRight, ArrowUp, CalendarDots, CheckCircle, Database, LinkSimple, NotePencil, PencilSimple, Plus, ShieldCheck, Stamp, Trash, UsersThree, Warning, X, XCircle } from '@phosphor-icons/react';
+import { ArrowClockwise, ArrowDown, ArrowRight, ArrowUp, CalendarDots, CaretLeft, CaretRight, CheckCircle, Database, LinkSimple, NotePencil, PencilSimple, Plus, ShieldCheck, Stamp, Trash, UsersThree, Warning, X, XCircle } from '@phosphor-icons/react';
 import { api } from '../api/client';
-import type { Activity, ActivityReferenceData, ApprovalCandidate } from '../../shared/types';
+import { ApiError } from '../api/transport';
+import type { Activity, ActivityReferenceData, ApprovalCandidate, CatalogueLabel, Paged, QuestionBankItem } from '../../shared/types';
 import { Field, Notice, PageHeader, Status } from '../components/Layout';
 import { useI18n } from '../i18n';
 
@@ -11,10 +12,10 @@ const emptyCreate = {
   startAt: '2027-02-15T09:00', endAt: '2027-02-15T10:00', location: '',
   mediaExpected: false, formVersionId: 'FV-CORE-001',
   selectedClassIds: ['S1A-2026-27'], teacherGroupIds: ['GRP-ENG-TEACHERS'],
-  participantIds: ['USR-S-001'], vaskItemIds: ['AX-VASK-V1','AX-VASK-A1','AX-VASK-S1','AX-VASK-K1'], riskFlags: ['none'],
+  participantIds: ['USR-S-001'], vaskItemIds: [] as string[], riskFlags: ['none'],
 };
 
-type DraftQuestion = { id: string; bankItemId?: string; promptEn: string; promptZh: string; abilityCode?: string; abilityNameEn?: string; abilityNameZh?: string; sourceLabelId?: string; required: boolean; custom: boolean; edited: boolean };
+type DraftQuestion = { id: string; questionId?: string; questionVersionId?: string; sourceCode?: string; sourceLabel?: string; promptEn: string; promptZh: string; abilityCode?: string; abilityNameEn?: string; abilityNameZh?: string; required: boolean; custom: boolean; edited: boolean };
 type SelectorKind = 'classes' | 'teachers' | 'questionBank' | null;
 
 function labelCategory(code: string, name: string) {
@@ -25,22 +26,9 @@ function labelCategory(code: string, name: string) {
   return 'S';
 }
 
-function recommendedQuestions(reference: ActivityReferenceData, vaskIds: string[], current: DraftQuestion[]) {
-  const selected = new Set(vaskIds);
-  const next = current.filter(question => question.custom || question.edited || !question.sourceLabelId || selected.has(question.sourceLabelId));
-  if (!reference.questionBank.length) return next;
-  vaskIds.forEach((labelId, labelIndex) => {
-    if (next.some(question => question.sourceLabelId === labelId)) return;
-    for (let offset = 0; offset < Math.min(2, reference.questionBank.length); offset += 1) {
-      const item = reference.questionBank[(labelIndex * 2 + offset) % reference.questionBank.length];
-      next.push({ id: `${labelId}:${item.bank_item_id}:${offset}`, bankItemId: item.bank_item_id, promptEn: item.prompt_en, promptZh: item.prompt_zh, abilityCode: item.ability_code, abilityNameEn: item.ability_name_en, abilityNameZh: item.ability_name_zh, sourceLabelId: labelId, required: Boolean(item.required), custom: false, edited: false });
-    }
-  });
-  return next;
-}
-
-function initialCreate(reference: ActivityReferenceData) {
-  const preferred = ['V1','A1','S1','K1'].map(code => reference.vaskItems.find(item => item.axis_code.toUpperCase() === code)?.axis_id).filter(Boolean) as string[];
+function initialCreate(reference: ActivityReferenceData, labels: CatalogueLabel[] = []) {
+  const selectable = labels.filter(item => item.selectable);
+  const preferred = ['V1','A1','S1','K1'].map(code => selectable.find(item => item.axis_code.toUpperCase() === code)?.axis_id).filter(Boolean) as string[];
   const selectedClassIds = reference.studentClasses[0] ? [reference.studentClasses[0].class_id] : [];
   return {
     ...emptyCreate,
@@ -49,17 +37,21 @@ function initialCreate(reference: ActivityReferenceData) {
     teacherGroupIds: reference.teacherGroups[0] ? [reference.teacherGroups[0].staff_group_id] : [],
     groupId: selectedClassIds[0] || emptyCreate.groupId,
     participantIds: reference.studentClasses.filter(item => selectedClassIds.includes(item.class_id)).flatMap(item => item.student_ids),
-    vaskItemIds: preferred.length ? preferred : reference.vaskItems[0] ? [reference.vaskItems[0].axis_id] : [],
+    vaskItemIds: preferred.length ? preferred : selectable[0] ? [selectable[0].axis_id] : [],
   };
 }
 
-function SelectorDialog({ kind, reference, create, isChinese, text, onToggle, onAddQuestion, onClose }: { kind: Exclude<SelectorKind,null>; reference: ActivityReferenceData; create: typeof emptyCreate; isChinese: boolean; text: (en: string, zh: string) => string; onToggle: (value: string) => void; onAddQuestion: (bankItemId: string) => void; onClose: () => void }) {
+function SelectorDialog({ kind, reference, create, isChinese, text, questionResult, questionSearch, questionLoading, questionError, onQuestionSearch, onQuestionPage, onToggle, onAddQuestion, onClose }: { kind: Exclude<SelectorKind,null>; reference: ActivityReferenceData; create: typeof emptyCreate; isChinese: boolean; text: (en: string, zh: string) => string; questionResult: Paged<QuestionBankItem> | null; questionSearch: string; questionLoading: boolean; questionError: string; onQuestionSearch: (value: string) => void; onQuestionPage: (page: number) => void; onToggle: (value: string) => void; onAddQuestion: (item: QuestionBankItem) => void; onClose: () => void }) {
   const title = kind === 'classes' ? text('Choose student classes', '選擇學生班別') : kind === 'teachers' ? text('Choose teacher groups', '選擇教師群組') : text('Add from question bank', '從題庫加入');
   return <div className="selector-backdrop" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}><section className="selector-dialog" role="dialog" aria-modal="true" aria-label={title}><header><div><p className="eyebrow">{text('GROUP SELECTOR', '群組選擇器')}</p><h3>{title}</h3></div><button type="button" aria-label={text('Close selector', '關閉選擇器')} onClick={onClose}><X size={19}/></button></header>
+    {kind === 'questionBank' && <div className="selector-search"><Field label={text('Search wording, construct or ability', '搜尋題目、構念或能力')}><input value={questionSearch} onChange={event => onQuestionSearch(event.target.value)} /></Field><span>{questionResult ? text(`${questionResult.total} source questions`, `共 ${questionResult.total} 條來源題目`) : text('Source-linked question versions', '已連繫來源的題目版本')}</span></div>}
+    {kind === 'questionBank' && questionLoading && <Notice>{text('Loading the latest question page…', '正在載入最新題目結果…')}</Notice>}
+    {kind === 'questionBank' && questionError && <Notice tone="warning"><Warning size={18}/>{questionError}</Notice>}
     <div className="selector-options">{kind === 'classes' && reference.studentClasses.map(item => <label key={item.class_id}><input type="checkbox" checked={create.selectedClassIds.includes(item.class_id)} onChange={() => onToggle(item.class_id)}/><span><b>{isChinese ? item.name_zh : item.name_en}</b><small>{item.student_ids.length} {text('students', '名學生')}</small></span></label>)}
       {kind === 'teachers' && reference.teacherGroups.map(item => <label key={item.staff_group_id}><input type="checkbox" checked={create.teacherGroupIds.includes(item.staff_group_id)} onChange={() => onToggle(item.staff_group_id)}/><span><b>{isChinese ? item.name_zh : item.name_en}</b><small>{item.member_ids.length} {text('members', '名成員')}</small></span></label>)}
-      {kind === 'questionBank' && reference.questionBank.map(item => <button type="button" className="bank-option" key={item.bank_item_id} onClick={() => onAddQuestion(item.bank_item_id)}><span><b>{isChinese ? item.prompt_zh : item.prompt_en}</b><small>{isChinese ? item.ability_name_zh : item.ability_name_en}</small></span><Plus size={17}/></button>)}</div>
-    <footer><span>{text('Selections remain editable until the draft is created.', '建立草稿前仍可修改選擇。')}</span><button type="button" className="primary" onClick={onClose}>{text('Done', '完成')}</button></footer>
+      {kind === 'questionBank' && !questionLoading && !questionError && questionResult?.items.map(item => <button type="button" className={item.selectable ? 'bank-option' : 'bank-option historical'} disabled={!item.selectable} key={item.question_version_id} onClick={() => onAddQuestion(item)}><span><b>{isChinese ? item.prompt_zh : item.prompt_en || item.prompt_zh}</b><small>{item.stable_code} · {isChinese ? item.ability_name_zh || item.source_construct_zh : item.ability_name_en || item.source_construct_en || item.source_construct_zh}{!item.selectable ? ` · ${text('historical only', '只供歷史查閱')}` : ''}</small></span><Plus size={17}/></button>)}</div>
+    {kind === 'questionBank' && !questionLoading && !questionError && questionResult && !questionResult.items.length && <Notice>{text('No source questions match this search.', '沒有來源題目符合這項搜尋。')}</Notice>}
+    <footer><span>{text('Selections remain editable until the draft is created.', '建立草稿前仍可修改選擇。')}</span>{kind === 'questionBank' && questionResult && <div className="selector-pagination"><button type="button" disabled={questionLoading || questionResult.page <= 1} onClick={() => onQuestionPage(questionResult.page - 1)}><CaretLeft size={15}/>{text('Previous', '上一頁')}</button><small>{questionResult.page} / {Math.max(1, questionResult.totalPages)}</small><button type="button" disabled={questionLoading || questionResult.page >= questionResult.totalPages} onClick={() => onQuestionPage(questionResult.page + 1)}>{text('Next', '下一頁')}<CaretRight size={15}/></button></div>}<button type="button" className="primary" onClick={onClose}>{text('Done', '完成')}</button></footer>
   </section></div>;
 }
 
@@ -80,7 +72,8 @@ export function Activities({ report, focusActivityId, onSelectActivity, onOpenIm
   const [create, setCreate] = useState(emptyCreate);
   const [questions, setQuestions] = useState<DraftQuestion[]>([]);
   const [selector, setSelector] = useState<SelectorKind>(null);
-  const [questionFilter, setQuestionFilter] = useState('ALL');
+  const [labelResult, setLabelResult] = useState<Paged<CatalogueLabel> | null>(null), [labelSearch, setLabelSearch] = useState(''), [labelPage, setLabelPage] = useState(1), [labelLoading, setLabelLoading] = useState(true), [labelError, setLabelError] = useState('');
+  const [questionResult, setQuestionResult] = useState<Paged<QuestionBankItem> | null>(null), [questionSearch, setQuestionSearch] = useState(''), [questionPage, setQuestionPage] = useState(1), [questionLoading, setQuestionLoading] = useState(false), [questionError, setQuestionError] = useState('');
   const [reviewMode, setReviewMode] = useState(false);
   const [reason, setReason] = useState('');
   const [proposal, setProposal] = useState('');
@@ -102,11 +95,10 @@ export function Activities({ report, focusActivityId, onSelectActivity, onOpenIm
 
   useEffect(() => {
     void load();
-    api.activityReferenceData().then(data => {
+    api.activityReferenceData(false).then(data => {
       setReference(data);
-      const initial = initialCreate(data);
-      setCreate(initial);
-      setQuestions(recommendedQuestions(data, initial.vaskItemIds, []));
+      setCreate(current => ({ ...initialCreate(data), vaskItemIds: current.vaskItemIds }));
+      setQuestions([]);
     }).catch(() => undefined);
     api.activityApprovalCandidates().then(data => {
       setCandidates(data);
@@ -117,22 +109,55 @@ export function Activities({ report, focusActivityId, onSelectActivity, onOpenIm
 
   useEffect(() => { if (focusActivityId) void load(focusActivityId); }, [focusActivityId]);
 
+  useEffect(() => {
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      const params = new URLSearchParams({ capability: 'labelling', status: 'all', page: String(labelPage), limit: '20' });
+      if (labelSearch.trim()) params.set('search', labelSearch.trim());
+      setLabelLoading(true);
+      setLabelError('');
+      void api.catalogueLabels(params, controller.signal).then(result => {
+        setLabelResult(result);
+        const selectable = result.items.filter(item => item.selectable);
+        const preferred = ['V1','A1','S1','K1'].map(code => selectable.find(item => item.axis_code.toUpperCase() === code)?.axis_id).filter(Boolean) as string[];
+        setCreate(current => current.vaskItemIds.length ? current : { ...current, vaskItemIds: preferred.length ? preferred : selectable[0] ? [selectable[0].axis_id] : [] });
+      }).catch(error => {
+        if (error instanceof DOMException && error.name === 'AbortError') return;
+        setLabelError(error instanceof ApiError && error.status === 403 ? text('You are not permitted to search activity labels.', '你沒有權限搜尋活動標籤。') : error instanceof Error ? error.message : text('Unable to load activity labels.', '未能載入活動標籤。'));
+      }).finally(() => { if (!controller.signal.aborted) setLabelLoading(false); });
+    }, 300);
+    return () => { window.clearTimeout(timer); controller.abort(); };
+  }, [labelSearch, labelPage, text]);
+
+  useEffect(() => {
+    if (selector !== 'questionBank') return;
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      const params = new URLSearchParams({ status: 'all', page: String(questionPage), limit: '20' });
+      if (questionSearch.trim()) params.set('search', questionSearch.trim());
+      setQuestionLoading(true);
+      setQuestionError('');
+      void api.questionBank(params, controller.signal).then(setQuestionResult).catch(error => {
+        if (error instanceof DOMException && error.name === 'AbortError') return;
+        setQuestionError(error instanceof ApiError && error.status === 403 ? text('You are not permitted to search the question bank.', '你沒有權限搜尋題庫。') : error instanceof Error ? error.message : text('Unable to load the question bank.', '未能載入題庫。'));
+      }).finally(() => { if (!controller.signal.aborted) setQuestionLoading(false); });
+    }, 300);
+    return () => { window.clearTimeout(timer); controller.abort(); };
+  }, [selector, questionSearch, questionPage, text]);
+
   const resolvedPeriod = useMemo(() => reference?.periods.find(item => item.start_date <= create.startAt.slice(0, 10) && item.end_date >= create.endAt.slice(0, 10)), [reference, create.startAt, create.endAt]);
-  const displayVaskItems = useMemo(() => {
-    const coded = reference?.vaskItems.filter(item => /^[VASK]\d+$/i.test(item.axis_code)) || [];
-    return coded.length ? coded : reference?.vaskItems || [];
-  }, [reference]);
+  const displayVaskItems = useMemo(() => labelResult?.items || [], [labelResult]);
 
   async function createActivity(event: React.FormEvent) {
     event.preventDefault();
     if (!reference) return;
     try {
       const participantIds = [...new Set(reference.studentClasses.filter(item => create.selectedClassIds.includes(item.class_id)).flatMap(item => item.student_ids))];
-      const item = await api.createActivity({ ...create, groupId: create.selectedClassIds[0] || null, participantIds, riskFlags: create.activitySetting === 'outside_school' ? ['off_site'] : create.riskFlags, questionnaire: questions.map(question => ({ bankItemId: question.bankItemId, promptEn: question.promptEn, promptZh: question.promptZh, required: question.required, abilityCode: question.abilityCode, abilityNameEn: question.abilityNameEn, abilityNameZh: question.abilityNameZh, suggestedByVaskLabelId: question.sourceLabelId })) });
+      const item = await api.createActivity({ ...create, groupId: create.selectedClassIds[0] || null, participantIds, riskFlags: create.activitySetting === 'outside_school' ? ['off_site'] : create.riskFlags, questionnaire: questions.map(question => ({ questionId: question.questionId, questionVersionId: question.questionVersionId, promptEn: question.promptEn, promptZh: question.promptZh, required: question.required, abilityCode: question.abilityCode, abilityNameEn: question.abilityNameEn, abilityNameZh: question.abilityNameZh })) });
       setShowCreate(false);
-      const reset = initialCreate(reference);
+      const reset = initialCreate(reference, labelResult?.items || []);
       setCreate(reset);
-      setQuestions(recommendedQuestions(reference, reset.vaskItemIds, []));
+      setQuestions([]);
       setReviewMode(false);
       onSelectActivity(item.activity_id);
       await load(item.activity_id);
@@ -140,10 +165,8 @@ export function Activities({ report, focusActivityId, onSelectActivity, onOpenIm
   }
 
   function toggleVask(labelId: string) {
-    if (!reference) return;
     const vaskItemIds = create.vaskItemIds.includes(labelId) ? create.vaskItemIds.filter(id => id !== labelId) : [...create.vaskItemIds, labelId];
     setCreate({ ...create, vaskItemIds });
-    setQuestions(current => recommendedQuestions(reference, vaskItemIds, current));
   }
 
   function toggleSelectorValue(value: string) {
@@ -151,10 +174,9 @@ export function Activities({ report, focusActivityId, onSelectActivity, onOpenIm
     if (selector === 'teachers') setCreate({ ...create, teacherGroupIds: toggle(create.teacherGroupIds, value) });
   }
 
-  function addBankQuestion(bankItemId: string) {
-    const item = reference?.questionBank.find(candidate => candidate.bank_item_id === bankItemId);
-    if (!item) return;
-    setQuestions(current => [...current, { id: `bank:${bankItemId}:${Date.now()}`, bankItemId, promptEn: item.prompt_en, promptZh: item.prompt_zh, abilityCode: item.ability_code, abilityNameEn: item.ability_name_en, abilityNameZh: item.ability_name_zh, required: Boolean(item.required), custom: true, edited: false }]);
+  function addBankQuestion(item: QuestionBankItem) {
+    if (!item.selectable) return;
+    setQuestions(current => [...current, { id: `question:${item.question_version_id}:${Date.now()}`, questionId: item.question_id, questionVersionId: item.question_version_id, sourceCode: item.stable_code, sourceLabel: isChinese ? item.source_construct_zh || item.source_construct_en : item.source_construct_en || item.source_construct_zh, promptEn: item.prompt_en || item.prompt_zh, promptZh: item.prompt_zh, abilityCode: item.ability_code, abilityNameEn: item.ability_name_en, abilityNameZh: item.ability_name_zh, required: false, custom: false, edited: false }]);
     setSelector(null);
   }
 
@@ -200,7 +222,7 @@ export function Activities({ report, focusActivityId, onSelectActivity, onOpenIm
     <PageHeader kicker={text('INPUT · ACTIVITY PACKAGE · TRACEABLE HAND-OFF', '輸入 · 活動資料套件 · 可追溯交接')} title={text('Activities and status', '活動及狀態')} description={text('Create the complete package, see who made it, and follow the named reviewer and publisher without losing the stable activity record.', '建立完整活動資料套件，查看建立者，並追蹤具名覆核人及發布人，同時保留穩定的活動紀錄。')} action={canCreate ? <button className="primary" onClick={() => setShowCreate(value => !value)}><Plus size={17} />{text('New activity', '新增活動')}</button> : undefined} />
 
     {showCreate && reference && <form className="activity-editor activity-builder-v2" onSubmit={createActivity}>
-      <div className="editor-heading"><div><p className="eyebrow">{text('NEW ACTIVITY · TRACEABLE DRAFT', '新增活動 · 可追溯草稿')}</p><h2>{text('Build an activity and its questionnaire', '建立活動及問卷')}</h2><span>{text('The active VASK labels suggest questions from the approved bank. You remain in control of the final questionnaire.', '生效 VASK 標籤會從已批核題庫建議題目；最終問卷仍由你決定。')}</span></div><button type="button" className="text-action" onClick={() => { setShowCreate(false); setReviewMode(false); }}>{text('Cancel', '取消')}</button></div>
+      <div className="editor-heading"><div><p className="eyebrow">{text('NEW ACTIVITY · TRACEABLE DRAFT', '新增活動 · 可追溯草稿')}</p><h2>{text('Build an activity and its questionnaire', '建立活動及問卷')}</h2><span>{text('Choose activity-intent labels and source-linked questions independently. A label is never an assessment result or an automatic question mapping.', '活動意向標籤及已連繫來源的題目會分開選擇；標籤並非評估結果，也不會自動對應題目。')}</span></div><button type="button" className="text-action" onClick={() => { setShowCreate(false); setReviewMode(false); }}>{text('Cancel', '取消')}</button></div>
 
       <section className="activity-identity-panel">
         <div className="identity-title-grid"><Field label={text('Activity name (English)', '活動名稱（英文）')}><input required value={create.titleEn} onChange={event => setCreate({ ...create, titleEn: event.target.value })}/></Field><Field label={text('Activity name (Chinese)', '活動名稱（中文）')}><input required value={create.titleZh} onChange={event => setCreate({ ...create, titleZh: event.target.value })}/></Field></div>
@@ -213,20 +235,22 @@ export function Activities({ report, focusActivityId, onSelectActivity, onOpenIm
 
       {!reviewMode ? <div className="question-builder-grid">
         <section className="vask-label-pane"><div className="active-labelling-banner"><ShieldCheck size={20}/><span><b>{text(`Default labelling · ${reference.activeLabelling?.code || 'VASK'} v${reference.activeLabelling?.version || '1.0'}`, `預設標籤 · ${reference.activeLabelling?.code || 'VASK'} v${reference.activeLabelling?.version || '1.0'}`)}</b><small>{text('Managed by SchoolAdmin · automatically used for new activities', '由 SchoolAdmin 管理 · 新增活動時自動套用')}</small></span></div><h3>{text('Choose VASK labels', '選擇 VASK 標籤')}</h3><p>{text('Labels describe the activity’s intended development areas. They are not assessment results.', '標籤描述活動期望發展的範疇，並不是評估結果。')}</p>
-          {['V','A','S','K'].map(category => <div className={`vask-group vask-${category.toLowerCase()}`} key={category}><header><b>{category}</b><span>{text(category === 'V' ? 'Values' : category === 'A' ? 'Attitudes' : category === 'S' ? 'Skills' : 'Knowledge', category === 'V' ? '價值觀' : category === 'A' ? '態度' : category === 'S' ? '技能' : '知識')}</span><small>{displayVaskItems.filter(item => create.vaskItemIds.includes(item.axis_id) && labelCategory(item.axis_code,item.name_en) === category).length} {text('selected', '項已選')}</small></header>{displayVaskItems.filter(item => labelCategory(item.axis_code,item.name_en) === category).map(item => <label className={create.vaskItemIds.includes(item.axis_id) ? 'selected' : ''} key={item.axis_id}><input type="checkbox" checked={create.vaskItemIds.includes(item.axis_id)} onChange={() => toggleVask(item.axis_id)}/><em>{item.axis_code}</em><span>{isChinese ? item.name_zh : item.name_en}</span></label>)}</div>)}
+          <div className="authoring-search"><input aria-label={text('Search activity labels', '搜尋活動標籤')} value={labelSearch} onChange={event => { setLabelSearch(event.target.value); setLabelPage(1); }} placeholder={text('Search labels', '搜尋標籤')} /><small>{labelResult ? `${labelResult.total} ${text('labels', '個標籤')}` : ''}</small></div>
+          {labelLoading && <Notice>{text('Loading labels…', '正在載入標籤…')}</Notice>}
+          {labelError && <Notice tone="warning"><Warning size={18}/>{labelError}</Notice>}
+          {!labelLoading && !labelError && ['V','A','S','K'].map(category => <div className={`vask-group vask-${category.toLowerCase()}`} key={category}><header><b>{category}</b><span>{text(category === 'V' ? 'Values' : category === 'A' ? 'Attitudes' : category === 'S' ? 'Skills' : 'Knowledge', category === 'V' ? '價值觀' : category === 'A' ? '態度' : category === 'S' ? '技能' : '知識')}</span><small>{displayVaskItems.filter(item => create.vaskItemIds.includes(item.axis_id) && labelCategory(item.axis_code,item.name_en) === category).length} {text('selected', '項已選')}</small></header>{displayVaskItems.filter(item => labelCategory(item.axis_code,item.name_en) === category).map(item => <label className={`${create.vaskItemIds.includes(item.axis_id) ? 'selected ' : ''}${item.selectable ? '' : 'historical'}`} key={item.axis_id}><input type="checkbox" disabled={!item.selectable} checked={create.vaskItemIds.includes(item.axis_id)} onChange={() => toggleVask(item.axis_id)}/><em>{item.axis_code}</em><span>{isChinese ? item.name_zh : item.name_en}{!item.selectable && <small>{text('Historical only', '只供歷史查閱')}</small>}</span></label>)}</div>)}
+          {!labelLoading && !labelError && labelResult && !labelResult.items.length && <Notice>{text('No activity labels match this search.', '沒有活動標籤符合這項搜尋。')}</Notice>}
+          {labelResult && labelResult.totalPages > 1 && <nav className="selector-pagination"><button type="button" disabled={labelLoading || labelResult.page <= 1} onClick={() => setLabelPage(value => Math.max(1, value - 1))}><CaretLeft size={15}/>{text('Previous', '上一頁')}</button><small>{labelResult.page} / {labelResult.totalPages}</small><button type="button" disabled={labelLoading || labelResult.page >= labelResult.totalPages} onClick={() => setLabelPage(value => Math.min(labelResult.totalPages, value + 1))}>{text('Next', '下一頁')}<CaretRight size={15}/></button></nav>}
         </section>
 
-        <section className="questionnaire-pane"><header><div><h3>{text('Build questionnaire', '建立問卷')}</h3><p>{text('Questions are suggested from the active question bank. Edit them or add your own.', '題目由生效題庫提供建議；你可修改或自行新增。')}</p></div></header><div className="question-suggestion-note"><NotePencil size={20}/><span><b>{text(`${questions.length} suggested questions from ${create.vaskItemIds.length} selected VASK labels`, `已按 ${create.vaskItemIds.length} 個 VASK 標籤建議 ${questions.length} 條題目`)}</b><small>{text('Suggestions use question metadata. They are editable recommendations—not assessment mappings.', '建議按題目資料產生，可自由修改，並非評估對應。')}</small></span></div>
-          <div className="question-filter"><span>{text('Filter by label', '按標籤篩選')}</span>{['ALL','V','A','S','K'].map(filter => <button type="button" className={questionFilter === filter ? 'selected' : ''} onClick={() => setQuestionFilter(filter)} key={filter}>{filter === 'ALL' ? text(`All (${questions.length})`,`全部 (${questions.length})`) : `${filter} (${questions.filter(question => { const label = reference.vaskItems.find(item => item.axis_id === question.sourceLabelId); return label && labelCategory(label.axis_code,label.name_en) === filter; }).length})`}</button>)}</div>
-          <div className="question-list"><div className="question-row heading"><span>#</span><span>{text('Question', '題目')}</span><span>{text('Suggested by', '建議標籤')}</span><span>{text('Required', '必答')}</span><span>{text('Actions', '操作')}</span></div>{questions.map((question,index) => {
-            const source = reference.vaskItems.find(item => item.axis_id === question.sourceLabelId); const category = source ? labelCategory(source.axis_code,source.name_en) : 'custom'; const visible = questionFilter === 'ALL' || category === questionFilter; return visible ? <div className="question-row" key={question.id}><span className="question-order"><b>{index + 1}</b><button type="button" disabled={index === 0} aria-label={text('Move question up', '題目上移')} onClick={() => moveQuestion(question.id,-1)}><ArrowUp size={12}/></button><button type="button" disabled={index === questions.length - 1} aria-label={text('Move question down', '題目下移')} onClick={() => moveQuestion(question.id,1)}><ArrowDown size={12}/></button></span><input aria-label={`${text('Question','題目')} ${index + 1}`} value={isChinese ? question.promptZh : question.promptEn} onChange={event => updateQuestion(question.id,isChinese ? {promptZh:event.target.value}:{promptEn:event.target.value})}/><span className={`source-label source-${String(category).toLowerCase()}`}>{source ? `${source.axis_code} · ${isChinese ? source.name_zh : source.name_en}` : text('Custom','自訂')}</span><select aria-label={`${text('Required','必答')} ${index + 1}`} value={question.required ? 'required' : 'optional'} onChange={event => updateQuestion(question.id,{required:event.target.value === 'required'})}><option value="required">{text('Required','必答')}</option><option value="optional">{text('Optional','選答')}</option></select><span className="question-actions"><button type="button" aria-label={text('Edit question', '修改題目')} onClick={() => document.querySelector<HTMLInputElement>(`input[aria-label='${text('Question','題目')} ${index + 1}']`)?.focus()}><PencilSimple size={15}/></button><button type="button" className="danger" aria-label={text('Remove question', '移除題目')} onClick={() => setQuestions(current => current.filter(item => item.id !== question.id))}><Trash size={15}/></button></span></div> : null;
-          })}</div>
+        <section className="questionnaire-pane"><header><div><h3>{text('Build questionnaire', '建立問卷')}</h3><p>{text('Search the source question bank or write a custom question. Questions remain independent from activity labels.', '搜尋來源題庫或自行撰寫題目；題目與活動標籤保持獨立。')}</p></div></header><div className="question-suggestion-note"><NotePencil size={20}/><span><b>{text(`${questions.length} questions selected by the author`, `作者已選擇 ${questions.length} 條題目`)}</b><small>{text('The exact source question version is retained even when its copied wording is edited for this activity.', '即使為本活動修改複製後的題目字眼，系統仍會保留原有來源題目版本。')}</small></span></div>
+          <div className="question-list"><div className="question-row heading"><span>#</span><span>{text('Question', '題目')}</span><span>{text('Source', '來源')}</span><span>{text('Required', '必答')}</span><span>{text('Actions', '操作')}</span></div>{questions.map((question,index) => <div className="question-row" key={question.id}><span className="question-order"><b>{index + 1}</b><button type="button" disabled={index === 0} aria-label={text('Move question up', '題目上移')} onClick={() => moveQuestion(question.id,-1)}><ArrowUp size={12}/></button><button type="button" disabled={index === questions.length - 1} aria-label={text('Move question down', '題目下移')} onClick={() => moveQuestion(question.id,1)}><ArrowDown size={12}/></button></span><input aria-label={`${text('Question','題目')} ${index + 1}`} value={isChinese ? question.promptZh : question.promptEn} onChange={event => updateQuestion(question.id,isChinese ? {promptZh:event.target.value}:{promptEn:event.target.value})}/><span className={question.questionVersionId ? 'source-label source-stable' : 'source-label source-custom'}>{question.questionVersionId ? <>{question.sourceCode}<small>{question.sourceLabel} · {question.questionVersionId}</small></> : text('Custom','自訂')}</span><select aria-label={`${text('Required','必答')} ${index + 1}`} value={question.required ? 'required' : 'optional'} onChange={event => updateQuestion(question.id,{required:event.target.value === 'required'})}><option value="required">{text('Required','必答')}</option><option value="optional">{text('Optional','選答')}</option></select><span className="question-actions"><button type="button" aria-label={text('Edit question', '修改題目')} onClick={() => document.querySelector<HTMLInputElement>(`input[aria-label='${text('Question','題目')} ${index + 1}']`)?.focus()}><PencilSimple size={15}/></button><button type="button" className="danger" aria-label={text('Remove question', '移除題目')} onClick={() => setQuestions(current => current.filter(item => item.id !== question.id))}><Trash size={15}/></button></span></div>)}</div>
           <div className="question-add-actions"><button type="button" onClick={() => setSelector('questionBank')}><Plus size={17}/>{text('Add from question bank', '從題庫加入')}</button><button type="button" className="primary" onClick={addCustomQuestion}><Plus size={17}/>{text('Write new question', '撰寫新題目')}</button></div>
         </section>
       </div> : <section className="activity-review-panel"><header><div><p className="eyebrow">{text('REVIEW BEFORE DRAFT', '建立草稿前覆核')}</p><h3>{text('Check the activity package', '檢查活動資料套件')}</h3></div><button type="button" onClick={() => setReviewMode(false)}>{text('Back to edit', '返回修改')}</button></header><div className="review-summary-grid"><article><span>{text('Activity', '活動')}</span><b>{isChinese ? create.titleZh : create.titleEn}</b><small>{create.startAt.replace('T',' ')} → {create.endAt.replace('T',' ')}</small></article><article><span>{text('Classification', '活動分類')}</span><b>{text(create.activityNature === 'academic' ? 'Academic' : 'Non-academic',create.activityNature === 'academic' ? '學術' : '非學術')} · {text(create.activitySetting === 'in_class' ? 'In-class' : create.activitySetting === 'out_of_class' ? 'Out-of-class' : 'Outside school',create.activitySetting === 'in_class' ? '課堂內' : create.activitySetting === 'out_of_class' ? '課堂外' : '校外')}</b><small>{resolvedPeriod ? (isChinese ? resolvedPeriod.name_zh : resolvedPeriod.name_en) : text('Period unresolved','學段未確定')}</small></article><article><span>{text('People', '參與人員')}</span><b>{create.selectedClassIds.length} {text('classes','個班別')} · {create.teacherGroupIds.length} {text('teacher groups','個教師群組')}</b><small>{[...new Set(reference.studentClasses.filter(item => create.selectedClassIds.includes(item.class_id)).flatMap(item => item.student_ids))].length} {text('students','名學生')}</small></article><article><span>{text('VASK and form', 'VASK 及表格')}</span><b>{create.vaskItemIds.length} {text('labels','個標籤')} · {questions.length} {text('questions','條題目')}</b><small>{text('Questionnaire will be saved as a successor draft form requiring separate approval.','問卷會保存為後繼表格草稿，並須另行批核。')}</small></article></div><Notice tone="warning">{text('Creating this draft does not publish the activity or questionnaire. Form approval, activity approval and publication remain separate audited actions.', '建立草稿不會發布活動或問卷；表格批核、活動批核及發布仍是分開並可稽核的操作。')}</Notice></section>}
 
       <div className="activity-builder-footer"><span><b>{questions.length} {text('questions', '條題目')}</b> · {text(`approx. ${Math.max(2,Math.ceil(questions.length * .75))} min`, `約 ${Math.max(2,Math.ceil(questions.length * .75))} 分鐘`)}</span><div>{reviewMode ? <><button type="button" onClick={() => setReviewMode(false)}>{text('Back to edit', '返回修改')}</button><button type="button" className="primary" onClick={event => event.currentTarget.form?.requestSubmit()} disabled={!resolvedPeriod || !create.titleEn || !create.titleZh || !create.descriptionEn || !create.selectedClassIds.length || !create.teacherGroupIds.length || !create.vaskItemIds.length || !questions.length}>{text('Create activity draft', '建立活動草稿')}<ArrowRight size={16}/></button></> : <><button type="submit" disabled={!resolvedPeriod || !create.titleEn || !create.titleZh || !create.descriptionEn || !create.selectedClassIds.length || !create.teacherGroupIds.length || !create.vaskItemIds.length || !questions.length}>{text('Save draft', '儲存草稿')}</button><button type="button" className="primary" disabled={!resolvedPeriod || !create.titleEn || !create.titleZh || !create.descriptionEn || !create.selectedClassIds.length || !create.teacherGroupIds.length || !create.vaskItemIds.length || !questions.length} onClick={() => setReviewMode(true)}>{text('Review activity', '覆核活動')}<ArrowRight size={16}/></button></>}</div></div>
-      {selector && <SelectorDialog kind={selector} reference={reference} create={create} isChinese={isChinese} text={text} onToggle={toggleSelectorValue} onAddQuestion={addBankQuestion} onClose={() => setSelector(null)}/>}
+      {selector && <SelectorDialog kind={selector} reference={reference} create={create} isChinese={isChinese} text={text} questionResult={questionResult} questionSearch={questionSearch} questionLoading={questionLoading} questionError={questionError} onQuestionSearch={value => { setQuestionSearch(value); setQuestionPage(1); }} onQuestionPage={setQuestionPage} onToggle={toggleSelectorValue} onAddQuestion={addBankQuestion} onClose={() => setSelector(null)}/>}
     </form>}
 
     <div className="activity-summary-strip">

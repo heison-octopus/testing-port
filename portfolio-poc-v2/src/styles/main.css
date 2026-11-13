@@ -318,10 +318,12 @@
   .vask-group > header > b { @apply flex h-7 w-7 items-center justify-center bg-soft text-base text-teal-dark; }
   .vask-group > header > span { @apply font-semibold text-teal-dark; }
   .vask-group > header > small { @apply text-[10px]; }
-  .vask-group > label { @apply grid cursor-pointer grid-cols-[18px_38px_1fr] items-center gap-2 border-b border-line px-3 py-2.5 text-sm last:border-b-0; }
+  .vask-group > label { @apply grid cursor-pointer grid-cols-[18px_minmax(72px,96px)_1fr] items-center gap-2 border-b border-line px-3 py-2.5 text-sm last:border-b-0; }
   .vask-group > label.selected { @apply bg-[#f1f8f7]; }
   .vask-group > label input { @apply h-auto w-auto accent-[#176b72]; }
-  .vask-group > label em { @apply text-xs font-semibold not-italic text-muted; }
+  .vask-group > label em { @apply truncate text-xs font-semibold not-italic text-muted; }
+  .vask-group > label.historical { @apply cursor-not-allowed bg-soft opacity-70; }
+  .vask-group > label span small { @apply ml-2 inline text-[9px] text-muted; }
   .vask-v > header > b, .source-v { @apply bg-[#fff0e6]! text-[#a25225]!; }
   .vask-a > header > b, .source-a { @apply bg-[#eef4ff]! text-[#426487]!; }
   .vask-s > header > b, .source-s { @apply bg-[#e5f5ef]! text-[#2e6f5c]!; }
@@ -339,6 +341,8 @@
   .question-order button, .question-actions button { @apply border-0 bg-transparent p-0 text-muted hover:text-teal; }
   .question-order button:disabled { @apply opacity-20; }
   .source-label { @apply truncate bg-soft px-2 py-1.5 text-[10px] font-semibold text-muted; }
+  .source-label small { @apply mt-0.5 block truncate font-normal; }
+  .source-stable { @apply bg-[#edf6f4]! text-teal-dark!; }
   .source-custom { @apply bg-brown-soft! text-[#775938]!; }
   .question-actions { @apply flex justify-end gap-2; }
   .question-actions .danger { @apply text-[#b64e55] hover:text-[#8f3238]; }
@@ -361,8 +365,18 @@
   .selector-options > label span, .bank-option span { @apply min-w-0 flex-1; }
   .selector-options b, .selector-options small { @apply block; }
   .bank-option > svg { @apply shrink-0 text-teal; }
+  .bank-option.historical { @apply cursor-not-allowed bg-soft opacity-65; }
+  .selector-search { @apply grid grid-cols-[1fr_auto] items-end gap-4 border-b border-line px-5 py-3; }
+  .selector-search .field { @apply m-0; }
+  .selector-search > span { @apply pb-2 text-[10px] text-muted; }
   .selector-dialog > footer { @apply flex items-center justify-between border-t border-line px-5 py-4 text-xs text-muted; }
   .selector-dialog > footer button { @apply border-0 bg-orange px-4 py-2 text-sm font-semibold text-white; }
+  .selector-pagination { @apply flex items-center justify-between gap-3; }
+  .selector-pagination button, .selector-dialog > footer .selector-pagination button { @apply flex items-center gap-1 border border-line bg-white! px-3 py-2 text-xs font-semibold text-teal-dark!; }
+  .selector-pagination button:disabled { @apply cursor-not-allowed opacity-40; }
+  .authoring-search { @apply mt-4 grid grid-cols-[1fr_auto] items-center gap-3; }
+  .authoring-search input { @apply text-sm; }
+  .authoring-search small { @apply text-[10px] text-muted; }
   .activity-review-panel { @apply border-t border-line p-6; }
   .activity-review-panel > header { @apply flex items-start justify-between; }
   .activity-review-panel > header h3 { @apply text-2xl text-teal-dark; }
@@ -488,6 +502,50 @@
   .learner-statement { @apply mb-6 flex items-start gap-4 bg-[#edf6f4] p-5 text-teal-dark; }
   .learner-statement p { @apply text-[10px] font-bold tracking-[0.14em] text-orange; }
   .learner-statement blockquote { @apply my-2 text-sm leading-relaxed; }
+
+  .portfolio-template-pin { @apply mb-4 flex items-center justify-between border-l-4 border-[#9c7753] bg-brown-soft px-4 py-3 font-mono text-[10px] text-[#785a3e]; }
+  .portfolio-template-pin em { @apply not-italic; }
+  .portfolio-template-renderer { @apply grid gap-4; }
+  .portfolio-template-section { @apply border border-line bg-white; }
+  section.portfolio-template-section > header { @apply flex items-start gap-3 border-b border-line px-5 py-4; }
+  section.portfolio-template-section > header > svg { @apply mt-0.5 shrink-0 text-teal; }
+  section.portfolio-template-section > header h3 { @apply text-base text-teal-dark; }
+  section.portfolio-template-section > header small { @apply mt-1 block text-[10px] text-muted; }
+  .portfolio-template-section > summary { @apply cursor-pointer list-none border-b border-line px-5 py-4 font-semibold text-teal-dark; }
+  .portfolio-template-section > summary::-webkit-details-marker { @apply hidden; }
+  details.portfolio-template-section > summary { @apply flex items-center justify-between gap-4; }
+  details.portfolio-template-section > summary::after { content: '+'; @apply text-lg font-normal text-teal; }
+  details.portfolio-template-section[open] > summary::after { content: '−'; }
+  details.portfolio-template-section > summary small { @apply text-[9px] font-normal text-muted; }
+  .template-section-body { @apply p-5; }
+  .template-item-list { @apply grid gap-3; }
+  .template-portfolio-item { @apply border-l-2 border-orange bg-soft px-4 py-3; }
+  .template-portfolio-item > span, .template-portfolio-item > div:first-child { @apply flex items-center justify-between gap-3; }
+  .template-portfolio-item blockquote { @apply my-3 text-sm leading-relaxed; }
+  .template-portfolio-item small { @apply text-[10px] text-muted; }
+  .template-empty { @apply text-xs text-muted; }
+  .template-narrative { @apply flex flex-col gap-3 bg-[#edf6f4] p-4 text-teal-dark; }
+  .template-narrative > svg { @apply text-orange; }
+  .template-narrative blockquote { @apply text-sm leading-relaxed; }
+  .template-source-trace { @apply grid gap-0; }
+  .template-source-trace > div { @apply grid grid-cols-[150px_1fr] gap-4 border-b border-line py-3 last:border-b-0; }
+  .template-source-trace dt { @apply text-[10px] font-semibold uppercase tracking-[0.08em] text-muted; }
+  .template-source-trace dd { @apply min-w-0 break-words text-xs; }
+  .template-child-sections { @apply mt-4 grid gap-3; }
+  .template-link-button { @apply border-0 bg-transparent; }
+  .template-link-button > summary { @apply inline-flex border-0 bg-teal px-4 py-2.5 text-sm text-white; }
+  .template-link-button > summary::after { @apply ml-2 text-white; }
+  .template-link-button[open] > summary { @apply bg-teal-dark; }
+  .template-link-button > .template-section-body { @apply mt-3 border border-line bg-white; }
+  .template-summary .template-section-body { @apply p-0; }
+  .template-summary .skill-visual-grid article:nth-last-child(-n+2) { @apply border-b-0; }
+  .review-template-item select { @apply mt-3 max-w-44; }
+  .portfolio-template-renderer .ai-panel { @apply mt-0; }
+
+  .pagination { @apply mt-4 flex items-center justify-between border-t border-line pt-4 text-xs text-muted; }
+  .pagination > div { @apply flex gap-2; }
+  .pagination button { @apply flex items-center gap-1 border border-line bg-white px-3 py-2 text-xs font-semibold text-teal-dark; }
+  .pagination button:disabled { @apply cursor-not-allowed opacity-40; }
 
   .secondary-action, .stop-action { @apply flex items-center gap-2 border border-line bg-white px-4 py-2.5 text-sm font-semibold hover:border-orange; }
   .stop-action { @apply border-[#e5b3b7] text-[#86454b]; }

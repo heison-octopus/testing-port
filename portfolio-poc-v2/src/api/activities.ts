@@ -3,7 +3,7 @@ import { call } from './transport';
 
 export const activitiesApi = {
   activities: () => call<ActivityWorkspace>('/activities'),
-  activityReferenceData: () => call<ActivityReferenceData>('/activities/reference-data'),
+  activityReferenceData: (includeAuthoring = true) => call<ActivityReferenceData>(`/activities/reference-data${includeAuthoring ? '' : '?includeAuthoring=false'}`),
   activityApprovalCandidates: () => call<ApprovalCandidate[]>('/activities/approval-candidates'),
   activity: (id: string) => call<Activity>(`/activities/${id}`),
   createActivity: (body: unknown) => call<Activity>('/activities', { method: 'POST', body: JSON.stringify(body) }),

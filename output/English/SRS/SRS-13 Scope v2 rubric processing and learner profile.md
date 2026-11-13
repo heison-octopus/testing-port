@@ -80,7 +80,7 @@ The manual controls that must be available, subject to role and assignment scope
 
 | ID | Requirement | Status |
 | --- | --- | --- |
-| V2-FR-056 | Rubric import/export shall use one four-sheet linked XLSX (`rubric_catalogues`, `rubric_groups`, `rubric_skills`, `rubric_steps`); export-all shall contain actual records, while a separate download supplies the new-record template. | Confirmed System Analyst direction, 29 Oct 2026; not BHSS/JC approval |
+| V2-FR-056 | Rubric import/export shall use one five-sheet linked XLSX (`rubric_catalogues`, `rubric_groups`, `rubric_skills`, `rubric_levels`, `rubric_steps`); export-all shall contain actual records, while a separate download supplies the new-record template. | Confirmed System Analyst direction, 29 Oct 2026; not BHSS/JC approval |
 | V2-FR-057 | Each immutable rubric version shall declare exactly one selection mode: `definition_only` or `score_range`. Score mode shall require complete valid non-overlapping bands covering zero to the declared scale, defaulting the scale to 10 only when omitted. | Confirmed System Analyst direction, 29 Oct 2026; not BHSS/JC approval |
 | V2-FR-058 | An active rubric shall not be edited in place. Any imported or in-platform change shall create a validated successor draft and require reasoned authorized activation. | Confirmed System Analyst direction, 29 Oct 2026; not BHSS/JC approval |
 | V2-FR-059 | A Portfolio working version shall pin the active assessment rubric ID/version when generated. Review, approval, publication and export shall retain it; later activation affects only subsequently generated working versions. | Confirmed System Analyst direction, 29 Oct 2026; not BHSS/JC approval |

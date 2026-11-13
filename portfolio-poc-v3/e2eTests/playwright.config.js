@@ -1,0 +1,1 @@
+import {defineConfig} from '@playwright/test';export default defineConfig({testDir:'.',testMatch:'*.spec.js',workers:1,use:{baseURL:'http://127.0.0.1:5180'},webServer:{command:'node e2eTests/start.js',cwd:process.cwd(),url:'http://127.0.0.1:5180',reuseExistingServer:false,timeout:30000}});

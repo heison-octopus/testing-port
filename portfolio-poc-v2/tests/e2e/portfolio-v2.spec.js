@@ -176,13 +176,23 @@ test.describe.serial('Portfolio POC v2 implemented workflows', () => {
     await page.getByLabel('Self-introduction').fill('I am building a new audited Portfolio version.');
     await page.getByRole('button', { name: 'Save new working version' }).click();
     await expect(page.getByText('Latest working version 3')).toBeVisible();
+    await page.locator('.working-version-panel [data-section-key="memorable_activity"] summary').click();
     await expect(page.getByText('I learned to reorganise a team after a setback.').first()).toBeVisible();
     await page.getByRole('button', { name: 'Submit working version' }).click();
     await expect(page.locator('.working-version-panel')).toContainText('student submitted');
 
     await page.locator('nav').getByRole('button', { name: 'Published Portfolio' }).click();
     await expect(page.getByText('PSNAP-S1-P1-v1')).toBeVisible();
-    await expect(page.locator('.portfolio-visual-sheet')).toContainText('Pinned rubric · Skills Builder Universal Framework · UF2.0 · RUB-SB-UF2');
+    await expect(page.locator('.portfolio-template-pin')).toContainText('Pinned rubric · Skills Builder Universal Framework · UF2.0 · RUB-SB-UF2');
+    await expect(page.locator('[data-section-key="self_introduction"]')).toHaveAttribute('data-presentation-mode', 'inline');
+    const evidenceGroup = page.locator('[data-section-key="evidence_and_moments"]');
+    await expect(evidenceGroup).toHaveAttribute('open', '');
+    const selectedEvidence = page.locator('[data-section-key="memorable_activity"]');
+    await expect(selectedEvidence).toHaveAttribute('data-presentation-mode', 'link_button');
+    await expect(selectedEvidence).not.toHaveAttribute('open', '');
+    await selectedEvidence.locator('summary').click();
+    await expect(selectedEvidence).toHaveAttribute('open', '');
+    await expect(page.locator('[data-section-key="source_trace"]')).toHaveAttribute('data-presentation-mode', 'disclosure');
     await expect(page.locator('.portfolio-detail')).not.toContainText('I am building a new audited Portfolio version.');
   });
 
@@ -216,6 +226,10 @@ test.describe.serial('Portfolio POC v2 implemented workflows', () => {
     await page.getByLabel('Activity name (Chinese)').fill('瀏覽器測試反思工作坊');
     await page.getByLabel('Description (English)').fill('Initial browser-tested description.');
     await page.getByLabel('Description (Chinese)').fill('瀏覽器測試用的初始簡介。');
+    await page.getByRole('button', { name: 'Add from question bank' }).click();
+    await expect(page.getByRole('dialog', { name: 'Add from question bank' })).toContainText('166 source questions');
+    await page.locator('.bank-option:not([disabled])').first().click();
+    await expect(page.locator('.question-row').nth(1).locator('.source-stable')).toContainText('Q-');
     await page.getByRole('button', { name: 'Review activity' }).click();
     await expect(page.getByRole('heading', { name: 'Check the activity package' })).toBeVisible();
     await page.getByRole('button', { name: 'Create activity draft' }).click();
@@ -381,7 +395,7 @@ test.describe.serial('Portfolio POC v2 implemented workflows', () => {
     await expect(page.getByText('Default labelling · VASK v2026')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Choose VASK labels' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Build questionnaire' })).toBeVisible();
-    await expect(page.getByText('8 suggested questions from 4 selected VASK labels')).toBeVisible();
+    await expect(page.getByText('0 questions selected by the author')).toBeVisible();
     await expect(page.getByText(/Current skill rubric:/)).toHaveCount(0);
 
     await page.getByLabel('Activity name (English)').fill('E2E activity builder flow');
@@ -389,11 +403,15 @@ test.describe.serial('Portfolio POC v2 implemented workflows', () => {
     await page.getByLabel('Description (English)').fill('Verifies the complete activity and questionnaire draft workflow.');
     await page.getByLabel('Description (Chinese)').fill('驗證完整活動及問卷草稿流程。');
     await page.locator('.vask-group label').filter({ hasText: 'Integrity' }).getByRole('checkbox').check();
-    await expect(page.getByText(/suggested questions from 5 selected VASK labels/)).toBeVisible();
+    await expect(page.getByText('0 questions selected by the author')).toBeVisible();
 
     await page.getByRole('button', { name: 'Choose teacher groups' }).click();
     await page.locator('.selector-options label').filter({ hasText: 'Student Development Team' }).getByRole('checkbox').check();
     await page.getByRole('button', { name: 'Done' }).click();
+    await page.getByRole('button', { name: 'Add from question bank' }).click();
+    await expect(page.getByRole('dialog', { name: 'Add from question bank' })).toContainText('166 source questions');
+    await page.locator('.bank-option:not([disabled])').first().click();
+    await expect(page.locator('.question-row').nth(1).locator('.source-stable')).toContainText('SUPPLIED-Q-001-v1');
     await page.getByLabel('Question 1', { exact: true }).fill('Describe one observed example and identify its supporting evidence.');
     await page.getByLabel('Required 1', { exact: true }).selectOption('optional');
     await page.getByRole('button', { name: 'Write new question' }).click();

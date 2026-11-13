@@ -4,8 +4,8 @@ import { call } from './transport';
 const query = (path: string, params: URLSearchParams) => `${path}${params.size ? `?${params}` : ''}`;
 
 export const authoringApi = {
-  teacherDirectory: (params = new URLSearchParams()) => call<Paged<Staff>>(query('/directory/teachers', params)),
-  catalogueLabels: (params = new URLSearchParams()) => call<Paged<CatalogueLabel>>(query('/catalogue-labels', params)),
-  questionBank: (params = new URLSearchParams()) => call<Paged<QuestionBankItem>>(query('/question-bank', params)),
-  questionBlocks: (params = new URLSearchParams()) => call<Paged<QuestionBlock>>(query('/question-blocks', params)),
+  teacherDirectory: (params = new URLSearchParams(), signal?: AbortSignal) => call<Paged<Staff>>(query('/directory/teachers', params), { signal }),
+  catalogueLabels: (params = new URLSearchParams(), signal?: AbortSignal) => call<Paged<CatalogueLabel>>(query('/catalogue-labels', params), { signal }),
+  questionBank: (params = new URLSearchParams(), signal?: AbortSignal) => call<Paged<QuestionBankItem>>(query('/question-bank', params), { signal }),
+  questionBlocks: (params = new URLSearchParams(), signal?: AbortSignal) => call<Paged<QuestionBlock>>(query('/question-blocks', params), { signal }),
 };

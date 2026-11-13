@@ -1,0 +1,2 @@
+import {spawn} from 'node:child_process';import{mkdtempSync,rmSync}from'node:fs';import{join}from'node:path';import{tmpdir}from'node:os';
+const dir=mkdtempSync(join(tmpdir(),'bhss-v3-e2e-'));const processes=[spawn(process.execPath,['backend/index.js'],{env:{...process.env,V3_DB:join(dir,'test.sqlite')},stdio:'inherit'}),spawn('npm',['run','client'],{stdio:'inherit'})];function stop(){for(const p of processes)p.kill();rmSync(dir,{recursive:true,force:true});process.exit()}process.on('SIGTERM',stop);process.on('SIGINT',stop);

@@ -80,7 +80,7 @@
 
 | ID | 要求 | 狀態 |
 | --- | --- | --- |
-| V2-FR-056 | Rubric 匯入／匯出須使用一個包含四張連繫工作表的 XLSX（`rubric_catalogues`、`rubric_groups`、`rubric_skills`、`rubric_steps`）；匯出全部須包含實際紀錄，新增紀錄範本則另行下載。 | 2026-10-29 確認的系統分析方向；不代表 BHSS 或 JC 已批准 |
+| V2-FR-056 | Rubric 匯入／匯出須使用一個包含五張連繫工作表的 XLSX（`rubric_catalogues`、`rubric_groups`、`rubric_skills`、`rubric_levels`、`rubric_steps`）；匯出全部須包含實際紀錄，新增紀錄範本則另行下載。 | 2026-10-29 確認的系統分析方向；不代表 BHSS 或 JC 已批准 |
 | V2-FR-057 | 每個不可變更的 Rubric 版本只可申報 `definition_only` 或 `score_range` 其中一種選取模式。分數模式須有完整、有效而不重疊的範圍，涵蓋 0 至申報滿分；只有沒有申報滿分時才預設為 10。 | 2026-10-29 確認的系統分析方向；不代表 BHSS 或 JC 已批准 |
 | V2-FR-058 | 生效 Rubric 不可原地修改。任何匯入或平台內改動均須建立已驗證後繼草稿，再由獲授權人員填寫理由並啟用。 | 2026-10-29 確認的系統分析方向；不代表 BHSS 或 JC 已批准 |
 | V2-FR-059 | 建立 Portfolio 工作版本時須鎖定當時生效的評估 Rubric ID／版本；覆核、批核、發布及匯出均沿用該版本，其後啟用新版本只影響再之後建立的工作版本。 | 2026-10-29 確認的系統分析方向；不代表 BHSS 或 JC 已批准 |
