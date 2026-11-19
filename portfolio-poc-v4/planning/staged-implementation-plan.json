@@ -1,0 +1,492 @@
+{
+  "version": "v4-plan-1",
+  "date": "2026-11-18",
+  "scope": "Stage 1 locally implemented after explicit approval; remaining stages planned",
+  "executor": "direct-codex",
+  "execution_mode": "active workspace",
+  "plan_tier": "T1",
+  "implementation_tier": "T2",
+  "schema_authorization": "User allowed relational 18-table design; no questionnaire/response operational JSON; backend rubric definitions",
+  "stages": [
+    {
+      "id": 0,
+      "title": "Plan and contract baseline",
+      "status": "preview",
+      "tables_introduced": [],
+      "depends_on": [],
+      "inputs": [
+        "Approved relational 18-table proposal",
+        "User-selected nRetention functional flow",
+        "V3 review HTML, stage-0 baseline and source plans"
+      ],
+      "outputs": [
+        "This stage review canvas and Archify dependency map",
+        "18-table ownership map; fixed versus configurable definition boundary",
+        "Stage gates and bilingual SRS rewrite map; no runnable app"
+      ],
+      "proposed_apis": [],
+      "acceptance": [
+        "All 18 tables have one introduction stage",
+        "Every future stage has inputs, outputs, named actor paths and negative cases",
+        "Accepted decisions are carried forward; no old V3 approval is reused for V4 runtime"
+      ],
+      "walkthroughs": {
+        "System Analyst": [
+          "Open this preview",
+          "Select a stage tab",
+          "Inspect schema, flow, tests and open rules",
+          "Review Stage 1 scope and answer the one approval question"
+        ]
+      },
+      "open_rules": [
+        "Implementation starts only after later approval of a concrete stage."
+      ],
+      "v3_mapping": "V3 stage 0; replaces the old schema assumptions, not V3 evidence"
+    },
+    {
+      "id": 1,
+      "title": "Foundation, identity and shared history",
+      "status": "implemented locally",
+      "tables_introduced": [
+        "schools",
+        "users",
+        "roles",
+        "assignments",
+        "school_definitions",
+        "record_links",
+        "change_logs"
+      ],
+      "depends_on": [
+        0
+      ],
+      "inputs": [
+        "Synthetic two-school fixture",
+        "Role/action profiles and school class/subject/period definitions",
+        "Expected-version and relational event/snapshot contract"
+      ],
+      "outputs": [
+        "Isolated V4 SQLite and ordered migrations; refuse destructive reset of retained paths",
+        "Vite/React typed API shell, layered server, session/request-key boundary",
+        "Manage people, dated role/class assignments and explicit overrides",
+        "Atomic row change + event; generic snapshot writer/reader proven on identity records",
+        "Backend definition registry validates retained config versions; no unvalidated rubric activation"
+      ],
+      "proposed_apis": [
+        "POST /api/session; GET /api/session; DELETE /api/session",
+        "GET/POST /api/people; GET/POST /api/roles",
+        "GET/POST /api/school-definitions; POST /api/assignments; PATCH /api/assignments/:id",
+        "GET /api/audit/events/:id"
+      ],
+      "acceptance": [
+        "Admin assigns and deassigns a scoped role; staff access changes at effective dates",
+        "Wrong-school IDs, explicit deny, expired/revoked session and missing request key fail server-side",
+        "Two concurrent edits: exactly one succeeds; failed transaction writes neither row nor log",
+        "Initial and changed snapshots reconstruct identity/assignment fields and relational links",
+        "Build and API checks pass; Playwright uses separate Admin/Teacher/Student/Denied contexts"
+      ],
+      "walkthroughs": {
+        "SchoolAdmin": [
+          "/login \u2192 sign in as school A admin",
+          "/admin/people \u2192 select synthetic teacher",
+          "Assignments \u2192 assign class role and effective period",
+          "/admin/audit \u2192 inspect event and earlier values"
+        ],
+        "Teacher": [
+          "/login \u2192 sign in as assigned teacher",
+          "/workspace \u2192 confirm permitted scope",
+          "After deassignment, reload /workspace \u2192 verify scope removed"
+        ],
+        "Student": [
+          "/login \u2192 sign in as student",
+          "/workspace \u2192 see own identity only",
+          "Direct /admin/people \u2192 forbidden"
+        ],
+        "Denied or school B": [
+          "/login \u2192 use denied or school B fixture",
+          "Request school A person ID directly \u2192 deny without leaking record"
+        ]
+      },
+      "open_rules": [
+        "Demo authority is a fixture, not a BHSS approval policy.",
+        "No production identity-provider or retention policy is decided here."
+      ],
+      "v3_mapping": "V3 stage 1 plus shared history conventions from the addendum"
+    },
+    {
+      "id": 2,
+      "title": "Relational questionnaires and backend definitions",
+      "status": "planned",
+      "tables_introduced": [
+        "questionnaire_definitions"
+      ],
+      "depends_on": [
+        1
+      ],
+      "inputs": [
+        "Question sources, ability definitions, agreement/frequency scales",
+        "Versioned VASK/Skills Builder artifacts and permission/workflow registry contracts"
+      ],
+      "outputs": [
+        "Relational questionnaire/block/question/scale/option and placement editor",
+        "Immutable published definition rows with successor drafts in the same table",
+        "Separate author/reviewer/publisher controls; source instrument and ability remain visible",
+        "Definition workbook export \u2192 staged import/diff \u2192 review; staging may be request-local here, durable batch records arrive in stage 4",
+        "Backend artifact validation and controlled activation specification, not rubric database tables"
+      ],
+      "proposed_apis": [
+        "GET/POST /api/questionnaire-definitions",
+        "POST /api/questionnaires/:id/submit|approve|publish",
+        "GET /api/questionnaires/:id/definition-export",
+        "POST /api/questionnaires/definition-preview; POST /api/questionnaires/definition-commit",
+        "GET /api/definitions/rubrics/:key/:version"
+      ],
+      "acceptance": [
+        "Reuse one question/block in two questionnaires using placement rows",
+        "Reject parent-kind errors, cycles, duplicate ambiguous placements and invalid options",
+        "Publish successor while old released question/block IDs still render identically",
+        "No questionnaire/answer/option JSON operational columns",
+        "Unauthorized publication fails; backend artifact version/hash is deterministic"
+      ],
+      "walkthroughs": {
+        "Form author": [
+          "/login \u2192 author",
+          "/questionnaires \u2192 New questionnaire",
+          "Blocks \u2192 add question and scale",
+          "Export definition \u2192 re-import changes \u2192 inspect diff \u2192 submit"
+        ],
+        "Assigned reviewer": [
+          "/login \u2192 reviewer",
+          "/reviews \u2192 open questionnaire",
+          "Inspect source and ability \u2192 approve \u2192 publish where assigned"
+        ]
+      },
+      "open_rules": [
+        "Official RC360 remains disabled without its source package.",
+        "Controlled rubric artifact publication preserves school administration; it must not silently become developer-only editing."
+      ],
+      "v3_mapping": "V3 stage 3 definition half; definition registry formerly in stage 4"
+    },
+    {
+      "id": 3,
+      "title": "Activities, stages, attendance and responses",
+      "status": "planned",
+      "tables_introduced": [
+        "activities",
+        "questionnaire_submissions",
+        "questionnaire_answers"
+      ],
+      "depends_on": [
+        1,
+        2
+      ],
+      "inputs": [
+        "Released questionnaires",
+        "People and period definitions",
+        "Activity roster, stage schedules and named respondents/reviewers",
+        "TI-INPUT-01 assumption: Time Infinity batch of activities, student actual attendance and feedback; reuse activity import"
+      ],
+      "outputs": [
+        "Root activity + stage rows; explicit completed/ongoing state",
+        "Planned roster and actual attendance via assignments; absence review exception",
+        "One submission per respondent/subject/stage; relational answer rows",
+        "Draft \u2192 submitted \u2192 approved or returned to draft, full scalar event snapshots",
+        "Stage/definition/date pins, effective deadlines, current versus at-submission lateness",
+        "Peer code creates an explicit reviewer-to-subject task only after eligibility checks"
+      ],
+      "proposed_apis": [
+        "GET/POST /api/activities; POST /api/activities/:id/stages",
+        "POST /api/activities/:id/roster-preview|roster-commit",
+        "PATCH /api/assignments/:id/attendance",
+        "GET /api/tasks; PUT /api/submissions/:id/answers",
+        "POST /api/submissions/:id/submit|approve|return",
+        "POST /api/peer-invitations/redeem"
+      ],
+      "acceptance": [
+        "Two stages with different questionnaires retain distinct answers",
+        "Teacher return and student resubmit use the same submission ID; previous submitted content survives",
+        "Expired assignment cannot be bypassed by late-submission permission",
+        "Extend deadline after submission: historical and current lateness differ correctly",
+        "Stale activity edits fail; pending early end does not count as completed",
+        "Unassigned or wrong-subject peer cannot read or submit; missing answer is never zero"
+      ],
+      "walkthroughs": {
+        "Activity teacher": [
+          "/login \u2192 teacher",
+          "/activities \u2192 New activity \u2192 set roster",
+          "Stages \u2192 add progress and end questionnaires",
+          "Attendance \u2192 confirm absent participant \u2192 request review"
+        ],
+        "Student": [
+          "/login \u2192 student",
+          "/tasks \u2192 open assigned stage",
+          "Save draft \u2192 Submit",
+          "After return, edit \u2192 resubmit same task"
+        ],
+        "Peer": [
+          "/login \u2192 eligible peer",
+          "/peer-invitations \u2192 enter activity code",
+          "Open explicitly assigned subject task \u2192 submit"
+        ],
+        "Reviewer": [
+          "/login \u2192 reviewer",
+          "/reviews \u2192 inspect submitted answers",
+          "Return with reason \u2192 inspect resubmission \u2192 approve"
+        ]
+      },
+      "open_rules": [
+        "M-28/L-04: common due date versus explicit dates for added stages remains unresolved; use explicit fixture dates.",
+        "Peer-code expiry/reuse and eligibility need school policy; synthetic fixtures use labelled temporary rules.",
+        "P0 is display-only pending L-09 and is not a valid resolved period."
+      ],
+      "v3_mapping": "V3 stages 2 and response half of 3, now after real form definitions"
+    },
+    {
+      "id": 4,
+      "title": "Media, processing runs and source evidence",
+      "status": "planned",
+      "tables_introduced": [
+        "media_assets",
+        "processing_runs",
+        "recognition_records",
+        "proof_items"
+      ],
+      "depends_on": [
+        1,
+        3
+      ],
+      "inputs": [
+        "Synthetic or specifically permitted files",
+        "Accepted responses and certificate/mark examples",
+        "Provider-neutral deterministic face/speech test adapters",
+        "TI-INPUT-01: accepted Time Infinity feedback becomes source-linked proof; retain authorship/perspective without inference"
+      ],
+      "outputs": [
+        "One asset + relational student/activity links; separate visibility/staff access/assessment use",
+        "Shared run IDs for face/speech/AI/import/export/request kinds; durable staged imports and row custody",
+        "Relational face-region/candidate and transcript/speaker rows; explicit reviewer enable/disable",
+        "Proof registration from accepted answers, certificates, reviewed extracts and manual feedback",
+        "Photo requests and early-end/approval exceptions become owned work records",
+        "Generic scene output stays unconfirmed and cannot be behavioural proof"
+      ],
+      "proposed_apis": [
+        "POST /api/media; GET /api/activities/:id/media",
+        "POST /api/processing-runs; GET /api/processing-runs/:id",
+        "GET /api/media/:id/recognition-records",
+        "POST /api/recognition-records/:id/confirm|correct",
+        "GET/POST /api/proof; POST /api/imports/preview|commit"
+      ],
+      "acceptance": [
+        "Two recognition runs remain independent; newest unconfirmed run never replaces enabled human confirmation",
+        "Correct exactly one face region; unknown people do not create user records",
+        "Speech segment/speaker correction preserves raw output and timestamps",
+        "Student-hidden proof can be eligible for assigned staff only under separate permitted-use checks",
+        "Unsupported file, wrong-school references and unassigned review fail",
+        "Import preserves original row and uploader; repeat source/hash cannot silently duplicate proof",
+        "Time Infinity repeated activity IDs resolve once across student rows; attendance and feedback retain source links; duplicate/corrected rows are previewed"
+      ],
+      "walkthroughs": {
+        "Teacher": [
+          "/activities/:id \u2192 Media Library",
+          "Upload permitted synthetic photo/audio \u2192 Run scan",
+          "Review face/segment \u2192 confirm or correct one item"
+        ],
+        "Student": [
+          "/activities/:id \u2192 Media Library",
+          "See only confirmed permitted student-linked items",
+          "Request additional image/correction"
+        ],
+        "Evidence reviewer": [
+          "/proof \u2192 inspect source and authorship",
+          "Accept or exclude evidence with reason",
+          "/processing-runs \u2192 inspect separate batches and raw provenance"
+        ],
+        "SchoolAdmin": [
+          "/imports \u2192 upload source workbook",
+          "Preview row errors \u2192 correct \u2192 commit",
+          "Inspect batch and row history"
+        ]
+      },
+      "open_rules": [
+        "Production face/speech providers and biometric/consent terms are not approved by fixture success.",
+        "File format/cap differences remain configurable under L-02.",
+        "Academic-result import stays proposed until source/scale contract is agreed.",
+        "TI-INPUT-01: exact Time Infinity headers, stable IDs, attendance vocabulary and feedback authorship await sample export"
+      ],
+      "v3_mapping": "V3 evidence stage 5 moves earlier; provider contracts from stage 7 are test doubles here"
+    },
+    {
+      "id": 5,
+      "title": "Assessment and evidence correction",
+      "status": "planned",
+      "tables_introduced": [
+        "assessments"
+      ],
+      "depends_on": [
+        1,
+        3,
+        4
+      ],
+      "inputs": [
+        "Complete versioned Skills Builder backend package",
+        "Accepted proof and completed activities",
+        "Named assessor/reviewer and versioned calculation policy"
+      ],
+      "outputs": [
+        "Candidate versus human observation versus period-result rows",
+        "Exact selected periods and included/excluded evidence in record_links",
+        "Default max of eligible confirmed observations; permitted alternatives gated by policy",
+        "Inherited/not-assessed display with no fake numeric level",
+        "Impact preview and dependency traversal before publication features",
+        "Immutable result decisions and explicit withdrawal/successor"
+      ],
+      "proposed_apis": [
+        "POST /api/assessment-runs",
+        "POST /api/observations; POST /api/observations/:id/confirm",
+        "POST /api/assessment-reviews/:id/include|exclude|calculate",
+        "POST /api/assessments/:id/publish|withdraw",
+        "GET /api/proof/:id/impact; POST /api/proof/:id/invalidate"
+      ],
+      "acceptance": [
+        "Reject source-free level, unknown rubric key/version/hash and unlike-rubric aggregation",
+        "Only completed eligible activity observations contribute; stage feedback cannot bypass parent completion",
+        "AI candidate maximum and official result remain distinct",
+        "Missing evidence gives eligible inheritance or not-assessed, never zero/step 8",
+        "Invalidate used identity/proof \u2192 dependent result becomes stale \u2192 named withdrawal/successor",
+        "A new rubric config cannot reinterpret an old result"
+      ],
+      "walkthroughs": {
+        "Assessor": [
+          "/assessment-review \u2192 select student/window",
+          "Inspect completed activities and proof",
+          "Confirm observation \u2192 select included evidence"
+        ],
+        "Reviewer/publisher": [
+          "/assessment-review \u2192 compute permitted method",
+          "Inspect exact sources and policy \u2192 approve/publish",
+          "/proof/:id/impact \u2192 invalidate source \u2192 withdraw affected result"
+        ]
+      },
+      "open_rules": [
+        "Average rounding, permitted methods, inheritance compatibility and publication authority remain school decisions.",
+        "RC360 remains separate and inactive until complete."
+      ],
+      "v3_mapping": "V3 stage 4 plus correction gate from 5 before Portfolio"
+    },
+    {
+      "id": 6,
+      "title": "Portfolio submission and frozen publication",
+      "status": "planned",
+      "tables_introduced": [
+        "portfolio_submissions",
+        "portfolio_items"
+      ],
+      "depends_on": [
+        1,
+        4,
+        5
+      ],
+      "inputs": [
+        "Confirmed results, eligible media/proof and frozen report periods",
+        "Versioned backend template",
+        "Student content and named class teacher/reviewer/publisher"
+      ],
+      "outputs": [
+        "Student intro and six editable learner fields as scalar columns",
+        "Relational cards/claims/selections; no sections_json",
+        "Same submission status workflow with complete published scalar snapshot graph",
+        "Official view/export uses published_event_id while a newer draft is edited",
+        "Source invalidation reaches Portfolio; withdrawal or reviewed successor",
+        "Controlled HTML and evidence-register exports pin frozen output"
+      ],
+      "proposed_apis": [
+        "GET/POST /api/portfolios; PUT /api/portfolios/:id/items",
+        "POST /api/portfolios/:id/submit|return|approve|publish",
+        "GET /api/portfolios/:id/published",
+        "POST /api/portfolios/:id/export|withdraw"
+      ],
+      "acceptance": [
+        "Student edits their own six fields without altering source observations",
+        "Returned working content never changes the last published view",
+        "Change backend template/rubric after publication: old output remains reproducible",
+        "Multi-period window is frozen; ongoing activities excluded from official derived sections",
+        "Unknown source claim cannot publish; generated and student-authored variants stay identifiable",
+        "Correct a source already used by published Portfolio \u2192 impact \u2192 withdrawal/reissue with full trace"
+      ],
+      "walkthroughs": {
+        "Student": [
+          "/portfolio \u2192 edit introduction and learner fields",
+          "Select permitted work \u2192 submit"
+        ],
+        "Class teacher": [
+          "/portfolio-reviews \u2192 open student submission",
+          "Select all/subset \u2192 return or recommend approval"
+        ],
+        "Publisher": [
+          "/portfolio-reviews \u2192 inspect approved version",
+          "Publish \u2192 export frozen snapshot"
+        ],
+        "Student after publication": [
+          "/portfolio/published \u2192 inspect issued content",
+          "/portfolio \u2192 make draft edit",
+          "Return to published view \u2192 old issued content unchanged"
+        ]
+      },
+      "open_rules": [
+        "M-30: interest/category taxonomy, card counts/ranking and student override rights remain open; use labelled manual fixture choices.",
+        "Final branding, sharing and public recipient access are not implied."
+      ],
+      "v3_mapping": "V3 stage 6 with source correction already implemented"
+    },
+    {
+      "id": 7,
+      "title": "Complete round trips and prepare release",
+      "status": "planned",
+      "tables_introduced": [],
+      "depends_on": [
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "inputs": [
+        "All previous local evidence",
+        "Approved external contracts and deployment scope when supplied",
+        "Bilingual behaviour-focused SRS mapping"
+      ],
+      "outputs": [
+        "Full definition/response/rubric-artifact and evidence import/export tests",
+        "End-to-end role regression, snapshot recovery and migration/backup checks",
+        "Optional production provider adapters only when separately authorised",
+        "Release readiness record; no deployment by this plan"
+      ],
+      "proposed_apis": [
+        "Existing domain APIs; new connector/provider endpoints only after their scoped review"
+      ],
+      "acceptance": [
+        "Whole journey: configure \u2192 stage \u2192 response \u2192 proof \u2192 observation \u2192 published Portfolio \u2192 correction",
+        "Database has the agreed 18 functional tables; any technical tables identified separately, no hidden domain expansion",
+        "Restore a test backup and rebuild issued snapshots with retained config artifacts",
+        "Role-isolated direct API and browser regressions pass",
+        "No unresolved policy is silently selected by fixtures or release scripts"
+      ],
+      "walkthroughs": {
+        "SchoolAdmin": [
+          "/imports \u2192 run complete reviewed round trip",
+          "/exports \u2192 inspect school-scoped results"
+        ],
+        "Teacher and student": [
+          "Repeat approved full activity-to-Portfolio walkthroughs in isolated contexts"
+        ],
+        "Operator": [
+          "Use disposable fixture database \u2192 migrate/backup/restore",
+          "Verify stored published snapshot and referenced backend artifact versions"
+        ]
+      },
+      "open_rules": [
+        "Deployment, production identity, provider contracts and detailed retention remain separate approvals."
+      ],
+      "v3_mapping": "V3 stage 7; no premature provider or deployment work"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+proof_link_id,proof_item_id,target_entity_type,target_entity_id,support_role,linked_by_user_id,linked_at,status,notes
+PL-001,PRF-FEEDBACK-001,rubric_observation,OBS-001,supports_condition,USR-T-001,2026-09-19T16:00:00+08:00,active,Human reviewer cited the behaviour when confirming the condition
+PL-002,PRF-RESPONSE-001,rubric_observation,OBS-005,supports_condition,USR-T-001,2026-09-19T16:05:00+08:00,active,Question ability provides context; no fixed question-to-rubric mapping exists
+PL-003,PRF-FEEDBACK-003,rubric_observation,OBS-003,supports_condition,USR-TA-001,2026-10-17T10:00:00+08:00,active,Teacher or TA confirmation is the assessment gate
+PL-004,PRF-FEEDBACK-004,rubric_observation,OBS-004,supports_condition,USR-T-001,2027-02-12T16:30:00+08:00,active,Higher level can be confirmed without a prerequisite-chain rule
+PL-005,PRF-REFLECTION-001,proud_moment_selection,PM-001,selected_by_student,USR-S-001,2026-12-15T18:00:00+08:00,active,Portfolio curation only
+PL-006,PRF-CERT-002,proud_moment_selection,PM-002,selected_by_student,USR-S-002,2026-12-15T18:00:00+08:00,active,Certificate remains non-assessing proof
+PL-007,PRF-FEEDBACK-001,portfolio_claim,CLAIM-001,supports_claim,USR-T-001,2026-12-20T15:00:00+08:00,active,Published claim keeps source citation
+PL-008,PRF-REFLECTION-001,portfolio_claim,CLAIM-001,context_for_claim,USR-T-001,2026-12-20T15:00:00+08:00,active,Mixed perspective retained

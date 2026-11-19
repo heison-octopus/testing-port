@@ -1,0 +1,3 @@
+staff_group_id,school_id,group_code,name_en,name_zh,group_purpose,department_id,subject_id,effective_from,effective_until,status,created_by_user_id,created_at
+GRP-ENG-TEACHERS,BHSS,ENG_TEACHERS,English Teachers,英文科老師,permission_scope,DEPT-LANG,SUB-ENG,2026-08-20,,active,USR-ADM-001,2026-08-20T09:30:00+08:00
+GRP-STUDENT-DEV,BHSS,STUDENT_DEV,Student Development Team,學生發展組,activity_scope,DEPT-STUDENT-DEV,,2026-08-20,,active,USR-ADM-001,2026-08-20T09:30:00+08:00

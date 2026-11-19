@@ -1,0 +1,6 @@
+activity_rubric_label_id,activity_id,form_version_id,question_block_code,rubric_catalogue_id,axis_id,label_role,assigned_by_user_id,assigned_at,status,notes
+ARL-001,ACT-COMM-001,FV-CORE-001,teacher_observation,RUB-VASK-2026,AX-VASK-COMMUNICATION,descriptor,USR-T-001,2026-09-10T10:06:00+08:00,active,Describes intended activity context only
+ARL-002,ACT-COMM-001,FV-CORE-001,teacher_observation,RUB-SB-UF2,AX-SB-LISTEN,intended_assessment_axis,USR-T-001,2026-09-10T10:06:00+08:00,active,Signals an observation target but does not award a level
+ARL-003,ACT-COMM-001,FV-CORE-001,teacher_observation,RUB-SB-UF2,AX-SB-SPEAK,intended_assessment_axis,USR-T-001,2026-09-10T10:06:00+08:00,active,Signals an observation target but does not award a level
+ARL-004,ACT-SELF-001,FV-SELF-001,student_reflection,RUB-VASK-2026,AX-VASK-SELF-AWARENESS,descriptor,USR-T-002,2026-09-15T09:06:00+08:00,active,VASK reflection provides context only
+ARL-005,ACT-SPORT-001,FV-CORE-001,peer_review,RUB-SB-UF2,AX-SB-TEAMWORK,intended_assessment_axis,USR-T-002,2026-10-01T12:06:00+08:00,active,Peer response becomes proof and still requires human observation confirmation

@@ -1,0 +1,2 @@
+portfolio_template_id,owner_scope_type,school_id,template_code,name_en,name_zh,description_en,description_zh,status,created_by_user_id,created_at
+PTPL-NEUTRAL-CORE,system,,neutral_core,Neutral core Portfolio,中性核心 Portfolio,Minimal evidence-led structure with no school-specific content assumptions,不預設校本內容的精簡佐證導向結構,active,USR-ADM-001,2026-11-02T09:00:00+08:00

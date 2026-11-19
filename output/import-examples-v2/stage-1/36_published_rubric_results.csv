@@ -1,0 +1,4 @@
+published_rubric_result_id,student_id,rubric_catalogue_id,rubric_version,axis_id,period_id,aggregation_policy_id,published_level_id,published_numeric_value,contributing_observation_ids,calculation_trace,published_by_user_id,published_at,status
+RESULT-001,USR-S-001,RUB-SB-UF2,UF2.0,AX-SB-LISTEN,2026-27-P1,POLICY-SB-MAX-001,LVL-SB-05,5,OBS-001,max(5)=5,USR-ST-001,2026-12-20T15:05:00+08:00,published
+RESULT-002,USR-S-001,RUB-SB-UF2,UF2.0,AX-SB-PROBLEM,2026-27-P2,POLICY-SB-MAX-001,LVL-SB-08,8,OBS-005|OBS-004,max(4|8)=8,USR-ST-001,2027-04-20T15:05:00+08:00,published
+RESULT-003,USR-S-002,RUB-SB-UF2,UF2.0,AX-SB-TEAMWORK,2026-27-P1,POLICY-SB-MAX-001,LVL-SB-07,7,OBS-003,max(7)=7,USR-ST-001,2026-12-20T15:05:00+08:00,published

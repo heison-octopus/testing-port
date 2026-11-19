@@ -48,3 +48,7 @@ The matching Hong Kong Traditional Chinese edition is in [`../../Chinese/SRS/`](
 
 Where a policy is unresolved, the SRS states both `Policy TBD` and a separately labelled temporary technical cap. A temporary cap prevents accidental unbounded input; it does not answer the school-policy question.
 
+
+## Alignment checkpoint 18 November 2026
+
+See the parent README alignment table. ACT-FR-026, SUB-FR-012–013 and ASM-FR-024–026 carry current internal direction; they do not assert implementation. Security and data-retention design is deferred for the current functional-definition phase. Media upload limits and peer-code assignment authority remain explicitly unresolved differences; existing temporary caps and assignment requirements are not silently replaced by DOCX examples.

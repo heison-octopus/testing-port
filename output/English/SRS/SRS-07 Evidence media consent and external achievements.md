@@ -32,6 +32,7 @@ Preserve evidence safely while keeping ownership, assessment use, portfolio disp
 | EVD-FR-022 | Each extraction shall retain the media asset, extraction type, provider/version, requested actor/time, processing state, start time, processed-finish time, candidate content, review state, reviewer/time/reason, correction and supersession link. | Approved System Analyst architecture decision, 30 Oct 2026; not BHSS/JC approval | P1/P2 |
 | EVD-FR-023 | Media metadata queries shall be server-filtered and paginated by permitted activity, type, lifecycle, processing, consent and search term. Assignment, capability, school and consent checks shall be applied before rows are returned. Storage references and raw server paths shall not be returned in metadata responses. | Approved System Analyst architecture decision, 30 Oct 2026; not BHSS/JC approval | P0/P1 |
 | EVD-FR-024 | Media create, extraction request, extraction review and soft-disable shall be separate protected actions. A queued or incomplete extraction cannot be accepted, and an accepted extraction remains a reviewed candidate rather than an official assessment. | Approved System Analyst architecture decision, 30 Oct 2026; not BHSS/JC approval | P1/P2 |
+| EVD-FR-025 | The system shall support per-face-region selection, identity correction, unknown/non-student classification, missed-region editing and downstream impact review as specified below; a correction shall not rename a shared person label. | System Analyst direction, 18 Nov 2026; not BHSS/JC approval | P1 |
 
 ## 3. Evidence and visibility model
 
@@ -97,3 +98,29 @@ The same control surface shall offer only the manual actions valid for the recor
 - An extraction records request, start and processed-finish stages separately and cannot be reviewed before processing completes.
 - Disabling a media asset appends a lifecycle event and preserves activity links, extraction history, actor, reason and timestamp.
 
+
+### Cross-document decision pending
+
+Unresolved difference: DOCX proposed 50 MB images / 2 GB video and broader extensions; SRS-07 retains 8 MiB images / 500 MiB video temporary caps. Do not silently activate either as approved production policy. L-02 must select and align the final contract.
+
+## Face-region identification and correction
+
+**System Analyst direction, 18 November 2026; not BHSS/JC approval.** Correct the individual face region, not a shared label or the whole photo. A media asset has zero or more detected/manual face regions; each region has a stable ID, source-image/version reference, bounding box in normalised coordinates and detection provenance. Identity candidates and human decisions are separate, versioned records. Reprocessing must not silently move or replace a previously confirmed region/identity link.
+
+An authorised activity owner/teacher opens the image, sees numbered face boxes and the current suggested/confirmed identity or Unknown, selects one box, and searches the existing permitted roster/student identities. Show a crop plus full-image context and a permitted reference image where available. The reviewer can confirm another student, mark non-student/guest (including an elder), leave unknown, or reject a false detection. Existing identity labels are reusable, but an existing positive student label is not required for an unknown face. Do not create a student or guess an elder’s identity from appearance.
+
+The editor supports adding a missed face region and adjusting the selected box, with a reason; the original image remains unchanged. A student can request correction but cannot reassign another person. Teacher title or ownership alone does not replace the required review assignment/capability. Duplicate faces, multiple regions for one student, occlusion and unidentifiable people are valid review cases. A non-rostered student requires roster/identity resolution rather than silent enrolment. Store prior/new association, actor, time and reason; corrections are local to that region and never globally rename a person or update other photos automatically.
+
+Revoke the incorrect student link and recompute permitted associations through review; flag dependent proof, AI candidates, observations and reports for impact review. Preserve the original candidate and prior decision. Published results require withdrawal or a reviewed successor, not silent recalculation. This is an identification workflow, not evidence that a photographed student demonstrated a skill. Detailed production security, retention and biometric/provider policy remain deferred; this section defines functional correction behaviour only.
+
+## Batch two photo purpose and description metadata
+
+**System Analyst clarification, 18 November 2026; not BHSS/JC approval.** The current photo use is to locate a student’s face, obtain human confirmation of the student association, and show the permitted image to that student. A confirmed face association is not confirmation of attendance, behaviour, an activity outcome or a rubric level. Ignore teachers and unknown/non-student people for student matching; they need not be named, enrolled or assigned a person profile. Ignoring their identity does not mean they have been removed or blurred from the original image.
+
+A supplied photo description is desirable but optional. Keep the media title and add a human-supplied caption/description with its source/author, recorded time and revision history. Link the photo to its activity ID and known capture date/time. Distinguish photo-specific context from the activity description and intended VASK labels. A caption states what its author supplied; it does not independently verify the action or identify every person in the image. Missing captions must remain missing and do not block student-photo matching. These are intended metadata requirements, not a claim that the current v2 schema already implements them.
+
+The locally deployed vision model may still scan the scene and produce generic observations such as “two people are interacting”. Store that output separately as an unconfirmed machine description, with model/prompt version, processing time and source image. It must not fill the human-description field, establish identities, infer the activity’s purpose, or assert a named student’s behaviour, intentions, skills or achievement. Do not use the generic scene description as accepted behavioural proof or as a basis for a rubric result. Face matching and scene description are separate outputs and review concerns.
+
+Label-assisted action identification is outside the current scope: do not pass VASK labels or student identity labels to the local model to produce personalised explanations of actions. A client may request this later, but accuracy and privacy concerns require a separate scope decision and validation. Local deployment alone does not establish suitability. This restriction does not remove descriptive activity labels or the student association used to deliver the photo.
+
+The face-region correction workflow remains: an authorised reviewer selects the specific face region and corrects a student association. Teacher/unknown regions are ignored for student delivery; they do not require a guest identity catalogue. Correcting a false student match removes the wrong association and flags its dependants. No automatic assessment follows from a face being present.

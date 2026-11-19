@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "workflow",
+  "quality": "showcase",
+  "specification": {
+    "path": "/Users/useroctopus-tech.com/Documents/GitHub/BHSS-MVP/.archify/workflow-v4-stages-20261118-180843/candidate.json",
+    "sha256": "e0e431d40d1a425dc3c598f7fc06ee053fca486092328cfbd15cfa72c565d9fd",
+    "bytes": 4643
+  },
+  "artifact": {
+    "path": "/Users/useroctopus-tech.com/Documents/GitHub/BHSS-MVP/.archify/workflow-v4-stages-20261118-180843/v4-stage-dependencies.html",
+    "sha256": "0443c69780e913065686481630a1cb66e3e944b6d94d66c408acd5074c644503",
+    "bytes": 843896
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/Users/useroctopus-tech.com/Documents/GitHub/BHSS-MVP/.archify/workflow-v4-stages-20261118-180843/review-2/v4-stage-dependencies.finalize.json",
+    "summaryReceipt": "/Users/useroctopus-tech.com/Documents/GitHub/BHSS-MVP/.archify/workflow-v4-stages-20261118-180843/review-2/v4-stage-dependencies.finalize-summary.json",
+    "browserCheckReceipt": "/Users/useroctopus-tech.com/Documents/GitHub/BHSS-MVP/.archify/workflow-v4-stages-20261118-180843/review-2/v4-stage-dependencies.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-11-18T10:10:41.979Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 1682,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}

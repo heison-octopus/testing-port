@@ -1,0 +1,3 @@
+external_media_reference_id,media_source_id,opaque_reference,student_id,activity_id,proof_item_id,content_type_hint,captured_at,consent_status,last_resolution_status,last_resolved_at,availability_status,notes
+EXT-MEDIA-003,MEDIA-SOURCE-SCHOOL-ARCHIVE,opaque:archive:ACT-SPORT-001:MED-003,USR-S-002,ACT-SPORT-001,PRF-MEDIA-003,video/mp4,2026-10-16T15:05:00+08:00,granted,metadata_returned,2026-10-16T16:31:00+08:00,available,Raw archive path is never exported to the browser
+EXT-TI-0001,MEDIA-SOURCE-TIME-INFINITY,opaque:time-infinity:TI-EVIDENCE-0001,USR-S-001,ACT-TI-8801,PRF-TI-001,application/octet-stream,2026-09-26T15:00:00+08:00,unknown,pending_provider_confirmation,,unknown,Reference is retained even while the source is unavailable

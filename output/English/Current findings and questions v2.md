@@ -48,7 +48,7 @@ Traceability tag used below: **Discussed on Meeting Oct 26 - kickstart**.
 | [x] | V2-B15 | AI outputs are positive, source-linked candidates only. | **Discussed on Meeting Oct 26 - kickstart.** AI cannot downgrade a learner, accept proof or publish a rubric result. |
 | [x] | V2-B16 | Review/outlook generation uses a teacher-selected school-period memory range and source classes. | **Discussed on Meeting Oct 26 - kickstart.** Freeze the exact activity descriptions, confirmed outcomes, accepted proof summaries, published results and prompt version used. |
 | [x] | V2-B17 | Account identity, role definitions, effective role assignments and approval assignments are separate. | **Discussed on Meeting Oct 26 - kickstart.** Scope and effective dates do not substitute for a named workflow responsibility. |
-| [x] | V2-B18 | Activity period is resolved from staff-entered start/end dates. | **Discussed on Meeting Oct 26 - kickstart.** One containing period is assigned automatically; a cross-period range must be split or explicitly approved as an exception. |
+| [~] | V2-B18 | Activity period is resolved from activity dates. | The previous **Discussed on Meeting Oct 26 - kickstart** split-or-approve interpretation has been superseded by the System Analyst direction in L-09: single-period resolution is automatic; cross-period activities propose the end period and require an explicit valid selection if missing. `P0` is displayed by default; its meaning is pending clarification. |
 
 ## C — product and learner-profile proposal
 

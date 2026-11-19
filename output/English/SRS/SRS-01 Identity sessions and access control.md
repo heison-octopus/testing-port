@@ -134,3 +134,14 @@ The POC demo account switching mechanism is development-only and shall not exist
 12. A principal without a content-approval capability cannot approve merely because their position is Principal.
 13. An ordinary teacher with the matching approval capability, scope and named assignment can decide the approval.
 
+
+
+## V4 Stage 1 implementation boundary — 18 November 2026
+
+**Status: approved internal System Analyst implementation direction; not BHSS/JC approval.** The owner approved Stage 1 of the relational 18-table plan, React + Vite and a JavaScript backend. The layout is provisional.
+
+V4 uses `schools`, `users`, `roles`, effective-dated `assignments`, typed `school_definitions`, validated `record_links` and shared scalar `change_logs`. Separate logical records do not require separate physical tables. Common physical keys are `id` and `row_version`; later-stage columns are not yet migrated. Refer to `../../../portfolio-poc-v4/README.md` and its planning folder for exact runnable scope and evidence.
+
+Implemented locally: school-scoped sessions/request keys; per-request effective grant/deny checks; own identity; administrative people/role/definition creation; assignment/deassignment; expected-version conflicts; atomic snapshots and historical reconstruction. Period-linked assignments derive dates from the configured period; student memberships require a period. Class membership alone grants no administrative capability. The subject/department relation API validates endpoint kinds and school ownership.
+
+The broader requirements above remain applicable. Stage 1 does not complete workflow-specific reviewer authority, all scope types, school feature-policy management, year-wide period expansion, production identity, full security-event audit or retention. Rubric validation exists in a backend registry; no rubric is active. Tests use synthetic policy and isolated role contexts. Original source documents and legacy examples remain evidence; CSV backups are under `../../import-examples-v2/stage-1/`, and new examples under `../../import-examples/stage-1/`.

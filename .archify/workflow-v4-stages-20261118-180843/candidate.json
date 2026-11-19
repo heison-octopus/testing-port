@@ -1,0 +1,229 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Proposed V4 implementation stages",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "output": ".archify/workflow-v4-stages-20261118-180843/v4-stage-dependencies.html"
+  },
+  "lanes": [
+    {
+      "id": "l0",
+      "label": "Plan and approval"
+    },
+    {
+      "id": "l1",
+      "label": "Foundation and definitions"
+    },
+    {
+      "id": "l2",
+      "label": "Activity and evidence"
+    },
+    {
+      "id": "l3",
+      "label": "Assessment and publication"
+    },
+    {
+      "id": "l4",
+      "label": "Release readiness"
+    }
+  ],
+  "mainPath": [
+    "s0",
+    "approve",
+    "s1",
+    "s2",
+    "s3",
+    "s4",
+    "s5",
+    "s6",
+    "s7",
+    "ready"
+  ],
+  "nodes": [
+    {
+      "id": "s0",
+      "lane": "l0",
+      "col": 0,
+      "type": "backend",
+      "label": "0 Plan",
+      "sublabel": "This preview"
+    },
+    {
+      "id": "approve",
+      "lane": "l0",
+      "col": 1,
+      "type": "security",
+      "label": "User approval",
+      "sublabel": "Named stage only"
+    },
+    {
+      "id": "s1",
+      "lane": "l1",
+      "col": 1,
+      "type": "backend",
+      "label": "1 Foundation",
+      "sublabel": "Scope and history"
+    },
+    {
+      "id": "s2",
+      "lane": "l1",
+      "col": 2,
+      "type": "backend",
+      "label": "2 Questionnaires",
+      "sublabel": "Relational definitions"
+    },
+    {
+      "id": "s3",
+      "lane": "l2",
+      "col": 2,
+      "type": "backend",
+      "label": "3 Activity tasks",
+      "sublabel": "Stages and responses"
+    },
+    {
+      "id": "s4",
+      "lane": "l2",
+      "col": 3,
+      "type": "backend",
+      "label": "4 Media and proof",
+      "sublabel": "Reviewed candidates"
+    },
+    {
+      "id": "s5",
+      "lane": "l3",
+      "col": 3,
+      "type": "backend",
+      "label": "5 Assessment",
+      "sublabel": "Correction gate"
+    },
+    {
+      "id": "s6",
+      "lane": "l3",
+      "col": 4,
+      "type": "backend",
+      "label": "6 Portfolio",
+      "sublabel": "Frozen publication"
+    },
+    {
+      "id": "s7",
+      "lane": "l4",
+      "col": 4,
+      "type": "backend",
+      "label": "7 Round trips",
+      "sublabel": "Release evidence"
+    },
+    {
+      "id": "ready",
+      "lane": "l4",
+      "col": 5,
+      "type": "external",
+      "label": "Ready for review",
+      "sublabel": "No auto deployment"
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-s0",
+      "from": "s0",
+      "to": "approve",
+      "label": "review",
+      "variant": "security"
+    },
+    {
+      "id": "edge-approve",
+      "from": "approve",
+      "to": "s1",
+      "label": "approved",
+      "variant": "security",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "route": "straight"
+    },
+    {
+      "id": "edge-s1",
+      "from": "s1",
+      "to": "s2",
+      "label": "gate passes",
+      "variant": "default"
+    },
+    {
+      "id": "edge-s2",
+      "from": "s2",
+      "to": "s3",
+      "label": "gate passes",
+      "variant": "default",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "route": "straight"
+    },
+    {
+      "id": "edge-s3",
+      "from": "s3",
+      "to": "s4",
+      "label": "gate passes",
+      "variant": "default"
+    },
+    {
+      "id": "edge-s4",
+      "from": "s4",
+      "to": "s5",
+      "label": "gate passes",
+      "variant": "default",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "route": "straight"
+    },
+    {
+      "id": "edge-s5",
+      "from": "s5",
+      "to": "s6",
+      "label": "gate passes",
+      "variant": "default"
+    },
+    {
+      "id": "edge-s6",
+      "from": "s6",
+      "to": "s7",
+      "label": "gate passes",
+      "variant": "default",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "route": "straight"
+    },
+    {
+      "id": "edge-s7",
+      "from": "s7",
+      "to": "ready",
+      "label": "gate passes",
+      "variant": "default"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "amber",
+      "title": "Stage gate",
+      "items": [
+        "Preview and user approval precede each runnable stage.",
+        "Pass local API and role-isolated browser checks before advancing."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Storage boundary",
+      "items": [
+        "18 functional tables; questionnaires and answers are relational.",
+        "Rubric definitions are retained backend artifacts."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Current state",
+      "items": [
+        "This is proposed sequencing, not implemented V4 behaviour.",
+        "Production providers and deployment require separate scope."
+      ]
+    }
+  ]
+}

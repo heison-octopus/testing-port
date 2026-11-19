@@ -1,0 +1,37 @@
+{
+  "stage": 1,
+  "source": "fresh synthetic fixtures, not live database",
+  "physicalConvention": "id and row_version are common columns; staged subset of approved schema",
+  "credentials": "password hashes excluded; demo authentication seeded separately",
+  "importStatus": "examples only; no upload/commit endpoint in Stage 1",
+  "files": [
+    {
+      "file": "schools.csv",
+      "rows": 2
+    },
+    {
+      "file": "users.csv",
+      "rows": 8
+    },
+    {
+      "file": "roles.csv",
+      "rows": 8
+    },
+    {
+      "file": "school_definitions.csv",
+      "rows": 8
+    },
+    {
+      "file": "assignments.csv",
+      "rows": 8
+    },
+    {
+      "file": "record_links.csv",
+      "rows": 1
+    },
+    {
+      "file": "change_logs.csv",
+      "rows": 208
+    }
+  ]
+}

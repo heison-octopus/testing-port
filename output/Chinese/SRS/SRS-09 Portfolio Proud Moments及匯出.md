@@ -109,3 +109,29 @@ flowchart LR
 
 驗收：啟用後繼版本後，新建立的工作版本使用新版本；較早的工作版本及其已發布快照繼續解析並顯示原有 Rubric 版本。
 
+
+## 學習者 Portfolio 區塊及欄位目錄
+
+**系統分析員方向，2026-11-18；並非 BHSS／JC 批准。** Rethinking Assessment 圖片只供結構參考，不是最終頁面規格。新 Portfolio 會與參考圖及現有 POC 不同。本次未指定學科分數區塊；學術強項／待發展之處建基於有佐證的學習經歷，不可杜撰分數或假設已有成績匯入。
+
+**核對結果：** Core 已有 portfolio_template_sections（內容／來源類型、次序、版面及顯示方式）、portfolio_version_items（來源、選取、作者及學生文字）及 learner_narrative_versions（生成／修改／批核版本）。SRS-09 已有 Portfolio 版本覆核，SRS-13 V2-FR-044 的興趣規則仍待定。這些是共用基礎，並非以下完整區塊欄位合約。下列欄名為有版本範本／內容合約的建議語意鍵，不代表已建立資料庫欄位；應重用既有來源識別碼及版本，不複製活動資料。
+
+所有 AI 文字先以建議呈現。分開保存生成文字、學生修改文字、老師覆核修訂及最終批核文字，保留作者／編輯者、時間、來源清單及模型／提示版本。學生可修改自己的「作為學習者的我」，明確擴展先前只描述老師修改生成敘述的方向；學生不可改動原始觀察或已發布 Rubric 階段。學生填寫的動力屬自述，不是模型推斷的心理事實。AI 提出的待發展之處須具建設性、有來源並交代不確定性，不可診斷或斷言沒有佐證的弱點。此方向容許原有正面敘述政策下的發展建議，不容許自動降級。資料不足時標示草稿佐證不足，不生成虛構內容。
+
+系統選取區塊由合資格來源填入，不代表需要 AI 杜撰項目。保存選取原因、來源／活動類型及政策版本。卡片數目、相關性排序、分類、匯報範圍及學生能否覆寫選取仍待定。正式學段內容沿用活動完成資格，不可因自動填入區塊而靜默納入進行中活動。
+
+新增圖片要求須記錄提出學生、目標老師／活動、所需圖片或描述、狀態、處理人、理由、時間及結果媒體連結。提出要求不等於獲得存取權；老師連結仍須符合媒體可見範圍及身份確認。相片供作品選取，不構成行為辨認或技能判斷。此要求／處理流程尚未實作。
+
+尚需客戶／產品決定（M-30）：學習基礎／課程／成就／興趣分類、卡片數目及相關性排序、學生能否確認／隱藏／重排、專題分類例子及 NLP 的意思、可顯示一個或多個專題、圖片要求的接收／轉交方式，以及最終區塊名稱。推薦評語、參考圖的社區改變題目及獨立成績區塊未列為已確認新增項目。學生簡介保留既有功能；本次未批准確實版面或自動欄位與 Rubric 對應。
+
+| 區塊 | 行為及來源 | 建議欄位 |
+|---|---|---|
+| 學生簡介 | 學生身份／相片及自我介紹；沿用既有作者及覆核規則。 | `student_id; display_name; profile_media_id; introduction_text` |
+| 技能雷達圖 | 採用 Skills Builder 或已驗證 RC360 的已發布結果及各自範疇，不把參考圖的 3Cs 當作本系統結果。 | `rubric_id/version; axis_id; published_result_id; level; assessment_state` |
+| 作為學習者的我 | AI 先建議學術強項、學術待發展之處、非學術強項、非學術待發展之處、下一步改善方向及學習動力；學生可修改自己的六項內容，再提交覆核。 | `academic_strengths; academic_development_needs; nonacademic_strengths; nonacademic_development_needs; next_steps; motivation` |
+| 學習基礎 | 系統選取相關活動及有佐證的基礎學習資料；分類及選取規則待確認。 | `activity_ids; activity_type; category_code; summary; source_refs` |
+| 課程 | 系統選取相關課程／學習活動，顯示已記錄的活動類型；不可推斷正式課程註冊。 | `activity_ids; activity_type; course_title; summary; source_refs` |
+| 我的成就 | 系統選取有佐證的相關活動成就；參與不等於獲獎。 | `activity_ids; activity_type; achievement_title; result_type; source_refs` |
+| 我的興趣 | 系統從相關活動提出興趣建議，保留活動類型及來源；次數不等於興趣，分類及學生確認方式待定。 | `interest_code/label; activity_ids; activity_type; selection_reason; confirmation_state` |
+| 個人專題 | 擷取 activity_type = project 的合資格活動；SBA、NLP 及專題相關比賽須明確列作專題才納入，不推斷 NLP 的意思。 | `activity_id; activity_type=project; project_subtype; title; summary; media_refs` |
+| 我的作品 | 顯示獲准且已連結學生的媒體庫相片。學生可向老師要求新增圖片；獲授權活動老師上載／連結及確認學生連結後，才可供選取。 | `media_asset_id; activity_id; student_id; caption; media_request_id; association_review_state` |

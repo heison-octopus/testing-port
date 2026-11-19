@@ -1,0 +1,93 @@
+{
+  "historical_commit": "bc1510f965d6f6a0f9e2799895e32f07550f4532",
+  "historical_path": "output/Core data relationships.md",
+  "historical_unique_entities": 50,
+  "historical_repeated_entity": "MEDIA_ASSETS",
+  "source_kind": "current working files, including pre-existing edits",
+  "reviewed_srs": "SRS-00 through SRS-12; SRS-13 and v2 application excluded",
+  "numbered_requirements": 309,
+  "initial_table_count": 24,
+  "extension_family_count": 18,
+  "verdict_counts": {
+    "CONDITIONAL_FIT": 179,
+    "STARTER_DATA_FIT": 5,
+    "POLICY_OPEN": 17,
+    "NON_SCHEMA": 40,
+    "EXTENSION_REQUIRED": 57,
+    "SERVICE_REQUIRED": 11
+  },
+  "sources": [
+    {
+      "path": "output/English/SRS/SRS-00 Product scope and requirements index.md",
+      "sha256": "7b55cbeea7db6447d603e218fe59f2c8ba970652eecb9f24ae076f6d6743fd32"
+    },
+    {
+      "path": "output/English/SRS/SRS-01 Identity sessions and access control.md",
+      "sha256": "c3d8deba9ce6f2d0f1937db5f22e5a3e32d59adb19d50748974d821a9599cb8f"
+    },
+    {
+      "path": "output/English/SRS/SRS-02 School structure and academic periods.md",
+      "sha256": "5f41c0c7a1ae1969178945786165164fe7ff69d698018444e7d2496b639e7bfd"
+    },
+    {
+      "path": "output/English/SRS/SRS-03 Source systems imports and data quality.md",
+      "sha256": "f42fe32e03b5e29caed2bd3b855d4fe7446538f5af663464c7a5d2c983748236"
+    },
+    {
+      "path": "output/English/SRS/SRS-04 Activities participants and VASK.md",
+      "sha256": "6a300713a754ad9dcc9ff3ffd1bcc15ce78989cce32614df794b145456658777"
+    },
+    {
+      "path": "output/English/SRS/SRS-05 Forms question blocks and governance.md",
+      "sha256": "3ec29ea35cd87e5ff85cabed62b437506774149c5decd5f0aff0e1a46abc8fea"
+    },
+    {
+      "path": "output/English/SRS/SRS-06 Assignments submissions and peer review.md",
+      "sha256": "ead5fcc07cad26e4898e7abdb4365a4c5fc584cb400877f251accae12d3ad7d4"
+    },
+    {
+      "path": "output/English/SRS/SRS-07 Evidence media consent and external achievements.md",
+      "sha256": "a610fa942f5a73dd5f61008819ef1108853c52dd91a7a01f99c74ea0cf22cbea"
+    },
+    {
+      "path": "output/English/SRS/SRS-08 Assessment eight skills and sixteen steps.md",
+      "sha256": "c2b71fae38ee0990cf8fe4cad7c4b9864571a9b3d820b0be12699325f6a763f4"
+    },
+    {
+      "path": "output/English/SRS/SRS-09 Portfolio Proud Moments and exports.md",
+      "sha256": "1ce05d8d7a83b522bbd4b29aed38424875cf83b4fdf0e1b001b3db6b6f603735"
+    },
+    {
+      "path": "output/English/SRS/SRS-10 AI-assisted processing and provenance.md",
+      "sha256": "a7e8953cd1e735e3dd111ba836f87de3761c43047072c0ed1a001ece0a4b7320"
+    },
+    {
+      "path": "output/English/SRS/SRS-11 Infrastructure security and operations.md",
+      "sha256": "c8092606d97c10aae8f86550c0594ddc25a3d4b567f09b63a846998ccd225e38"
+    },
+    {
+      "path": "output/English/SRS/SRS-12 Page catalogue and role visibility.md",
+      "sha256": "ba40fabddea3c03fda5ac49eb4a6a35039f30bb82e1a62264d8876746251e8dd"
+    },
+    {
+      "path": "output/English/Core data relationships.md",
+      "sha256": "a1cfc973e78f939f3c6fc031ec5487899b4414f71389b10a42ebd798466bfb9c"
+    },
+    {
+      "path": "output/Chinese/核心資料關係.md",
+      "sha256": "95d92690e295f17a29d4c3d2d564e68de2cc99e355a6f16e40cd1652baa67896"
+    },
+    {
+      "path": "output/English/Roles and permissions.md",
+      "sha256": "e7717399fdda55c532872b279f6b7fc2e394851fe7fa2f17d71e06cbc5d2ba4a"
+    },
+    {
+      "path": "output/English/Presentation agenda.md",
+      "sha256": "ac4bc752ccc5296acaafc46337cd715e91f73f3e4c470bcfc5c82c2543f3374a"
+    },
+    {
+      "path": "output/English/Aspects updated.md",
+      "sha256": "18a2101acbb66ae385ea16fe5acc932c70cbaf78ed3581f1b9cf635275df7297"
+    }
+  ]
+}

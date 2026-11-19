@@ -1,0 +1,5 @@
+rubric_group_id,rubric_catalogue_id,group_code,name_en,name_zh,display_order,status,disabled
+GRP-SB-COMMUNICATION,RUB-SB-UF2,communication,Communication,溝通能力,1,active,false
+GRP-SB-CREATIVE-PROBLEM,RUB-SB-UF2,creative_problem_solving,Creative problem solving,創意解難,2,active,false
+GRP-SB-SELF-MANAGEMENT,RUB-SB-UF2,self_management,Self-management,自我管理,3,active,false
+GRP-SB-COLLABORATION,RUB-SB-UF2,collaboration,Collaboration,協作能力,4,active,false

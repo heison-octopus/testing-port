@@ -31,3 +31,27 @@ The linked-data revision tagged `Discussed on Meeting Oct 26 - kickstart` is now
 The System Analyst architecture decision approved on 27 October 2026 is also synchronized: immutable `SchoolId` isolation, `schools.is_disabled`, deny-by-default per-school feature availability, provider-neutral `ExtractionProvider` / `PortfolioGenerator` contracts in P1, production provider implementations in P2, and visualization from an approved frozen snapshot only. This is an internal architecture decision, not a BHSS or JC policy approval.
 
 The 28 October 2026 System Analyst architecture decisions are synchronized as internal product decisions, not BHSS/JC approvals: job title is separated from stackable functional role/capability and assignment scope; department, subject and teacher group are first-class scopes; explicit deny wins; teacher search/filter is required; each workflow uses a lean configurable approval mode with escalation; activities keep a stable ID across approved revisions; and official Portfolio views resolve the latest approved working version while retaining newer drafts.
+
+## Documentation alignment checked 18 November 2026
+
+This is a topic-level alignment record, not a new product version or proof of implementation. Historical comparison uses Git HEAD `70e251a` (13 Nov 2026) versus current working files; it does not establish the date every working edit was authored. Internal decisions are not BHSS/JC approvals. Original source documents remain unchanged.
+
+| Topic | Current position |
+|---|---|
+| Document authority | Use Core for domain rules, the question register for decision status and SRS for testable requirements. The media formats DOCX is the current single functional overview. Other flow DOCXs remain historical working copies; filename or modification time alone does not confer authority. |
+| Overdue responses | Older committed baseline had generic due times and late-response handling. Current Core and SRS-04/06 add the one-month default, audited post-expiry extensions and historical/current lateness. ACT-FR-026; SUB-FR-012–013; L-04/M-12 remain partly open. |
+| Activity amendments | Already detailed in older Core/SRS: stable identity, revisions, reapproval and change requests (H-19; ACT-FR-012–016; M-27 imports). The former DOCX one-month amendment phrase is removed; it was not an approved edit cutoff. |
+| Activity periods | Current L-09/SCH-FR-008–009 supersede split-or-approve: single-period automatic resolution; cross-period end-period proposal and valid staff selection where missing. P0 meaning remains open. |
+| Period assessment | 17 Nov internal direction is in Core/M-21; SRS-08 now aligned via ASM-FR-024–026. Includes selected periods, permitted versioned calculation choices, inherited rating and 50% not-assessed display. School authority, rounding and inheritance eligibility remain open. |
+| School result inputs | SRS-03/ASM-FR-008 already allow academic results as supporting evidence. The DOCX now adds proposed fields/examples; these do not establish a dedicated v2 import or approved column contract. L-06 remains open. |
+| Media formats and sizes | Unresolved difference: DOCX proposed 50 MB images / 2 GB video and broader extensions; SRS-07 retains 8 MiB images / 500 MiB video temporary caps. Do not silently activate either as approved production policy. L-02 must select and align the final contract. |
+| Peer invitation | DOCX student-initiated activity code is internal direction; SRS-06 SUB-FR-005 currently requires teacher/TA assignment. Keep explicit reviewer-to-subject assignment. Who authorises code-generated assignments, expiry and eligibility must be resolved before implementation. |
+| Security and retention | Deferred for this functional-definition phase by System Analyst direction on 18 Nov. Existing security/retention SRS detail remains a later-phase design reference; role responsibilities and visibility remain in the functional flow. This is not BHSS/JC approval or removal of implemented controls. |
+
+### Additional scope revision 18 November 2026
+
+M-28 supersedes the one-questionnaire-per-activity rule: one published questionnaire per assessment stage, with a default end stage and optional start/progress/custom stages. M-29 specifies face-region correction, including unknown/guest handling. Core, SRS-04/05/06/07 and the functional DOCX describe intended behaviour; v2 schema, APIs, UI and CSV contracts have not been migrated. BHSS test-data requests are in the discussion register and DOCX.
+
+Latest M-28 clarification: the owner may request early end; only effectively ended/completed activities enter period assessment. Ongoing activities retain stage feedback but are excluded from period results. This supersedes interim-stage inclusion while the parent activity is ongoing. See Core “Activity completion and early end”.
+
+Batch two, 18 Nov: photo matching/delivery is distinct from optional human captions and unconfirmed generic local-vision descriptions. Label-assisted action identification is excluded from current scope. Ignore teachers/unknown people for student matching. See Core and the updated immediate BHSS checklist in the discussion register and functional DOCX.

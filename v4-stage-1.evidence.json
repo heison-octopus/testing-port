@@ -1,0 +1,61 @@
+{
+  "round": "v4-stage-1",
+  "loop": "fix",
+  "tier": "T2",
+  "state": "IMPLEMENTED",
+  "reference": {
+    "kind": "artifact",
+    "value": "portfolio-poc-v4/planning/approved-stage1-reference.html"
+  },
+  "walkthrough": {
+    "steps": [
+      "Admin login \u2192 People \u2192 teacher assignments \u2192 assign class \u2192 Audit snapshot",
+      "Teacher login \u2192 Workspace \u2192 refresh after deassignment",
+      "Student login \u2192 own identity \u2192 direct admin route denied",
+      "Denied fixture \u2192 workspace denied; School B \u2192 School A ID denied"
+    ],
+    "script": "portfolio-poc-v4/tests/ui.spec.js",
+    "driver": "playwright",
+    "profileOrAccount": "separate contexts: admin@a.demo, teacher@a.demo, student@a.demo, denied@a.demo, admin@b.demo",
+    "role": "Admin / Teacher / Student / Denied / other school"
+  },
+  "dispatch": {
+    "agent": "direct-codex",
+    "runId": "v4-stage1-20261118-01",
+    "executionMode": "direct-codex"
+  },
+  "pr": {
+    "requested": false,
+    "url": null,
+    "base": null,
+    "head": null,
+    "mergeSha": null
+  },
+  "issues": [
+    {
+      "id": 1,
+      "expected": "Stage 1 role-scoped foundation, effective assignments and atomic historical snapshots",
+      "local": {
+        "result": "pass",
+        "buildSha": "66848a4596fbacac5c3495a3707c8fd2cf77f1cfdfdb3872ad32975ddbc0ae0a",
+        "artifact": "portfolio-poc-v4/planning/stage-1-evidence/validation.json"
+      },
+      "deployed": {
+        "result": null,
+        "buildSha": null,
+        "artifact": null,
+        "env": null
+      }
+    }
+  ],
+  "approval": {
+    "source": "explicit chat",
+    "scope": "Stage 1 only; provisional layout; React + Vite and JavaScript backend"
+  },
+  "limits": [
+    "No final product layout approved",
+    "No Stage 2+ workflows or deployment",
+    "No active rubric; immutable validator foundation only",
+    "Demo sessions are process-local"
+  ]
+}

@@ -1,0 +1,4 @@
+membership_id,school_id,student_user_id,academic_year_id,period_id,class_code,status,source,change_reason
+SCM-001-P1,BHSS,USR-S-001,AY-2026-27,2026-27-P1,S2A,active,school_roster,
+SCM-001-P2,BHSS,USR-S-001,AY-2026-27,2026-27-P2,S2B,active,school_roster,Class change for new period
+SCM-002-P1,BHSS,USR-S-002,AY-2026-27,2026-27-P1,S2A,active,school_roster,

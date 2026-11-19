@@ -102,3 +102,7 @@ The manual controls that must be available, subject to role and assignment scope
 
 Acceptance of production RC360, face matching, queue sizing, and cross-year freeze rules is blocked on V2-D01, V2-D02, V2-D03, V2-D08, V2-D09, and V2-D12. The POC may demonstrate those states but shall label them unresolved.
 
+
+### Learner-profile clarification 18 November 2026
+
+V2-FR-044 is partly addressed: interests are proposed from relevant activities and their types; taxonomy, ranking and student confirmation remain open under M-30. See SRS-09/Core for the complete proposed section/field catalogue and student-editable AI suggestions. No academic-grades panel or implemented dedicated fields are asserted.

@@ -1,0 +1,17 @@
+level_id,rubric_catalogue_id,level_code,level_order,numeric_value,name_en,name_zh,is_prerequisite_chain,status
+LVL-SB-01,RUB-SB-UF2,step_01,1,1,Step 1,第 1 階段,false,active
+LVL-SB-02,RUB-SB-UF2,step_02,2,2,Step 2,第 2 階段,false,active
+LVL-SB-03,RUB-SB-UF2,step_03,3,3,Step 3,第 3 階段,false,active
+LVL-SB-04,RUB-SB-UF2,step_04,4,4,Step 4,第 4 階段,false,active
+LVL-SB-05,RUB-SB-UF2,step_05,5,5,Step 5,第 5 階段,false,active
+LVL-SB-06,RUB-SB-UF2,step_06,6,6,Step 6,第 6 階段,false,active
+LVL-SB-07,RUB-SB-UF2,step_07,7,7,Step 7,第 7 階段,false,active
+LVL-SB-08,RUB-SB-UF2,step_08,8,8,Step 8,第 8 階段,false,active
+LVL-SB-09,RUB-SB-UF2,step_09,9,9,Step 9,第 9 階段,false,active
+LVL-SB-10,RUB-SB-UF2,step_10,10,10,Step 10,第 10 階段,false,active
+LVL-SB-11,RUB-SB-UF2,step_11,11,11,Step 11,第 11 階段,false,active
+LVL-SB-12,RUB-SB-UF2,step_12,12,12,Step 12,第 12 階段,false,active
+LVL-SB-13,RUB-SB-UF2,step_13,13,13,Step 13,第 13 階段,false,active
+LVL-SB-14,RUB-SB-UF2,step_14,14,14,Step 14,第 14 階段,false,active
+LVL-SB-15,RUB-SB-UF2,step_15,15,15,Step 15,第 15 階段,false,active
+LVL-SB-16,RUB-SB-UF2,step_16,16,16,Step 16,第 16 階段,false,active

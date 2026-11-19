@@ -1,0 +1,27 @@
+{
+  "source": "output/BHSS internal system analyst functional flow nRetention.docx",
+  "sha256": "8f357f85ce348d758685e7afd12651629a268c8ad7814595255dc8b025bc4757",
+  "authority": "Explicit user-selected proposal baseline; not promotion over Core for existing implementation",
+  "status": "recommended condensed functional schema; not BHSS/JC approval",
+  "table_count": 18,
+  "coverage_groups": 25,
+  "locator": "B<n> is the 1-based top-level OOXML body element; R<n> is the table row. These are not page numbers.",
+  "open_conflicts": [
+    {
+      "source": "B139 vs B143",
+      "issue": "All questionnaire deadlines same versus explicit distinct dates for added stages; preserve configurable stage deadlines."
+    },
+    {
+      "source": "B314 vs user request",
+      "issue": "Embedded authority note names media formats DOCX; user explicitly selected nRetention for this proposal."
+    },
+    {
+      "source": "B300.R3",
+      "issue": "Teacher expiry situation is paired with late-response text; do not treat expiry as permission to submit."
+    }
+  ],
+  "superseding_direction": {
+    "source": "B234",
+    "meaning": "Students can edit their own six learner narrative fields; preserve human edit provenance."
+  }
+}

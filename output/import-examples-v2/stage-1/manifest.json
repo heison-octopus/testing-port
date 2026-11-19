@@ -1,0 +1,336 @@
+{
+  "stage": 1,
+  "purpose": "Pre-stage backup; original contracts are historical and are not the V4 seed schema",
+  "files": [
+    {
+      "source": "output/import-examples/00_upload_manifest.csv",
+      "backup": "00_upload_manifest.csv",
+      "sha256": "e6e2c0927bfaa602f5ec12ed1e94fd25b02bfc7160297d8743b56a0e6c228d8c"
+    },
+    {
+      "source": "output/import-examples/01_users_import.csv",
+      "backup": "01_users_import.csv",
+      "sha256": "2f16508dcffac9a97f40753b9783eed29cf92970d0136e33dbc5b17f54a4b14b"
+    },
+    {
+      "source": "output/import-examples/02_users_update.csv",
+      "backup": "02_users_update.csv",
+      "sha256": "042ce34ba9ed386a84f516f8605ef594344c6599bd4f652f6a7f09f5a0f27f78"
+    },
+    {
+      "source": "output/import-examples/03_reporting_periods.csv",
+      "backup": "03_reporting_periods.csv",
+      "sha256": "69c6e150202db3f8b55d0b04f81f679bbd90a88dbc98c684aa9bbacc5b0aef5a"
+    },
+    {
+      "source": "output/import-examples/04_activities.csv",
+      "backup": "04_activities.csv",
+      "sha256": "349390c59683cd9e60d288c06d4bff906f40200c2626b8887f67a68c8aac3466"
+    },
+    {
+      "source": "output/import-examples/05_activity_people.csv",
+      "backup": "05_activity_people.csv",
+      "sha256": "1a62af6b8ca1efe72bd5734474efb9d161bcb297eaa350177d98a8247c3d0631"
+    },
+    {
+      "source": "output/import-examples/06_form_templates.csv",
+      "backup": "06_form_templates.csv",
+      "sha256": "6fdb3e7e37c0df8b506a158e2aaa7b6a41886e1b6f78f1f6c3ad04793668261a"
+    },
+    {
+      "source": "output/import-examples/07_form_template_items.csv",
+      "backup": "07_form_template_items.csv",
+      "sha256": "3277d6c2a18a62bc7064336aee24c32bae4f5cec0d8c232a9b51b705e5cc7f70"
+    },
+    {
+      "source": "output/import-examples/08_media_evidence.csv",
+      "backup": "08_media_evidence.csv",
+      "sha256": "441ad4d689368b8fa9cc884fa08baf6a3f1013ad48a22c2e1078eeaf19f4c687"
+    },
+    {
+      "source": "output/import-examples/09_question_bank_example.csv",
+      "backup": "09_question_bank_example.csv",
+      "sha256": "d4ba18797dae9ad62570196bf0350b9df03e4bcc94a2b6f5ed6bdf96ca1c645b"
+    },
+    {
+      "source": "output/import-examples/11_time_infinity_activity_export.csv",
+      "backup": "11_time_infinity_activity_export.csv",
+      "sha256": "5bbae2b547a82d6fba0a5b6dac2e3d4e27204739ea25a6bb7020cf3098a21279"
+    },
+    {
+      "source": "output/import-examples/12_form_review_history.csv",
+      "backup": "12_form_review_history.csv",
+      "sha256": "ef695b514d851ef6ab360fe09a8cefcea2b87b7c294cb7622b738e4c7007a43d"
+    },
+    {
+      "source": "output/import-examples/13_activity_form_assignments.csv",
+      "backup": "13_activity_form_assignments.csv",
+      "sha256": "c5b2c2f5273c0ee90666035b189965d2ef994f58e3c4a4656a4034d07d7ed8da"
+    },
+    {
+      "source": "output/import-examples/14_enum_reference.csv",
+      "backup": "14_enum_reference.csv",
+      "sha256": "62430342825532386e51c563a9bebfa5d60cdf021a554ff85cd047ee0173c4ac"
+    },
+    {
+      "source": "output/import-examples/15_form_review_assignments.csv",
+      "backup": "15_form_review_assignments.csv",
+      "sha256": "047e433989d5f641d3b050a2b119793f40a8e3cb48a3daa105c4f247ad3cbc9c"
+    },
+    {
+      "source": "output/import-examples/16_student_external_achievements.csv",
+      "backup": "16_student_external_achievements.csv",
+      "sha256": "c508989cae506bc76c3ecb020df077993d155e907daa9c2d3e39e75ea28fa7f3"
+    },
+    {
+      "source": "output/import-examples/17_proud_moment_selections.csv",
+      "backup": "17_proud_moment_selections.csv",
+      "sha256": "1a74706ed58de5a3562036d5bc29cc863e4fde58b9a7a63cab10b8278144c31e"
+    },
+    {
+      "source": "output/import-examples/18_rubric_observations.csv",
+      "backup": "18_rubric_observations.csv",
+      "sha256": "56f944163cb919666e0d2c5dba82ecc98666cd106d21a9250c9f92b4fdfb1713"
+    },
+    {
+      "source": "output/import-examples/19_peer_review_assignments.csv",
+      "backup": "19_peer_review_assignments.csv",
+      "sha256": "f7e6c7e16f1b4d6c601a32bf29508a0679e7b0e30e5f4350b6b1fbd58693a44a"
+    },
+    {
+      "source": "output/import-examples/20_activity_rubric_labels.csv",
+      "backup": "20_activity_rubric_labels.csv",
+      "sha256": "6b6f3c470bd367b7bba30ee6cc0048027446eb7a14b8481914a34e42a856fc2f"
+    },
+    {
+      "source": "output/import-examples/21_review_outlook_submissions.csv",
+      "backup": "21_review_outlook_submissions.csv",
+      "sha256": "e10a1371b551eb13b4e1f50ff93ccff31a99d58c6262a17229b04c79fd483cc3"
+    },
+    {
+      "source": "output/import-examples/22_role_definitions.csv",
+      "backup": "22_role_definitions.csv",
+      "sha256": "e22a35681fcb0a682608302a36f60b0fca2302198f65a6878edc1bd1e1dab82a"
+    },
+    {
+      "source": "output/import-examples/23_user_role_assignments.csv",
+      "backup": "23_user_role_assignments.csv",
+      "sha256": "d24edda5c041fe6f03cdab8502cefb2dfdea40b5a53274310e25679b9ba8beb6"
+    },
+    {
+      "source": "output/import-examples/24_rubric_catalogues.csv",
+      "backup": "24_rubric_catalogues.csv",
+      "sha256": "504d6004df015805b61e9dc45b7d84a0a5abb494a2cf7b6cc13bcb6e388f8a3f"
+    },
+    {
+      "source": "output/import-examples/25_rubric_axes.csv",
+      "backup": "25_rubric_axes.csv",
+      "sha256": "ba4d0de81c4f56bfe61ce2dd276ad953005da53001903e2a8993e32fc187be3e"
+    },
+    {
+      "source": "output/import-examples/26_rubric_levels.csv",
+      "backup": "26_rubric_levels.csv",
+      "sha256": "31c08aac218a7a128fc56c29b34af9561e1c4fd0fa9431c8f1bedc5d29f17831"
+    },
+    {
+      "source": "output/import-examples/27_rubric_level_conditions.csv",
+      "backup": "27_rubric_level_conditions.csv",
+      "sha256": "9f38e7d7b251b92fc6bd5fda35ca7b9c4327169314b4b90b6fb263955e5c9ea7"
+    },
+    {
+      "source": "output/import-examples/28_rubric_aggregation_policies.csv",
+      "backup": "28_rubric_aggregation_policies.csv",
+      "sha256": "340c01c51c96a8545876211cf1b755953e59f84a6ab7ac290640b0d88024b46b"
+    },
+    {
+      "source": "output/import-examples/29_proof_type_definitions.csv",
+      "backup": "29_proof_type_definitions.csv",
+      "sha256": "4f45718fe4d0013b90b6edbd5e009ce14def064171905329d36193ccc44e17d4"
+    },
+    {
+      "source": "output/import-examples/30_proof_items.csv",
+      "backup": "30_proof_items.csv",
+      "sha256": "03b5e68807cb0938c2c4d38a127c7cf06f29093c8f00626cad3dbd22832cbcaa"
+    },
+    {
+      "source": "output/import-examples/31_proof_links.csv",
+      "backup": "31_proof_links.csv",
+      "sha256": "5247eb748c645581371a9a9d9b7cf8faefca7cbcbdb507f4356bd7127f164384"
+    },
+    {
+      "source": "output/import-examples/32_review_outlook_memory_settings.csv",
+      "backup": "32_review_outlook_memory_settings.csv",
+      "sha256": "098b350fc7495f3cf93ef09d1b82c957257c6c49e39f3f2fc7f536ed5299ba10"
+    },
+    {
+      "source": "output/import-examples/33_review_outlook_memory_items.csv",
+      "backup": "33_review_outlook_memory_items.csv",
+      "sha256": "481b85e99f528a09f773b80e75083246bb3ad5959b6815c13f9a334bea541c46"
+    },
+    {
+      "source": "output/import-examples/34_media_source_definitions.csv",
+      "backup": "34_media_source_definitions.csv",
+      "sha256": "f3ea049a4a48f849614919b3d3e6ec95ccce94bdb2c418d1acebd04a07ab1d1c"
+    },
+    {
+      "source": "output/import-examples/35_external_media_references.csv",
+      "backup": "35_external_media_references.csv",
+      "sha256": "790c175736e239fbdfaa4d4444434898321e0a6f7598e71848d8e30d1cd95707"
+    },
+    {
+      "source": "output/import-examples/36_published_rubric_results.csv",
+      "backup": "36_published_rubric_results.csv",
+      "sha256": "0a44bd8b26a343f6967a0a428c53b16f286507afb980bdf5361c80edb81fa57b"
+    },
+    {
+      "source": "output/import-examples/37_llm_candidate_claims.csv",
+      "backup": "37_llm_candidate_claims.csv",
+      "sha256": "6f12209b63ba32294521ad5f211f5a8a89970ae16b92c2f39f3551841c366481"
+    },
+    {
+      "source": "output/import-examples/38_staff_position_definitions.csv",
+      "backup": "38_staff_position_definitions.csv",
+      "sha256": "aa59358ccfa4f53271527f09cfda8ff1d682f5097763a513678583c915623344"
+    },
+    {
+      "source": "output/import-examples/39_user_position_assignments.csv",
+      "backup": "39_user_position_assignments.csv",
+      "sha256": "8b18f5a375f24d05f6ca0971fbb6e981f84f461df0bbc08e7a1e449097ffcbf9"
+    },
+    {
+      "source": "output/import-examples/40_departments.csv",
+      "backup": "40_departments.csv",
+      "sha256": "ff3ec1ddddd88495c6d4a5e96ccf39d1f402aee8f612cc41e2e6a21b39635159"
+    },
+    {
+      "source": "output/import-examples/41_subjects.csv",
+      "backup": "41_subjects.csv",
+      "sha256": "4e1f031792e5449f2ecedf0fac02eccf5822328a2c45f2c071f09d934311ead4"
+    },
+    {
+      "source": "output/import-examples/42_department_subjects.csv",
+      "backup": "42_department_subjects.csv",
+      "sha256": "0dbe7663b912222fae18a917dd483efb4f477795931877c2d4055ad497df3e8a"
+    },
+    {
+      "source": "output/import-examples/43_capability_definitions.csv",
+      "backup": "43_capability_definitions.csv",
+      "sha256": "ebebf6484233e0039f1c70ed236bf3d730327e2384da91fdfdb1a98ac0d472f4"
+    },
+    {
+      "source": "output/import-examples/44_role_capabilities.csv",
+      "backup": "44_role_capabilities.csv",
+      "sha256": "870fea8d78b6c8471b52ffb7a05d5d371f73dbebc5eb31092c26badc1d09b504"
+    },
+    {
+      "source": "output/import-examples/45_capability_policy_overrides.csv",
+      "backup": "45_capability_policy_overrides.csv",
+      "sha256": "7e93a6ab0028bd51f53255685564b278fa6e77d5dd49b41aaa08d8fd3c0039c1"
+    },
+    {
+      "source": "output/import-examples/46_approval_policy_versions.csv",
+      "backup": "46_approval_policy_versions.csv",
+      "sha256": "abc282cbb023c8d77ca64776bcecd4939b09563e0cbb8518545ebc9d06c7cc05"
+    },
+    {
+      "source": "output/import-examples/47_approval_policy_steps.csv",
+      "backup": "47_approval_policy_steps.csv",
+      "sha256": "9a6b6480d764c7c8194ae2ea4691e5add04aeab4ce5a422db1df3c9fb4bfcc5d"
+    },
+    {
+      "source": "output/import-examples/48_approval_assignments.csv",
+      "backup": "48_approval_assignments.csv",
+      "sha256": "edf28f903cfd3b1fdf902101785d602424c90b68f2b37ebb40d6cfa43a150216"
+    },
+    {
+      "source": "output/import-examples/49_approval_decisions.csv",
+      "backup": "49_approval_decisions.csv",
+      "sha256": "5b69a838494f1ba134b9ef57cb7cc0a47b13a5598caaebad12733e42cdd6a465"
+    },
+    {
+      "source": "output/import-examples/50_approval_escalations.csv",
+      "backup": "50_approval_escalations.csv",
+      "sha256": "b9752e3715b5e345fbd1df7b4742e910dfd289e13ac44f8a681a66dd20023bcd"
+    },
+    {
+      "source": "output/import-examples/51_activity_revisions.csv",
+      "backup": "51_activity_revisions.csv",
+      "sha256": "2ca0f16b91941a6296c447062815d9400a784b21015027ef26cdb24af9d41c4a"
+    },
+    {
+      "source": "output/import-examples/52_activity_change_requests.csv",
+      "backup": "52_activity_change_requests.csv",
+      "sha256": "e5cd3c13b21ae3b4e2c4d080e9256896e01ff5b705b55137471009008cb0e690"
+    },
+    {
+      "source": "output/import-examples/53_portfolio_working_versions.csv",
+      "backup": "53_portfolio_working_versions.csv",
+      "sha256": "b8e964e3b204979468586b4353dd9303746434b385463baaf12102ed4650b29b"
+    },
+    {
+      "source": "output/import-examples/54_portfolio_version_items.csv",
+      "backup": "54_portfolio_version_items.csv",
+      "sha256": "ab55ee73e0347e4042a3a4ee48eff77f57641a6ebce1ba3bc69fb4649ad231a9"
+    },
+    {
+      "source": "output/import-examples/55_learner_narrative_versions.csv",
+      "backup": "55_learner_narrative_versions.csv",
+      "sha256": "fea199e0a71232a93d6c0e50ec311448ec8f3e8c95a084cd05e3dadd12c9cad6"
+    },
+    {
+      "source": "output/import-examples/56_staff_groups.csv",
+      "backup": "56_staff_groups.csv",
+      "sha256": "ce84f895851e40b4b70a472c6a363ffc777f71f2064ed1731216b1676afd8c05"
+    },
+    {
+      "source": "output/import-examples/57_staff_group_memberships.csv",
+      "backup": "57_staff_group_memberships.csv",
+      "sha256": "c745584a62ed7b363de74851d39def06886e3ee35fbee42d1f7d935852354437"
+    },
+    {
+      "source": "output/import-examples/58_rubric_groups.csv",
+      "backup": "58_rubric_groups.csv",
+      "sha256": "54166e452a6dfba77a5af6b80bdc561c0558d279e7f5e52170970b6aa115f8d4"
+    },
+    {
+      "source": "output/import-examples/59_rubric_step_definitions.csv",
+      "backup": "59_rubric_step_definitions.csv",
+      "sha256": "ad15da773e0ac1d8720d3f08cd91087df8ee1c1a778528060d91e1a5e598a532"
+    },
+    {
+      "source": "output/import-examples/60_role_definition_versions.csv",
+      "backup": "60_role_definition_versions.csv",
+      "sha256": "695a097bfec9d55cb0abcfe0b57103e14b3fd1e8259f306b6a3be46cb0461dc5"
+    },
+    {
+      "source": "output/import-examples/61_school_rubric_assignments.csv",
+      "backup": "61_school_rubric_assignments.csv",
+      "sha256": "466d8a2fe8a294b0514f45e9a699909129a43df055fb6d2b3a1c500611bc9d26"
+    },
+    {
+      "source": "output/import-examples/62_portfolio_templates.csv",
+      "backup": "62_portfolio_templates.csv",
+      "sha256": "347def1d4ac8d45e4a70553afc79d3758c9433a1c23d35dbb6f1c5b91bee428e"
+    },
+    {
+      "source": "output/import-examples/63_portfolio_template_versions.csv",
+      "backup": "63_portfolio_template_versions.csv",
+      "sha256": "616c3c79c64592737e4f7848039e72e212832030735c095b6b72429e4d8a7df4"
+    },
+    {
+      "source": "output/import-examples/64_portfolio_template_sections.csv",
+      "backup": "64_portfolio_template_sections.csv",
+      "sha256": "11ee3879894fb9718577cf80024f358f6395c6d21014a92365f734746bbb7ca2"
+    },
+    {
+      "source": "output/import-examples/65_school_portfolio_template_assignments.csv",
+      "backup": "65_school_portfolio_template_assignments.csv",
+      "sha256": "31924a9a5adf016c2a2ddec7b12ab60501aaee9a9eb2faabfd9095bf3550e28e"
+    },
+    {
+      "source": "output/import-examples/66_student_class_memberships.csv",
+      "backup": "66_student_class_memberships.csv",
+      "sha256": "848d2a6dfcd0fbcee7f9e66096785db8ea81ef95b4f93f96d86fada409223f6c"
+    }
+  ]
+}

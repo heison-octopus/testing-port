@@ -1,0 +1,26 @@
+{
+  "sourceHash": "66848a4596fbacac5c3495a3707c8fd2cf77f1cfdfdb3872ad32975ddbc0ae0a",
+  "build": "pass",
+  "backendTests": {
+    "pass": 7,
+    "fail": 0
+  },
+  "browserTests": {
+    "pass": 3,
+    "fail": 0
+  },
+  "csvChecks": {
+    "backupHashes": 66,
+    "functionalCsvs": 7,
+    "references": "pass"
+  },
+  "roles": [
+    "Admin",
+    "Teacher",
+    "Student",
+    "Denied",
+    "School B Admin"
+  ],
+  "layout": "Desktop audit and 390px people screenshot visually inspected; provisional layout",
+  "deployed": false
+}

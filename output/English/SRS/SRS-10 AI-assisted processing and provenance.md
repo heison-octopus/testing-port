@@ -107,3 +107,15 @@ sequenceDiagram
 - Invalidating one input marks the affected run stale and permits a successor run without changing the earlier manifest or output.
 - Declared AI-assisted student work remains a separately labelled source item; the LLM/tool used does not itself make the work better aligned to a rubric.
 
+
+## Batch two photo purpose and description metadata
+
+**System Analyst clarification, 18 November 2026; not BHSS/JC approval.** The current photo use is to locate a student’s face, obtain human confirmation of the student association, and show the permitted image to that student. A confirmed face association is not confirmation of attendance, behaviour, an activity outcome or a rubric level. Ignore teachers and unknown/non-student people for student matching; they need not be named, enrolled or assigned a person profile. Ignoring their identity does not mean they have been removed or blurred from the original image.
+
+A supplied photo description is desirable but optional. Keep the media title and add a human-supplied caption/description with its source/author, recorded time and revision history. Link the photo to its activity ID and known capture date/time. Distinguish photo-specific context from the activity description and intended VASK labels. A caption states what its author supplied; it does not independently verify the action or identify every person in the image. Missing captions must remain missing and do not block student-photo matching. These are intended metadata requirements, not a claim that the current v2 schema already implements them.
+
+The locally deployed vision model may still scan the scene and produce generic observations such as “two people are interacting”. Store that output separately as an unconfirmed machine description, with model/prompt version, processing time and source image. It must not fill the human-description field, establish identities, infer the activity’s purpose, or assert a named student’s behaviour, intentions, skills or achievement. Do not use the generic scene description as accepted behavioural proof or as a basis for a rubric result. Face matching and scene description are separate outputs and review concerns.
+
+Label-assisted action identification is outside the current scope: do not pass VASK labels or student identity labels to the local model to produce personalised explanations of actions. A client may request this later, but accuracy and privacy concerns require a separate scope decision and validation. Local deployment alone does not establish suitability. This restriction does not remove descriptive activity labels or the student association used to deliver the photo.
+
+The face-region correction workflow remains: an authorised reviewer selects the specific face region and corrects a student association. Teacher/unknown regions are ignored for student delivery; they do not require a guest identity catalogue. Correcting a false student match removes the wrong association and flags its dependants. No automatic assessment follows from a face being present.

@@ -1,0 +1,7 @@
+portfolio_template_section_id,portfolio_template_version_id,section_key,title_en,title_zh,content_type,source_type,display_order,parent_section_id,layout_region,visual_variant,presentation_mode,default_expanded,visible,status
+PTSEC-NEUTRAL-INTRO,PTPLV-NEUTRAL-CORE-1,self_introduction,About me,關於我,student_narrative,portfolio_item,10,,main,plain,inline,true,true,active
+PTSEC-NEUTRAL-SKILLS,PTPLV-NEUTRAL-CORE-1,skills_overview,Skills overview,技能概覽,rubric_summary,published_rubric_result,20,,main,summary,inline,true,true,active
+PTSEC-NEUTRAL-LEARNER,PTPLV-NEUTRAL-CORE-1,me_as_a_learner,Me as a learner,我的學習特質,learner_narrative,learner_narrative_version,30,,main,narrative,disclosure,true,true,active
+PTSEC-NEUTRAL-EVIDENCE,PTPLV-NEUTRAL-CORE-1,evidence_and_moments,Evidence and moments,佐證與重要時刻,section_group,none,40,,main,group,disclosure,true,true,active
+PTSEC-NEUTRAL-MOMENT,PTPLV-NEUTRAL-CORE-1,memorable_activity,Selected evidence,精選佐證,evidence_collection,portfolio_item,10,PTSEC-NEUTRAL-EVIDENCE,main,evidence,link_button,false,true,active
+PTSEC-NEUTRAL-TRACE,PTPLV-NEUTRAL-CORE-1,source_trace,Source trace,資料來源記錄,source_trace,frozen_manifest,50,,supporting,trace,disclosure,false,true,active

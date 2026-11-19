@@ -1,0 +1,62 @@
+{
+  "round": "v4-plan-20261118-01",
+  "loop": "fix",
+  "tier": "T1",
+  "state": "PREVIEW",
+  "reference": {
+    "kind": "canvas",
+    "value": "http://localhost:8791/bhss-mvp/v3-stage-0.html"
+  },
+  "walkthrough": {
+    "steps": [
+      "Open V4 preview",
+      "Select Stage 1",
+      "Select Stage 6",
+      "Return to Stage 1; approval remains pending"
+    ],
+    "script": "portfolio-poc-v4/planning/preview-walkthrough.mjs",
+    "driver": "ego-browser",
+    "profileOrAccount": "task space 15; no application account",
+    "role": "System Analyst review"
+  },
+  "dispatch": {
+    "agent": "direct-codex",
+    "runId": "v4-plan-20261118-01",
+    "executionMode": "direct-codex"
+  },
+  "pr": {
+    "requested": false,
+    "url": null,
+    "base": null,
+    "head": null,
+    "mergeSha": null
+  },
+  "issues": [
+    {
+      "id": 1,
+      "expected": "Future Stage 1 runnable implementation after approval; not executed in this planning round",
+      "local": {
+        "result": null,
+        "buildSha": null,
+        "artifact": null
+      },
+      "deployed": {
+        "result": null,
+        "buildSha": null,
+        "artifact": null,
+        "env": null
+      }
+    }
+  ],
+  "planValidation": {
+    "uniqueTables": 18,
+    "stages": 8,
+    "archify": "All four finalize gates passed; no perceptual visual review claimed",
+    "archifyReceipt": ".archify/workflow-v4-stages-20261118-180843/review-2/v4-stage-dependencies.finalize.json",
+    "approval": "pending; no saved answers",
+    "screenshotLimitation": "Ego capture timed out; replay uses DOM snapshots",
+    "previewReplay": "pass: Stage 0 \u2192 1 \u2192 6 \u2192 1; 18 rows; unanswered approval disabled",
+    "previewEvidence": "portfolio-poc-v4/planning/preview-evidence"
+  },
+  "implementationRunId": null
+}

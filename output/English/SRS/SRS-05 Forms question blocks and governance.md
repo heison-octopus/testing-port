@@ -15,7 +15,7 @@
 
 | ID | Requirement | Status | Priority |
 | --- | --- | --- | --- |
-| FRM-FR-001 | One activity shall reference one immutable published form version at a time. | Confirmed architecture | P0 |
+| FRM-FR-001 | Each released assessment stage shall reference one immutable approved/published form version. One activity may contain multiple stages with different questionnaires. | Confirmed architecture | P0 |
 | FRM-FR-002 | A form version shall contain ordered teacher, student and/or peer blocks. | Confirmed architecture | P0 |
 | FRM-FR-003 | Editing a published version shall create a successor draft and preserve historical assignments. | Confirmed architecture | P0 |
 | FRM-FR-004 | Each question shall preserve source, bilingual wording, audience, scale, version and an ability code/name/description. | Confirmed Oct 26 revision | P0 |
@@ -37,6 +37,7 @@
 | FRM-FR-020 | Reusable question blocks shall be stable records with immutable ordered versions, respondent audience, optional ability context, item links, review state, publication state and form-version usage links. Authoring queries shall support search, audience, ability, form version, lifecycle and pagination filters. | Approved System Analyst architecture decision, 30 Oct 2026; not BHSS/JC approval | P1 |
 | FRM-FR-021 | Disabled questions and blocks shall be unavailable for new selection while unchanged published forms retain their exact historical references. Historical validation may match disabled definitions but shall report that the reference is historical-only. | Approved System Analyst architecture decision, 30 Oct 2026; not BHSS/JC approval | P0/P1 |
 | FRM-FR-022 | Activity submission and approval shall fail when its selected form version is not already approved and published. Successful activity approval shall never mutate the form review/publication lifecycle. | Approved System Analyst architecture decision, 30 Oct 2026; not BHSS/JC approval | P0/P1 |
+| FRM-FR-023 | The system shall support the stage workflow and immutable stage/form/response context specified below; default one end stage, optional additional assessments, separately governed questionnaire changes and no automatic comparison of unlike instruments. | System Analyst direction, 18 Nov 2026; not BHSS/JC approval | P1 |
 
 ## 3. Question and form-definition fields
 
@@ -109,3 +110,17 @@ Role membership and a named workflow approval assignment are separate records.
 - M-06: minimum block/question completeness rules.
 - H-03: final authority for publishing a 1–16 result.
 - H-02: whether the supplied workbook is an official instrument or editable reference source.
+
+## Multi-stage activity assessment
+
+**System Analyst direction, 18 November 2026; not BHSS/JC approval.** This supersedes the activity-wide one-questionnaire restriction. An activity has one or more assessment/feedback stages. Default to one end-stage assessment scheduled at the relevant reporting-period end; an authorised activity editor may add start, progress, end or custom stages and adjust their dates. A stage may use a different questionnaire from another stage. Each released stage pins one approved, published, immutable form version, which can contain student, teacher and peer blocks. Multiple questionnaires within the same stage are not assumed; use separate named stages where needed.
+
+Activity → assessment stages → stage revisions → form assignments → recipients → submissions → answers/proof. Stage records have a stable stage ID, activity ID, name/type, sequence, review/reporting period, assessment date, evidence-window start/end, opening/due/optional closing times, questionnaire version, respondent groups and named review assignments. Stage revisions preserve their author, reason, approval, publication and superseded revision. Assignments, submissions, proof and observations retain stage identity and exact stage/form revision context. These are conceptual model additions; database migrations and API/UI implementation remain outstanding.
+
+Keep activity period allocation separate from stage review periods. An activity spanning P1–P2 can have a P1 progress assessment and a P2 end assessment under the same activity ID. P1-stage responses remain available for feedback comparison, but an ongoing P1–P2 activity is excluded from the P1 period assessment unless an owner-requested early end has taken effect. Freeze evidence windows and review decisions for any eligible completed activity. A stage is not a new activity, an automatic rubric result or an automatic publication.
+
+Adding or replacing a stage/questionnaire after activity approval is a governed activity amendment: the owner/authorised editor proposes a successor activity/stage revision and submits it for the configured approval. Teachers without editing authority request the change. Draft or unapproved questionnaires cannot be assigned to respondents; questionnaire approval/publication remains independent. Existing stage assignments, responses and published results keep their original versions. A stage with submitted work cannot be relabelled, overwritten or deleted to represent a new assessment; cancel/retire future work with reason, or create a successor stage/assignment with explicit recipients. The last approved configuration remains effective until the successor is approved and released.
+
+A stage assessment date, response due date and closing time are separate. For the default end stage, retain the existing one-calendar-month-after-activity-end response due rule unless explicitly changed. Added stages require explicit opening/due dates and validation against their assessment date; do not silently reuse the final-activity deadline for a start/progress stage. If period-end scheduling and the default response deadline conflict, require an explicit schedule decision before release. Existing audited extension and derived-overdue rules apply per stage. Peer deadlines, default date precedence and exact extension authority remain open under M-28/L-04.
+
+Compare stages side by side with questionnaire/version, question/ability, answer scale, perspective, date and evidence visible. Different questionnaires are permitted, but do not subtract or average unrelated answers. Numerical change requires an explicitly approved comparable question/scale or rubric-version/axis definition; otherwise show qualitative evidence comparison. Reusing the same proof across stages must retain its identity and must not count it twice merely because it appears twice. Stage-specific versus cumulative evidence windows, final-stage replacement versus retention and official aggregation remain configurable questions; no new automatic progression formula is introduced.

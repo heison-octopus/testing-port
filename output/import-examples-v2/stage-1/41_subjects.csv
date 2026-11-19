@@ -1,0 +1,3 @@
+subject_id,school_id,subject_code,name_en,name_zh,effective_from,effective_until,status,created_by_user_id,created_at
+SUB-CHI,BHSS,CHI,Chinese Language,中國語文,2026-08-20,,active,USR-ADM-001,2026-08-20T08:51:00+08:00
+SUB-ENG,BHSS,ENG,English Language,英國語文,2026-08-20,,active,USR-ADM-001,2026-08-20T08:51:00+08:00

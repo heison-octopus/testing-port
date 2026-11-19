@@ -1,0 +1,19 @@
+table,introduced_stage,purpose
+schools,1,School/service state and active configuration selections
+users,1,Student and staff identity
+roles,1,Explicit role names and backend permission profiles
+assignments,1,"Dated roles, class/group memberships, activity people and scoped exceptions"
+school_definitions,1,"Classes, subjects, years, periods, groups, departments, positions and custom labels"
+activities,3,Activities and their response stages
+questionnaire_definitions,2,"Questionnaire, block, question, reusable scale, option and ordered placements"
+questionnaire_submissions,3,One assigned respondent/subject/stage task and current review state
+questionnaire_answers,3,Actual answers in relational rows
+media_assets,4,"Original files, external references and derivatives"
+processing_runs,4,"Face/speech/AI batches, imports, source rows and independently actionable work"
+recognition_records,4,"Face regions, candidate identities, speech segments, transcripts and review decisions"
+proof_items,4,"Accepted source-linked evidence, certificates, marks and manual feedback"
+assessments,5,"Human activity observations, model proposals and official reporting results"
+portfolio_submissions,6,One student/report working submission and official release reference
+portfolio_items,6,"Relational Portfolio cards, sections, claims, generated alternatives and selections"
+record_links,1,"Explicit references, label mappings, selected periods/proof and dependencies"
+change_logs,1,"Shared state history, field changes, scalar snapshots and publication manifests"

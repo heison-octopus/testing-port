@@ -2,14 +2,14 @@
 
 ## 1. Purpose
 
-Define a school-owned activity as a stable container connecting versioned context, students, responsible staff, VASK intentions, one immutable form version, evidence and assessment.
+Define a school-owned activity as a stable container connecting versioned context, students, responsible staff, VASK intentions, one or more versioned assessment stages, evidence and assessment.
 
 ## 2. Functional requirements
 
 | ID | Requirement | Status | Phase |
 |---|---|---|---|
 | ACT-FR-001 | The system shall distinguish reusable activity templates from dated activity instances. | Recommended architecture | P1 |
-| ACT-FR-002 | Every school-owned activity shall reference one approved, published, immutable form version before activation. | Confirmed working model | P1 |
+| ACT-FR-002 | Every school-owned activity shall have a default assessment stage; each stage must pin an approved, published form version before release to respondents. | Confirmed working model | P1 |
 | ACT-FR-003 | Activity participants and responsible staff shall be explicit many-to-many assignments. | Confirmed architecture | P0 |
 | ACT-FR-004 | Attendance/participation shall remain separate from form completion and assessment. | Confirmed architecture | P1 |
 | ACT-FR-005 | An activity may select multiple VASK items with source, rationale, version and approval state. | Confirmed working model | P1 |
@@ -33,6 +33,12 @@ Define a school-owned activity as a stable container connecting versioned contex
 | ACT-FR-023 | New activity and successor-revision requests shall accept only active, selectable labels. A historical revision may continue to reference a disabled catalogue or axis; validation shall return a historical-reference warning rather than rewriting or rejecting the unchanged record. | Approved System Analyst architecture decision, 30 Oct 2026; not BHSS/JC approval | P0/P1 |
 | ACT-FR-024 | Activity approval shall confirm that the selected questionnaire version was already approved and published. It shall not approve, publish or change the questionnaire. Activity and form decisions remain separate approval records even where the same person performs both decisions. | Approved System Analyst architecture decision, 30 Oct 2026; not BHSS/JC approval | P0/P1 |
 | ACT-FR-025 | Activity-authoring teacher/staff assignment lookups shall be server-filtered and paginated by name/identifier, active state, position, functional role, capability, department, subject, group, programme, scope and approval eligibility as applicable. Search permission shall not grant access to staff administration. | Approved System Analyst architecture decision, 30 Oct 2026; not BHSS/JC approval | P1 |
+| ACT-FR-026 | Default student/teacher response due time shall be one calendar month after activity end. Authorised extensions, including after expiry, shall preserve old/new deadline, actor, reason, effective time and required approval. Due time is not an automatic close or an activity-amendment cutoff; exact calendar rules and authority remain open under L-04/M-12. | System Analyst direction; synchronized 18 Nov 2026; not BHSS/JC approval | P1 |
+| ACT-FR-027 | The system shall support the stage workflow and immutable stage/form/response context specified below; default one end stage, optional additional assessments, separately governed questionnaire changes and no automatic comparison of unlike instruments. | System Analyst direction, 18 Nov 2026; not BHSS/JC approval | P1 |
+
+### Due dates and extensions
+
+An activity response is due by default one calendar month after the activity ends. An authorised staff member can configure a longer activity-specific deadline, including after the original date has passed. Each change records previous/new deadline, actor, reason, time and required approval as one auditable action. A due date signals lateness; it is not automatically a closing date. The school must confirm authority, exact month-end/timezone rules and any separate hard close. Submission lateness is derived from timestamps and deadline history as specified in SRS-06; published snapshots remain immutable.
 
 ## 3. Activity data package
 
@@ -43,7 +49,7 @@ flowchart TB
     A --> P[Participants and attendance]
     A --> S[Responsible teachers / TA / assessor]
     A --> V[VASK intentions]
-    A --> F[One approved form version]
+    A --> F[Assessment stages with published form versions]
     A --> M[Media and evidence]
     A --> O[Teacher observations]
     A --> R[Published result references]
@@ -63,8 +69,8 @@ flowchart TB
 | Other staff | Optional | Maximum 50 temporary cap |
 | Participants | Required before activation | 1–1,000 |
 | VASK items | Required before activation | 1–100 temporary cap; catalogue-controlled |
-| Form version | Required before activation | Exactly one immutable version |
-| Access/due times | Conditional | Opening ≤ closing; due time Policy TBD |
+| Form version | Required before activation | One immutable version per released stage |
+| Access/due times | Conditional | Opening ≤ closing when configured; response due default ACT-FR-026; calendar details TBD |
 | Risk flags | Required before approval | Multi-select configured enum |
 | Latest/current approved revision | System managed | Both may differ while a successor awaits approval |
 | Change request | Conditional | Required when requester lacks direct edit authority; reason 1–4,000 characters |
@@ -104,3 +110,29 @@ Routine use of the approved default form with no new sensitive media may follow 
 - A disabled label remains visible on an older revision as historical context but cannot be selected for a new revision.
 - An activity creator may search an in-scope, paginated assignment directory without gaining staff-administration access.
 
+
+### Amendment timing clarification
+
+ACT-FR-012–016 already govern activity changes. The one-calendar-month response deadline does not impose an activity edit cutoff. Material edits follow successor revision and reapproval; non-editors request a change. Any separate amendment cutoff remains open under M-12/L-04.
+
+## Multi-stage activity assessment
+
+**System Analyst direction, 18 November 2026; not BHSS/JC approval.** This supersedes the activity-wide one-questionnaire restriction. An activity has one or more assessment/feedback stages. Default to one end-stage assessment scheduled at the relevant reporting-period end; an authorised activity editor may add start, progress, end or custom stages and adjust their dates. A stage may use a different questionnaire from another stage. Each released stage pins one approved, published, immutable form version, which can contain student, teacher and peer blocks. Multiple questionnaires within the same stage are not assumed; use separate named stages where needed.
+
+Activity → assessment stages → stage revisions → form assignments → recipients → submissions → answers/proof. Stage records have a stable stage ID, activity ID, name/type, sequence, review/reporting period, assessment date, evidence-window start/end, opening/due/optional closing times, questionnaire version, respondent groups and named review assignments. Stage revisions preserve their author, reason, approval, publication and superseded revision. Assignments, submissions, proof and observations retain stage identity and exact stage/form revision context. These are conceptual model additions; database migrations and API/UI implementation remain outstanding.
+
+Keep activity period allocation separate from stage review periods. An activity spanning P1–P2 can have a P1 progress assessment and a P2 end assessment under the same activity ID. P1-stage responses remain available for feedback comparison, but an ongoing P1–P2 activity is excluded from the P1 period assessment unless an owner-requested early end has taken effect. Freeze evidence windows and review decisions for any eligible completed activity. A stage is not a new activity, an automatic rubric result or an automatic publication.
+
+Adding or replacing a stage/questionnaire after activity approval is a governed activity amendment: the owner/authorised editor proposes a successor activity/stage revision and submits it for the configured approval. Teachers without editing authority request the change. Draft or unapproved questionnaires cannot be assigned to respondents; questionnaire approval/publication remains independent. Existing stage assignments, responses and published results keep their original versions. A stage with submitted work cannot be relabelled, overwritten or deleted to represent a new assessment; cancel/retire future work with reason, or create a successor stage/assignment with explicit recipients. The last approved configuration remains effective until the successor is approved and released.
+
+A stage assessment date, response due date and closing time are separate. For the default end stage, retain the existing one-calendar-month-after-activity-end response due rule unless explicitly changed. Added stages require explicit opening/due dates and validation against their assessment date; do not silently reuse the final-activity deadline for a start/progress stage. If period-end scheduling and the default response deadline conflict, require an explicit schedule decision before release. Existing audited extension and derived-overdue rules apply per stage. Peer deadlines, default date precedence and exact extension authority remain open under M-28/L-04.
+
+Compare stages side by side with questionnaire/version, question/ability, answer scale, perspective, date and evidence visible. Different questionnaires are permitted, but do not subtract or average unrelated answers. Numerical change requires an explicitly approved comparable question/scale or rubric-version/axis definition; otherwise show qualitative evidence comparison. Reusing the same proof across stages must retain its identity and must not count it twice merely because it appears twice. Stage-specific versus cumulative evidence windows, final-stage replacement versus retention and official aggregation remain configurable questions; no new automatic progression formula is introduced.
+
+### Activity completion and early end
+
+**System Analyst clarification, 18 November 2026; not BHSS/JC approval.** The activity owner may request an early end. Record the proposed actual end date, reason, requester and time, and apply the configured activity amendment/approval workflow. Only an effective completed/ended state qualifies the activity for period assessment; a pending early-end request is not completion. If the owner does not end the activity and it remains ongoing, exclude it from that period’s assessment input and calculation. Show “ongoing — not included” rather than zero; retain its history, media, stage responses and feedback.
+
+This supersedes the earlier assumption that a P1 stage of an ongoing P1–P2 activity may contribute to the P1 official period result. Start/progress stages can still collect and compare feedback, but cannot bypass activity-completion eligibility. An eligible completed activity still requires accepted proof, human-confirmed observations and the normal publication decision; ending it does not automatically award a level. If no eligible results remain, apply the existing inherited/not-yet-assessed display rule.
+
+An effective early-end change records old/new end dates and the treatment of future stages and outstanding tasks. Recalculate the default response deadline from the effective actual end date through the existing audited deadline-change workflow, preserving explicit extensions and submitted history for review rather than silently shortening them. Future stages are explicitly rescheduled or cancelled with reason; they are not silently deleted. Period-end assessment may proceed without an ongoing activity. Exact completion cutoff, treatment of late completion in an already published report, and authority for any separate hard-close/reopen remain open under M-28/L-04. Published results are never silently changed.

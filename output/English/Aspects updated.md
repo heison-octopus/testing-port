@@ -123,7 +123,8 @@ The stable root of one actual activity. Governed display/content fields belong t
 | `school_id` | UUID | References `schools`; required |
 | `activity_template_id` | UUID, nullable | Null for a standalone observation |
 | `resolved_period_id` | UUID | Server-resolved from the active revision's `start_at`/`end_at`; references `academic_periods` |
-| `period_resolution_status` | enum | `resolved`, `cross_period_exception`, `no_match`, `exception_approved` |
+| `selectedPeriod` | conceptual, optional | Explicit selection for a cross-period activity; default display `P0` is required but its meaning is pending clarification. Single-period activity does not need a selection. |
+| `period_resolution_status` | conceptual | Distinguish automatic single-period resolution, cross-period selection required, selected, and no matching period; exact persisted values remain to be designed. |
 | `group_id` | UUID, nullable | Class, team, or project group |
 | `created_by_user_id` | UUID | Original creator; not an ongoing permission grant |
 | `latest_revision_id` | UUID | Latest draft or submitted revision |
@@ -1149,7 +1150,7 @@ Internal moderation may prevent publication when context, consent, or evidence i
 
 ### Activity form package and question blocks
 
-Every school-owned activity references one immutable form version. A form version contains question blocks. For the proof of concept:
+Each released activity assessment stage references one immutable form version; an activity may have multiple stages. A form version contains question blocks. For the proof of concept:
 
 - use the BHSS dummy questions as the default question source;
 - give each question version its own valid ability code, bilingual name and description;
@@ -1258,3 +1259,33 @@ These decisions should not be hidden inside JSON or application code. Store them
 
 ---
 
+
+## Stage and face-region model additions
+
+See Core sections Multi-stage activity assessment and Face-region identification and correction. Proposed relationships: activities 1:N assessment stages; stages 1:N immutable stage revisions; stage revisions 1:N respondent assignments; submissions/proof/observations retain stage and version. Media assets 1:N face regions; regions 1:N identity candidates and review decisions. Existing activity-level form fields and diagrams are legacy shorthand for the default stage, not a one-form-per-activity constraint. Exact column names and migrations are not yet implemented.
+
+## Learner profile section and field catalogue
+
+**System Analyst direction, 18 November 2026; not BHSS/JC approval.** The supplied Rethinking Assessment image is a structural reference, not the final page specification. The new profile differs from that example and the existing POC. No academic-grades panel is specified in this revision. Academic strengths/development needs refer to supported learning evidence; do not invent grades or assume a grade import exists.
+
+**Fact check:** Core already describes portfolio_template_sections (semantic/source type, order, layout and display mode), portfolio_version_items (source links, selection, authorship and student text), and learner_narrative_versions (generated/edited/approved versions). SRS-09 already covers versioned Portfolio review; SRS-13 V2-FR-044 leaves interests open. These are generic foundations, not the following complete section-specific field contract. Field names below are proposed semantic keys for a versioned template/content contract, not new implemented database columns. Reuse existing source IDs and versioned records rather than copying activity data.
+
+All AI prose starts as a suggestion. Keep generated text, student-edited text, any teacher-reviewed revision and final-approved text separately, with author/editor, time, source manifest and model/prompt versions. Students may edit their own Me as a learner content; this explicitly extends the earlier teacher-edit-only narrative direction. Student edits cannot change source observations or published rubric levels. Student-authored motivation is a self-report, not an inferred psychological fact. AI development-needs wording must be constructive, evidence-linked and uncertain where appropriate; it may not diagnose or assert unsupported weaknesses. This allows developmental suggestions alongside the earlier positive-only drafting policy without allowing automated downgrading. Missing evidence produces an insufficient-evidence draft state, not invented text.
+
+System-selected sections are populated from eligible source records; this does not require AI to invent items. Retain selection reason, source/activity type and selection policy version. Activity count, ranking of relevance, category taxonomy, reporting window and student override rights for these sections remain open. For official period-derived sections, preserve the completed-activity eligibility rule; ongoing activities are not silently included because a section is automatically populated.
+
+The additional-image request stores requester/student, target teacher/activity, requested image or description, status, handler, reason, timestamps and resulting media association. It is a request, not automatic access. Teacher linkage does not bypass the existing media-visibility and identity-confirmation checks. Photo availability supports curation, not action identification or a skill claim. The request/editor workflow is intended behaviour, not implemented code.
+
+Client/product inputs still needed (M-30): define building-block/course/achievement/interest categories; number of cards and relevance ranking; whether students can accept/hide/reorder system selections; project subtype examples and the meaning of NLP; whether one or several projects may be shown; photo-request recipient/routing; and the final section labels. Testimonials, the reference image’s community-change prompt and a standalone grades panel are not confirmed additions. The student introduction remains existing functionality. No exact visual layout or automatic field-to-rubric mapping is approved here.
+
+| Section | Behaviour and source | Proposed fields |
+|---|---|---|
+| Student introduction | Student identity/photo and introduction; existing authorship/review rules remain. | `student_id; display_name; profile_media_id; introduction_text` |
+| Skills radar | Published results from either Skills Builder or a validated RC360 version. Use that rubric’s own axes; never relabel the reference image’s 3Cs as these results. | `rubric_id/version; axis_id; published_result_id; level; assessment_state` |
+| Me as a learner | AI initially suggests academic strengths, academic development needs, non-academic strengths, non-academic development needs, what to work on and motivation. Student may edit their own six fields before submission/review. | `academic_strengths; academic_development_needs; nonacademic_strengths; nonacademic_development_needs; next_steps; motivation` |
+| Building blocks | System selects relevant activities and supported foundational learning evidence. Categories and selection rules remain to be agreed. | `activity_ids; activity_type; category_code; summary; source_refs` |
+| Courses | System selects relevant course/learning activities and displays recorded activity types; no inferred formal course enrolment. | `activity_ids; activity_type; course_title; summary; source_refs` |
+| My achievements | System selects relevant supported activity achievements; participation alone does not imply an award. | `activity_ids; activity_type; achievement_title; result_type; source_refs` |
+| My interests | System proposes interests from relevant activities, with activity types and provenance. Frequency alone does not establish an interest; taxonomy and student confirmation remain open. | `interest_code/label; activity_ids; activity_type; selection_reason; confirmation_state` |
+| Personal project | Fetch eligible activities with activity_type = project. SBA, NLP and project-related competitions qualify only when explicitly classified as projects. Do not infer the meaning of NLP. | `activity_id; activity_type=project; project_subtype; title; summary; media_refs` |
+| My beautiful work | Display permitted student-associated media-library photos. Student may request an additional image from a teacher; the authorised activity teacher uploads/links it and confirms its student association before it becomes selectable. | `media_asset_id; activity_id; student_id; caption; media_request_id; association_review_state` |

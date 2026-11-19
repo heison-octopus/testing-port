@@ -1,0 +1,3 @@
+school_rubric_assignment_id,school_id,purpose,rubric_catalogue_id,scope_type,scope_id,effective_from,effective_until,status,assigned_by_user_id,assigned_at,reason
+SRA-BHSS-LABELLING-1,BHSS,activity_labelling,RUB-VASK-2026,school,BHSS,2026-08-20,,active,USR-ADM-001,2026-08-20T09:10:00+08:00,Initial school labelling policy using the supplied VASK vocabulary
+SRA-BHSS-ASSESSMENT-1,BHSS,assessment_rubric,RUB-SB-UF2,school,BHSS,2026-08-20,,active,USR-ADM-001,2026-08-20T09:10:00+08:00,Initial school assessment policy using the supplied Universal Framework

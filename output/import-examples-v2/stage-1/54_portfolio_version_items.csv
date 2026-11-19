@@ -1,0 +1,8 @@
+portfolio_version_item_id,portfolio_working_version_id,section_key,source_type,source_id,student_selected,class_teacher_decision,display_order,authorship_origin,student_text,decision_reason,decided_by_user_id,decided_at
+PVI-S1-INTRO,PWV-S1-001,self_introduction,student_text,,true,included,1,human_authored,I enjoy helping classmates and learning through music,Student-authored section,USR-T-001,2026-12-16T10:00:00+08:00
+PVI-S1-ACT,PWV-S1-001,memorable_activity,activity,ACT-SPORT-001,true,included,2,human_authored,The sports challenge taught me to plan with my team,Suitable reviewed activity,USR-T-001,2026-12-16T10:00:00+08:00
+PVI-S1-NARR,PWV-S1-001,me_as_a_learner,learner_narrative,LNV-S1-001,true,included,3,ai_assisted,,Sources checked and wording approved,USR-T-001,2026-12-16T10:00:00+08:00
+PVI-S2-INTRO,PWV-S2-001,self_introduction,student_text,,true,included,1,human_authored,I like practical projects and supporting my group,Student-authored section,USR-T-001,2026-12-19T09:30:00+08:00
+PVI-S2-ACT1,PWV-S2-001,memorable_activity,activity,ACT-SPORT-001,true,included,2,human_authored,The teamwork session was memorable,Supported by reviewed activity,USR-T-001,2026-12-19T09:30:00+08:00
+PVI-S2-ACT2,PWV-S2-001,memorable_activity,activity,ACT-COMM-001,true,returned,3,human_authored,I learned to speak clearly,Activity revision is still awaiting approval,USR-T-001,2026-12-19T09:30:00+08:00
+PVI-S3-INTRO,PWV-S3-001,self_introduction,student_text,,true,pending,1,human_authored,I want to become more confident when speaking,,,

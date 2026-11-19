@@ -1,0 +1,3 @@
+capability_policy_override_id,school_id,target_type,target_id,capability_id,effect,scope_type,scope_id,effective_from,effective_until,reason,configured_by_user_id,configured_at,status
+CPO-GROUP-ENG-CREATE,BHSS,group,GRP-ENG-TEACHERS,CAP-ACTIVITY-CREATE,allow,subject,SUB-ENG,2026-08-20,,English teacher group may create English activities,USR-ADM-001,2026-08-20T09:10:00+08:00,active
+CPO-T2-DENY-PRESS,BHSS,user,USR-T-002,CAP-ACTIVITY-VIEW,deny,activity,ACT-PRESS-001,2027-01-20,2027-04-09,Individual restriction overrides inherited group or role access,USR-ADM-001,2027-01-20T09:10:00+08:00,active

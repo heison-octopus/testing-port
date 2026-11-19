@@ -1,0 +1,7 @@
+position_id,school_id,position_code,name_en,name_zh,position_category,sort_order,status,created_by_user_id,created_at
+POS-SUBJECT-TEACHER,BHSS,subject_teacher,Subject Teacher,科任老師,teaching,10,active,USR-ADM-001,2026-08-20T08:40:00+08:00
+POS-MENTORING-TEACHER,BHSS,mentoring_teacher,Mentoring Teacher,導師,teaching,20,active,USR-ADM-001,2026-08-20T08:40:00+08:00
+POS-SUBJECT-LEADER,BHSS,subject_leader,Subject Leader,科主任,leadership,30,active,USR-ADM-001,2026-08-20T08:40:00+08:00
+POS-PRINCIPAL,BHSS,principal,Principal,校長,leadership,40,active,USR-ADM-001,2026-08-20T08:40:00+08:00
+POS-VICE-PRINCIPAL,BHSS,vice_principal,Vice Principal,副校長,leadership,50,active,USR-ADM-001,2026-08-20T08:40:00+08:00
+POS-TA,BHSS,teaching_assistant,Teaching Assistant,教學助理,support,60,active,USR-ADM-001,2026-08-20T08:40:00+08:00

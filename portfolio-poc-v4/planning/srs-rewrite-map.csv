@@ -1,0 +1,9 @@
+document_scope,stage,rewrite_boundary
+SRS-00/01/02,Stages 1 and 7,"Describe roles, dated assignments and school-definition kinds; backend action keys replace capability-definition tables; preserve server checks."
+SRS-03,Stages 2/3/4/7,"Retain separate import contracts; shared processing_runs own batches and rows; rubric packages publish backend artifacts, not rubric tables."
+SRS-04/05/06,Stages 2 and 3,"Activity/stage kinds, relational questionnaire tree and answers; one submission with status and shared scalar snapshot history."
+SRS-07/10,Stages 4 and 5,"Shared run and recognition kinds, source-linked proof, human candidate review and dependency correction; no provider output directly publishes."
+SRS-08,Stage 5,"Backend rubric key/version/hash, relational selected sources, human observations/results, inheritance and not-assessed display."
+SRS-09/12,Stages 1–6,Portfolio row/items and published event snapshot; preserve role-specific views and editable student learner fields.
+SRS-11,Stages 1 and 7,"Retain layered APIs, auth/request protection and operational boundaries; identify technical bookkeeping separately from 18 functional tables."
+Core and Chinese counterparts,Each implementation stage,Update corresponding English/Traditional Chinese rules together only when that stage contract is accepted; record open choices with existing IDs. Existing files are not rewritten by this preview.

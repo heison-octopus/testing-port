@@ -1,0 +1,253 @@
+{
+  "config": {
+    "argv": [
+      "/usr/local/bin/node",
+      "/Users/useroctopus-tech.com/Documents/GitHub/BHSS-MVP/portfolio-poc-v4/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "tests/playwright.config.js"
+    ],
+    "configFile": "/Users/useroctopus-tech.com/Documents/GitHub/BHSS-MVP/portfolio-poc-v4/tests/playwright.config.js",
+    "rootDir": "/Users/useroctopus-tech.com/Documents/GitHub/BHSS-MVP/portfolio-poc-v4/tests",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/Users/useroctopus-tech.com/Documents/GitHub/BHSS-MVP/portfolio-poc-v4/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/Users/useroctopus-tech.com/Documents/GitHub/BHSS-MVP/portfolio-poc-v4/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "ui.spec.js"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "/Users/useroctopus-tech.com/Documents/GitHub/BHSS-MVP/portfolio-poc-v4/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "",
+        "testDir": "/Users/useroctopus-tech.com/Documents/GitHub/BHSS-MVP/portfolio-poc-v4/tests",
+        "snapshotDir": "/Users/useroctopus-tech.com/Documents/GitHub/BHSS-MVP/portfolio-poc-v4/tests",
+        "testIgnore": [],
+        "testMatch": "ui.spec.js",
+        "timeout": 30000,
+        "use": {
+          "baseURL": "http://127.0.0.1:5184",
+          "screenshot": "on",
+          "trace": "retain-on-failure"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": ""
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results/browser-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.65.0",
+    "workers": 1,
+    "webServer": {
+      "command": "V4_DB_PATH=/tmp/bhss-v4-e2e-57098.sqlite npm run dev",
+      "url": "http://127.0.0.1:5184",
+      "reuseExistingServer": true,
+      "timeout": 30000
+    }
+  },
+  "suites": [
+    {
+      "title": "ui.spec.js",
+      "file": "ui.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "Admin assigns class, teacher sees scope, admin ends assignment and inspects snapshots",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1040,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-18T10:26:46.229Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/useroctopus-tech.com/Documents/GitHub/BHSS-MVP/portfolio-poc-v4/test-results/ui-Admin-assigns-class-tea-0cdeb-ment-and-inspects-snapshots/test-finished-1.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/useroctopus-tech.com/Documents/GitHub/BHSS-MVP/portfolio-poc-v4/test-results/ui-Admin-assigns-class-tea-0cdeb-ment-and-inspects-snapshots/test-finished-2.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6cacfa4b79c1be8f210f-ba3e5f13e60d28a90a09",
+          "file": "ui.spec.js",
+          "line": 24,
+          "column": 1
+        },
+        {
+          "title": "student own identity and direct admin route denied, denied fixture and other school isolated",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 901,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-18T10:26:47.335Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/useroctopus-tech.com/Documents/GitHub/BHSS-MVP/portfolio-poc-v4/test-results/ui-student-own-identity-an-3ef95-e-and-other-school-isolated/test-finished-1.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/useroctopus-tech.com/Documents/GitHub/BHSS-MVP/portfolio-poc-v4/test-results/ui-student-own-identity-an-3ef95-e-and-other-school-isolated/test-finished-3.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/useroctopus-tech.com/Documents/GitHub/BHSS-MVP/portfolio-poc-v4/test-results/ui-student-own-identity-an-3ef95-e-and-other-school-isolated/test-finished-2.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6cacfa4b79c1be8f210f-8098bb01c356033460ea",
+          "file": "ui.spec.js",
+          "line": 96,
+          "column": 1
+        },
+        {
+          "title": "Admin creates a person, labelled role and class; mobile layout remains usable",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 677,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-18T10:26:48.240Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/useroctopus-tech.com/Documents/GitHub/BHSS-MVP/portfolio-poc-v4/test-results/ui-Admin-creates-a-person--18b1b-obile-layout-remains-usable/test-finished-1.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6cacfa4b79c1be8f210f-bbdc47c878ec5e58c544",
+          "file": "ui.spec.js",
+          "line": 136,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-18T10:26:45.697Z",
+    "duration": 3253.0299999999997,
+    "expected": 3,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

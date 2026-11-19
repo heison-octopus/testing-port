@@ -1,0 +1,2 @@
+"id","row_version","school_id","relation","source_type","source_id","target_type","target_id","status"
+"example-link","1","a","subject_department","school_definitions","a-subject","school_definitions","a-department","active"

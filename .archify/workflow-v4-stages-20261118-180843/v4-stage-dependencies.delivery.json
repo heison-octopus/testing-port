@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "e8773db8-0586-4b5a-a3e1-c8d81b2e6040",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "/Users/useroctopus-tech.com/Documents/GitHub/BHSS-MVP/.archify/workflow-v4-stages-20261118-180843/candidate.json",
+  "output": "/Users/useroctopus-tech.com/Documents/GitHub/BHSS-MVP/.archify/workflow-v4-stages-20261118-180843/v4-stage-dependencies.html",
+  "specification": {
+    "sha256": "e0e431d40d1a425dc3c598f7fc06ee053fca486092328cfbd15cfa72c565d9fd",
+    "bytes": 4643
+  },
+  "artifact": {
+    "sha256": "0443c69780e913065686481630a1cb66e3e944b6d94d66c408acd5074c644503",
+    "bytes": 843896
+  }
+}

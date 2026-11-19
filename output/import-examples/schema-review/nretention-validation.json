@@ -1,0 +1,13 @@
+{
+  "status": "pass",
+  "source_unchanged": true,
+  "tables": 18,
+  "functional_flow_groups": 25,
+  "checks": [
+    "Distinct table names and populated columns/merge/constraints/source fields",
+    "All functional coverage table references resolve within the 18-table set",
+    "All proposal download links resolve",
+    "Original nRetention document hash unchanged"
+  ],
+  "scope": "Proposal only; no runtime or migration validation"
+}

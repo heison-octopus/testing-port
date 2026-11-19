@@ -1,0 +1,26 @@
+{
+  "result": "pass",
+  "checks": [
+    "309 unique requirement IDs and verbatim statements resolve to source lines",
+    "50 historical unique entities; 24 initial tables; 18 extension families",
+    "All extension references and download links resolve",
+    "All recorded source hashes unchanged",
+    "SRS-13 excluded"
+  ],
+  "limits": [
+    "No operational CSV migration",
+    "No runtime conformance claim",
+    "Numbered FR coverage does not constitute field-by-field verification of all ancillary paragraphs"
+  ],
+  "browser": {
+    "driver": "ego-browser",
+    "task_space": 13,
+    "result": "pass",
+    "checks": [
+      "Report loaded with expected headings",
+      "ACT-FR-013 filter returns exactly 1 of 309 rows with immutable-revision limitation",
+      "Result page retained for review"
+    ],
+    "screenshot": "Capture timed out; screenshot-based visual verification unavailable"
+  }
+}

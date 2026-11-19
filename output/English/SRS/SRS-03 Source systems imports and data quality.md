@@ -110,3 +110,14 @@ The P0 form-definition contract accepts `.xlsx` only, maximum 4 MiB and 200 ques
 
 Acceptance: the supplied Skills Builder package exports 4 groups, 8 skills and 128 step definitions; a re-imported valid package creates a draft with a new catalogue ID and `supersedes_rubric_catalogue_id`; invalid links, incomplete score bands or mixed/unknown selection modes block commit.
 
+
+
+## TI-INPUT-01 — Time Infinity input assumption
+
+**Status: assumption set by the System Analyst, 18 November 2026; not a verified Time Infinity export contract or BHSS/JC approval.** Treat Time Infinity input as a batch of activities with student attendance and feedback. Reuse the activity import workflow rather than introduce a separate Time Infinity entity or workflow.
+
+Map activity records to `activities`, student attendance to the corresponding participant `assignments`, and accepted source-linked feedback to `proof_items`. Preserve original feedback text and supplied author/perspective; do not infer teacher authorship or a questionnaire answer where the source does not establish it. Batch provenance and review use `processing_runs`, relationships use `record_links`, and changes use `change_logs`. These are existing tables in the accepted 18-table plan.
+
+Attendance is actual attendance input, not merely a planned roster. Import validation and review still apply, including absent-participant exceptions where applicable. Feedback is evidence, not an automatic rubric level or approved assessment. Repeated activity IDs across student rows must resolve to one activity; repeated/corrected source records require duplicate/change preview before commit.
+
+Stages 3–4 implement this contract. Exact source headers, identifiers, attendance vocabulary and feedback authorship remain open pending a sample export; synthetic fixtures must label those assumptions. The existing Time Infinity CSV is a legacy example, not a confirmed source specification.
