@@ -1,0 +1,2 @@
+item_id,portfolio_id,parent_item_id,item_kind,section_code,field_key,display_order,title,body_text,source_type,source_id,source_event_id,activity_type,selected_by,authorship_origin,author_id,reviewer_id,review_status,visibility_status,row_version
+pitem-001,port-001,,evidence_card,activities,featured,1,Community Service Day,,activity,act-001,,service,u-student,student,u-student,u-teacher,draft,student_staff,1

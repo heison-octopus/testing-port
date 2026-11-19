@@ -1,0 +1,2 @@
+answer_id,submission_id,question_placement_id,question_definition_id,answer_kind,text_value,missing_state,status,row_version
+ans-001,sub-001,q-activity-1,q-activity-1,text,I coordinated materials.,answered,accepted,1

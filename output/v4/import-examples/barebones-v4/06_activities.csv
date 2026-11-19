@@ -1,0 +1,2 @@
+activity_record_id,school_id,kind,parent_activity_id,title,description,owner_id,source_key,activity_type,period_id,start_at,end_at,questionnaire_definition_id,reviewer_id,operational_status,published_status,row_version
+act-001,sch-a,activity,,Community Service Day,Time Infinity or manual activity import example.,u-teacher,time-infinity:TI-ACT-8801,service,period-1,2026-09-26T09:00:00+08:00,2026-09-26T15:00:00+08:00,qdef-activity-1,u-teacher,completed,draft,1

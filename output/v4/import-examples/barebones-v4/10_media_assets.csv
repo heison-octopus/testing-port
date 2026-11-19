@@ -1,0 +1,2 @@
+media_id,school_id,parent_media_id,title,media_type,mime_type,size,hash,source_key,external_reference,uploader_id,owner_id,captured_at,scan_status,latest_run_id,confirmed_run_id,student_visibility,staff_scope_code,assessment_eligible,consent_status,status,row_version
+med-001,sch-a,,Service day photo,image,image/jpeg,245000,sha256:example,time-infinity:TI-EVIDENCE-0001,TI-EVIDENCE-0001,u-teacher,u-student,2026-09-26T12:00:00+08:00,queued,run-001,,visible,activity_staff,true,pending,active,1

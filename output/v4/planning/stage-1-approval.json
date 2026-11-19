@@ -1,0 +1,9 @@
+{
+  "status": "approved",
+  "source": "explicit user chat",
+  "scope": "Stage 1 as specified",
+  "runId": "v4-stage1-20261118-01",
+  "executor": "direct-codex",
+  "steering": "React + Vite; JavaScript backend with routes and utilities; provisional working layout, no final product design approved",
+  "backup": "output/import-examples-v2/stage-1"
+}

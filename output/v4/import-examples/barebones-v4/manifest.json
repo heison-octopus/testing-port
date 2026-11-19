@@ -1,0 +1,29 @@
+{
+  "purpose": "Barebones all-18-table V4 schema examples; provisional import shape",
+  "status": "examples-only",
+  "schema_authority": "../../planning/schema-contract.csv",
+  "tables": 18,
+  "implemented_runtime_tables_stage1": 7,
+  "time_infinity_assumption": "activity batch with student attendance and feedback; exact source contract remains open",
+  "flexibility": "media_id is stable; external_reference/source_key and record_links permit additional media/provider references",
+  "files": [
+    "01_schools.csv",
+    "02_users.csv",
+    "03_roles.csv",
+    "04_assignments.csv",
+    "05_school_definitions.csv",
+    "06_activities.csv",
+    "07_questionnaire_definitions.csv",
+    "08_questionnaire_submissions.csv",
+    "09_questionnaire_answers.csv",
+    "10_media_assets.csv",
+    "11_processing_runs.csv",
+    "12_recognition_records.csv",
+    "13_proof_items.csv",
+    "14_assessments.csv",
+    "15_portfolio_submissions.csv",
+    "16_portfolio_items.csv",
+    "17_record_links.csv",
+    "18_change_logs.csv"
+  ]
+}

@@ -1,0 +1,2 @@
+link_id,school_id,relation_kind,source_type,source_id,source_event_id,target_type,target_id,target_event_id,display_order,included,state,assessment_eligible,consent_status,decided_by,reason,status
+link-proof-media,sch-a,proof_media,proof_items,proof-001,,media_assets,med-001,,1,true,active,true,pending,u-teacher,Activity evidence link,active

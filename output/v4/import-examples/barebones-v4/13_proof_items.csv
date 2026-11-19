@@ -1,0 +1,2 @@
+proof_id,student_id,activity_id,stage_id,source_type,source_id,source_event_id,proof_kind,perspective,authorship_origin,author_id,occurred_at,summary,reviewer_id,review_status,visibility_status,status,row_version
+proof-001,u-student,act-001,act-001,questionnaire_answer,ans-001,,feedback,self,student,u-student,2026-09-30T18:00:00+08:00,I coordinated materials.,u-teacher,accepted,student_staff,active,1

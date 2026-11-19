@@ -1,0 +1,2 @@
+log_id,event_id,row_kind,school_id,entity_type,entity_id,row_version,action,from_status,to_status,field_name,value_type,old_text,new_text,snapshot_text,related_event_id,actor_id,reason,recorded_at,effective_at
+log-001,evt-001,event,sch-a,activities,act-001,1,created,,draft,,,,,,,u-teacher,Barebones imported activity,2026-09-26T12:00:00+08:00,2026-09-26T12:00:00+08:00

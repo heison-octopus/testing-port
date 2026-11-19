@@ -1,0 +1,2 @@
+assessment_id,school_id,kind,run_id,student_id,activity_id,stage_id,rubric_key,rubric_version,rubric_hash,axis_key,level_key,perspective,method,observer_id,reviewer_id,review_status,publication_status,row_version
+asm-001,sch-a,observation,,u-student,act-001,act-001,skills-builder,draft,backend:pending,communication,candidate,teacher,human_review,u-teacher,u-teacher,draft,unpublished,1

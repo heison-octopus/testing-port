@@ -1,4 +1,5 @@
 # BHSS V4 — Stage 1 foundation
+> Implementation note: read `AGENT-NOTE.md` before using any V4 CSV example.
 
 Stage 1 was explicitly approved in chat on 18 November 2026. This is a runnable local POC with a provisional working layout, not the approved final product design. Stages 2–7 remain planned.
 
@@ -45,6 +46,10 @@ npm run test:e2e
 ```
 
 Backend tests cover authorization, dates, cross-school references, request keys, sessions, conflicts, rollback, reconstruction, retained artifacts and reopening a migrated database. Browser tests use separate contexts for Admin, Teacher, Student, Denied and School B. The shared review canvas retains approval and local evidence. No deployment is claimed.
+
+## Schema example pack
+
+The complete provisional all-18-table CSV pack is at `../output/v4/import-examples/barebones-v4/`. It includes minimal activity, teacher/student assignment, attendance, feedback/proof, media and Portfolio relationships. Stage 1 SQLite is seeded directly by JavaScript fixtures; it is not loaded from this pack.
 
 ## CSVs
 

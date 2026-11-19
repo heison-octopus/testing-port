@@ -1,0 +1,3 @@
+user_id,school_id,source_id,display_name,email,user_kind,profile_media_id,status
+u-teacher,sch-a,TI-T001,Example Teacher,teacher@example.test,staff,med-teacher,active
+u-student,sch-a,TI-S1001,Example Student,student@example.test,student,,active

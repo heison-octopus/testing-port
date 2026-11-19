@@ -1,0 +1,2 @@
+record_id,school_id,kind,run_id,media_id,region_key,candidate_user_id,confirmed_user_id,original_text,reviewed_text,confidence,reviewer_id,review_status,is_enabled,row_version
+rec-001,sch-a,face_candidate,run-001,med-001,face-1,u-student,,,,0.82,,unreviewed,false,1

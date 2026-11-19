@@ -1,0 +1,2 @@
+submission_id,school_id,activity_id,stage_id,questionnaire_definition_id,respondent_id,subject_student_id,assigned_by,reviewer_id,perspective,due_at,submitted_at,review_status,processing_status,visibility_status,row_version
+sub-001,sch-a,act-001,act-001,qdef-activity-1,u-student,u-student,u-teacher,u-teacher,self,2026-10-01T23:59:59+08:00,2026-09-30T18:00:00+08:00,submitted,accepted,student_staff,1

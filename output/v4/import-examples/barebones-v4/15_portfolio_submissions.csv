@@ -1,0 +1,2 @@
+portfolio_id,school_id,student_id,reporting_point_id,template_key,template_version,introduction,academic_strengths,academic_development_needs,nonacademic_strengths,nonacademic_development_needs,next_steps,motivation,reviewer_id,publisher_id,review_status,publication_status,row_version
+port-001,sch-a,u-student,period-1,basic,draft,,,,,,,,u-teacher,,draft,unpublished,1

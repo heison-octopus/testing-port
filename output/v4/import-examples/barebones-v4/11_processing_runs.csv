@@ -1,0 +1,2 @@
+run_id,school_id,kind,activity_id,media_id,target_type,target_id,requested_by,requested_at,status,provider,model_version,source_key,content_hash,attempt,result_ref
+run-001,sch-a,media_import,act-001,med-001,media,med-001,u-teacher,2026-09-26T12:05:00+08:00,queued,synthetic,fixture-1,time-infinity:TI-EVIDENCE-0001,sha256:example,1,
