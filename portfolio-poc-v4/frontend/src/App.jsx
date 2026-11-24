@@ -8,7 +8,7 @@ import Audit from './pages/Audit';
 import Activities from './pages/Activities';
 import Imports from './pages/Imports';
 import RoleRefresh from './pages/RoleRefresh';
-const links = [['/workspace', 'Workspace'], ['/activities', 'Activities'], ['/admin/people', 'People & assignments'], ['/admin/imports', 'Assignments & imports'], ['/admin/role-refresh', 'Role transfer'], ['/admin/definitions', 'Academic structure'], ['/admin/roles', 'Roles'], ['/admin/audit', 'Audit history']];
+const links = [['/workspace', 'Workspace'], ['/activities', 'Activities'], ['/admin/people', 'Users & assignments'], ['/admin/imports', 'Assignments & imports'], ['/admin/role-refresh', 'Role transfer'], ['/admin/definitions', 'Academic structure'], ['/admin/roles', 'Roles'], ['/admin/audit', 'Audit history']];
 const IDLE_WARNING_MS = 25 * 60 * 1000;
 const IDLE_LOGOUT_MS = 30 * 60 * 1000;
 const ACTIVE_REFRESH_MARGIN_MS = 2 * 60 * 1000;
@@ -111,7 +111,7 @@ export default function App() {
     }
   };
   if (loading) return <main>Loading session…</main>;
-  if (!session) return <main className="login"><p className="eyebrow">BHSS / V4 · STAGE 1</p><h1>Make every student visible.</h1><p>Sign in to the foundation workspace.</p><form onSubmit={e => {
+  if (!session) return <main className="login"><h1>Make every student visible.</h1><p>Sign in to the foundation workspace.</p><form onSubmit={e => {
       e.preventDefault();
       const body = Object.fromEntries(new FormData(e.currentTarget));
       run(async () => {
@@ -124,8 +124,8 @@ export default function App() {
           await api.logout();
           setSession(null);
           go('/login');
-        })}>Sign out</button></div></header><div className="shell"><nav aria-label="Main navigation">{links.filter(([p]) => manage || p === '/workspace' || p === '/activities').map(([p, l]) => <a href={p} key={p} aria-current={path === p ? 'page' : undefined} onClick={e => {
+        })}>Sign out</button></div></header><div className="shell"><nav className="app-navigation" aria-label="Main navigation">{links.filter(([p]) => manage || p === '/workspace' || p === '/activities').map(([p, l]) => <a href={p} key={p} aria-current={path === p ? 'page' : undefined} onClick={e => {
           e.preventDefault();
           go(p);
-        }}>{l}</a>)}<p className="muted">Stage 1<br />Working layout<br />Synthetic data</p></nav><main><div className="page-heading"><p className="eyebrow">SCHOOL {session.user.school_id.toUpperCase()} / FOUNDATION</p></div>{error && <p role="alert">{error}</p>}{notice && <p role="status">{notice}</p>}{developerMessage && import.meta.env.DEV && <div className="developer-message" role="status">{developerMessage}</div>}{path.startsWith('/admin') && !manage ? <><h1>Access denied</h1><p>Your current assignments do not allow administration.</p></> : path === '/activities' ? <Activities run={run} notify={setNotice} /> : path === '/admin/people' ? <People run={run} notify={setNotice} /> : path === '/admin/imports' ? <Imports run={run} notify={setNotice} /> : path === '/admin/role-refresh' ? <RoleRefresh run={run} notify={setNotice} /> : path === '/admin/roles' ? <Catalogue kind="roles" run={run} notify={setNotice} /> : path === '/admin/definitions' ? <Catalogue kind="school-definitions" run={run} notify={setNotice} /> : path === '/admin/audit' ? <Audit run={run} /> : <Workspace session={session} run={run} />}</main></div>{sessionWarning && <div className="session-overlay" role="dialog" aria-modal="true" aria-labelledby="session-warning-title"><div className="session-dialog"><h2 id="session-warning-title">Your session is about to expire</h2><p>No activity was detected for a while. Confirm within {secondsRemaining} seconds to refresh your session and continue.</p><div><button className="primary" onClick={() => { if (Date.now() >= warningDeadline.current) { logoutForSafety(); return; } refreshActiveSession(); }}>Confirm and continue</button><button onClick={() => logoutForSafety('You chose to end the session.')}>Cancel and sign out</button></div></div></div>}</>;
+        }}>{l}</a>)}</nav><main>{error && <p role="alert">{error}</p>}{notice && <p role="status">{notice}</p>}{developerMessage && import.meta.env.DEV && <div className="developer-message" role="status">{developerMessage}</div>}{path.startsWith('/admin') && !manage ? <><h1>Access denied</h1><p>Your current assignments do not allow administration.</p></> : path === '/activities' ? <Activities run={run} notify={setNotice} /> : path === '/admin/people' ? <People run={run} notify={setNotice} /> : path === '/admin/imports' ? <Imports run={run} notify={setNotice} /> : path === '/admin/role-refresh' ? <RoleRefresh run={run} notify={setNotice} /> : path === '/admin/roles' ? <Catalogue kind="roles" run={run} notify={setNotice} /> : path === '/admin/definitions' ? <Catalogue kind="school-definitions" run={run} notify={setNotice} /> : path === '/admin/audit' ? <Audit run={run} /> : <Workspace session={session} run={run} />}</main></div><footer className="app-footer">Stage 1 · Working layout · Synthetic data</footer>{sessionWarning && <div className="session-overlay" role="dialog" aria-modal="true" aria-labelledby="session-warning-title"><div className="session-dialog"><h2 id="session-warning-title">Your session is about to expire</h2><p>No activity was detected for a while. Confirm within {secondsRemaining} seconds to refresh your session and continue.</p><div><button className="primary" onClick={() => { if (Date.now() >= warningDeadline.current) { logoutForSafety(); return; } refreshActiveSession(); }}>Confirm and continue</button><button onClick={() => logoutForSafety('You chose to end the session.')}>Cancel and sign out</button></div></div></div>}</>;
 }

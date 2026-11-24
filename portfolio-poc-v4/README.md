@@ -10,10 +10,12 @@ Requires a Node runtime with `node:sqlite` (tested with Node 25.2.1).
 ```sh
 cd portfolio-poc-v4
 npm ci
-npm run dev
+npm run dev          # local computer only
+# or
+npm run start        # accessible to devices on your network
 ```
 
-Open http://127.0.0.1:5184. API: port 4194. Sign in with `admin@a.demo`, `teacher@a.demo`, `student@a.demo`, or `denied@a.demo`; School B uses `@b.demo`. The synthetic password is `demo-stage1`. These are local fixtures, not production policy. New users receive no authority until an effective role is assigned.
+Open http://127.0.0.1:5184. In network mode, Vite also prints the network URL; open that address on another device on the same network. The API remains local on port 4194 and is accessed through the Vite proxy. Network mode exposes this demo and its fixture accounts to reachable devices, so use it only on a trusted network. Sign in with `admin@a.demo`, `teacher@a.demo`, `student@a.demo`, or `denied@a.demo`; School B uses `@b.demo`. The synthetic password is `demo-stage1`. These are local fixtures, not production policy. New users receive no authority until an effective role is assigned.
 
 `data/stage1.sqlite` is separate from V2/V3. It is created only when absent, migrated in order and never reset on startup. Tests use in-memory/disposable databases. `V4_DB_PATH` selects a separate test database. Access and refresh JWTs are HttpOnly, SameSite cookies; the access token is short-lived, the refresh token is rotated and extends the server-side session within the configured idle/absolute policy, and both are revoked on logout. The separate request key protects state-changing requests. In-memory sessions intentionally expire on server restart. Production cookies additionally require HTTPS. School isolation and current assignment checks run on each protected request.
 
@@ -60,3 +62,11 @@ Pre-stage CSV backup: `../output/import-examples-v2/stage-1/` with original path
 The local Stage 1 slice now uses short-lived JWT access cookies and rotating JWT refresh cookies. The key ID, issuer, audience, subject, session ID and token type are validated server-side; refresh rotates the refresh identifier and expiry, while server-side revocation and request-key protection remain active. Signing keys are an in-process demo ring and must move to managed secret storage before deployment.
 
 Role labels and permissions are separate records: `roles` stores the school-scoped ID and English/Chinese labels, while technical `role_permissions` stores explicit `resource.action` allow/deny mappings. Position labels alone grant no access. The activity UI covers a five-step details/stages/people/evidence/review flow, dated teacher/student assignments, and CSV preview-before-commit batch changes. Questionnaire definitions and Portfolio interpretation remain later-stage boundaries.
+
+### Default role when creating people
+
+Analyst-approved prototype direction: new accounts infer Student from an in-school ID beginning with `s`, or Teacher from `t` (case insensitive). The optional CSV `default_role` column overrides inference with an active role code configured in the same school. Other prefixes with no override receive no automatic role.
+
+Creation header: `user_id,in_school_id,display_name,email,user_kind,status,default_role,password`. Leave `user_id` blank for a new account; leave `default_role` blank to infer. Teacher accounts use `user_kind=staff`.
+
+Roles are stored as audited assignments effective from creation, with no default end date. Existing-user imports with blank `default_role` preserve assignments; an explicit role adds that role without removing other roles. Repeated imports do not duplicate currently effective assignments. Role assignment requires server-side `assignments.create` permission; user creation also requires `people.create`. Prefix inference does not grant portfolio approval automatically.

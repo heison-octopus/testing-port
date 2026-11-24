@@ -131,3 +131,9 @@ The broader requirements above remain applicable. Stage 1 does not complete work
 ## V4 batch class and period update implementation note — 23 November 2026
 
 Admin or an authorised teacher may preview a CSV with `user_id,new_class,class_number,effective_period`. The server validates school ownership, configured class, configured period, duplicate rows and column count, returning row/column errors. Commit is disabled when any error exists; valid rows are committed in one transaction as effective-dated membership assignments. The old assignment is ended by date or retained according to the selected policy; historical responsibility is not erased. This is the current V4 implementation direction and remains subject to school policy confirmation.
+
+### School term terminology and three-term setup — approved System Analyst direction
+
+The V4 administrative label is **School term** (學期). The internal `period` kind and `period_id` remain stable. The school uses three terms; The school-year tab provides two actions: “Add school year” creates the year alone; “Add school year (3 terms)” collects a new year and Term 1–3, with administrator-entered dates and a single confirmation. The combined action saves all four records atomically. Dates are not evenly divided or inferred. Creation is atomic, audited, school-scoped and permission-checked; reject missing dates, inverted ranges, dates outside the year, duplicate codes and overlapping active terms. Individual additional school terms remain supported.
+
+This is the repository owner's approved direction, not an assertion of BHSS/JC approval.

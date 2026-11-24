@@ -8,7 +8,9 @@
     "client": "vite --config frontend/vite.config.js",
     "build": "vite build --config frontend/vite.config.js",
     "test": "node --test tests/api.test.js",
-    "test:e2e": "playwright test --config tests/playwright.config.js"
+    "test:e2e": "playwright test --config tests/playwright.config.js",
+    "client:network": "vite --config frontend/vite.config.js --host 0.0.0.0",
+    "start": "concurrently -k \"npm:server\" \"npm:client:network\""
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.5",

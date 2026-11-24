@@ -28,6 +28,7 @@ export function api(service, { sessionTtl = 8 * 60 * 60 * 1000, accessTtl = 15 *
   router.get('/session', (req, res) => res.json({ ...service.scope(req.user), requestKey: req.session.key, tokenType: 'JWT', accessExpiresInMs: accessTtl, refreshExpiresInMs: req.session.expires - now(), keyId: req.claims.kid }));
   router.delete('/session', (req, res) => { sessions.delete(req.session.id); setCookie(res, 'bhss_v4_access', '', 0); setCookie(res, 'bhss_v4_refresh', '', 0); res.status(204).end(); });
   router.get('/workspace', c.workspace);
+  router.post('/school-definitions/terms', c.create('createSchoolTerms'));
   router.get('/activities', (req, res) => res.json(service.listActivities(req.user)));
   router.post('/assignments/import/preview', (req, res) => res.json(service.previewAssignmentImport(req.user, req.body)));
   router.post('/assignments/import/commit', (req, res) => res.status(201).json(service.commitAssignmentImport(req.user, req.body)));

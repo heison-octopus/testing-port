@@ -135,3 +135,9 @@ flowchart LR
 | 我的興趣 | 系統從相關活動提出興趣建議，保留活動類型及來源；次數不等於興趣，分類及學生確認方式待定。 | `interest_code/label; activity_ids; activity_type; selection_reason; confirmation_state` |
 | 個人專題 | 擷取 activity_type = project 的合資格活動；SBA、NLP 及專題相關比賽須明確列作專題才納入，不推斷 NLP 的意思。 | `activity_id; activity_type=project; project_subtype; title; summary; media_refs` |
 | 我的作品 | 顯示獲准且已連結學生的媒體庫相片。學生可向老師要求新增圖片；獲授權活動老師上載／連結及確認學生連結後，才可供選取。 | `media_asset_id; activity_id; student_id; caption; media_request_id; association_review_state` |
+
+### 按學期檢視活動及挑選代表活動 — 已獲系統分析員批准的方向
+
+第一學期結束後，學生檢視自己的活動紀錄；第二學期可挑選最難忘、最能代表自己的活動，預設最多三項。獲授權的 Admin／Superadmin 可設定上限。檢視及挑選的開放與截止日期、可選活動所屬學期範圍，以及選取上限，均屬獨立流程設定，不等同學期起訖日期。在第二學期進行挑選時，第一學期的活動仍可納入選取範圍。提交時保留所選活動 ID 及適用設定版本；日後更改設定，不得默默改寫已提交的選擇。挑選代表活動不會自動改變技能評估結果。
+
+三學期制本身不代表第三學期必須執行另一項流程；第三學期的具體安排仍待確認。以上為系統分析員批准的方向，不代表 BHSS 或 JC 已確認。**實作狀態：** V4 已實作學期設定及一次建立三個學期；學生檢視與挑選流程，以及管理員設定選取上限的介面，仍屬後續 Portfolio 功能。

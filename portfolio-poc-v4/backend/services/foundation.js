@@ -53,9 +53,10 @@ export function foundation(store) {
   function assignDefaultRole(user, actor, inSchoolId, explicitRole, reasonText) {
     const roleCode = inferredRoleCode(inSchoolId, explicitRole);
     if (!roleCode) return null;
+    permit(actor, 'assignments.create');
     const role = store.list('roles', user.school_id).find(candidate => candidate.code === roleCode && candidate.status === 'active');
     ensure(role, 422, `Role ${roleCode} is not configured in this school`);
-    const existing = store.list('assignments', user.school_id).find(assignment => assignment.user_id === user.id && assignment.assignment_kind === 'role' && assignment.role_id === role.id && assignment.status === 'active' && !assignment.deassigned_at);
+    const existing = store.list('assignments', user.school_id).find(assignment => assignment.user_id === user.id && assignment.assignment_kind === 'role' && assignment.role_id === role.id && effective(assignment, timestamp()));
     if (existing) return { record: existing, event_id: null };
     const record = store.insert('assignments', { id: randomUUID(), school_id: user.school_id, assignment_kind: 'role', user_id: user.id, role_id: role.id, school_definition_id: null, activity_id: null, period_id: null, action_key: null, effect: null, assigned_by: actor.id, assigned_at: timestamp(), effective_from: timestamp(), effective_until: null, status: 'active' });
     return { record, event_id: store.audit('assignments', record, actor.id, reasonText) };
@@ -141,6 +142,36 @@ export function foundation(store) {
         return { record: role, event_id: store.audit('roles', role, u.id, why) };
       });
     },
+    createSchoolTerms(u, b) {
+      permit(u, 'school-definitions.create');
+      const why = reason(b);
+      ensure(!(b.year && b.parent_definition_id), 422, 'Choose a new year or an existing year');
+      const year = b.year ? { id: randomUUID(), school_id: u.school_id, kind: 'year', code: text(b.year.code, 'School year code'), name: text(b.year.name, 'School year name'), start_at: date(b.year.start_at), end_at: date(b.year.end_at), status: 'active' } : same('school_definitions', b.parent_definition_id, u);
+      if (b.year) {
+        ensure(year.end_at > year.start_at, 422, 'School year end must follow start');
+        ensure(Array.isArray(b.terms) && b.terms.length === 3, 422, 'A new school year package requires three terms');
+      }
+      ensure(year.kind === 'year' && year.status === 'active' && year.start_at && year.end_at, 422, 'Select an active academic year with configured dates');
+      ensure(Array.isArray(b.terms) && b.terms.length > 0 && b.terms.length <= 12, 422, 'Supply 1–12 school terms');
+      return store.transaction(() => {
+        const definitions = store.list('school_definitions', u.school_id);
+        if (b.year) ensure(!definitions.some(r => r.kind === 'year' && r.code === year.code), 422, 'School year code already exists');
+        const existing = definitions.filter(r => r.kind === 'period');
+        const pending = [];
+        for (const [index, term] of b.terms.entries()) {
+          const prefix = 'Term row ' + (index + 1) + ': ';
+          const code = text(term.code, prefix + 'Code'), name = text(term.name, prefix + 'Name');
+          const start = date(term.start_at), end = date(term.end_at);
+          ensure(end > start, 422, prefix + 'End must follow start');
+          ensure(start >= year.start_at && end <= year.end_at, 422, prefix + 'Dates must fall within the academic year');
+          ensure(![...existing, ...pending].some(r => r.code === code), 422, prefix + 'Code already exists');
+          ensure(![...existing, ...pending].some(r => r.parent_definition_id === year.id && r.status === 'active' && r.start_at && r.end_at && start < r.end_at && end > r.start_at), 422, prefix + 'Dates overlap another school term');
+          pending.push({ id: randomUUID(), school_id: u.school_id, kind: 'period', code, name, parent_definition_id: year.id, start_at: start, end_at: end, status: 'active' });
+        }
+        if (b.year) { store.insert('school_definitions', year); store.audit('school_definitions', year, u.id, why); }
+        return { year: b.year ? year : undefined, records: pending.map(row => { const record = store.insert('school_definitions', row); store.audit('school_definitions', record, u.id, why); return record; }) };
+      });
+    },
     createDefinition(u, b) {
       return write('school_definitions', u, b, () => {
         const parents = {
@@ -160,7 +191,14 @@ export function foundation(store) {
         } else ensure(!b.parent_definition_id, 422, 'Parent not permitted for this kind');
         const start = b.start_at ? date(b.start_at) : null,
           end = b.end_at ? date(b.end_at) : null;
+        if (['year', 'period'].includes(b.kind)) ensure(start && end, 422, 'Academic years and school terms require start and end dates');
         ensure(!start || !end || end > start, 422, 'End must follow start');
+        if (b.kind === 'period') {
+          const parent = same('school_definitions', b.parent_definition_id, u);
+          ensure(parent.start_at && parent.end_at, 422, 'Parent academic year dates are not configured');
+          ensure(start >= parent.start_at && end <= parent.end_at, 422, 'School term must fall within its academic year');
+          ensure(!store.list('school_definitions', u.school_id).some(r => r.kind === 'period' && r.parent_definition_id === parent.id && r.status === 'active' && r.start_at && r.end_at && start < r.end_at && end > r.start_at), 422, 'Dates overlap another school term');
+        }
         return store.insert('school_definitions', {
           id: randomUUID(),
           school_id: u.school_id,
@@ -198,8 +236,8 @@ export function foundation(store) {
           ensure(period.kind === 'period', 422, 'Period required');
         }
         if (b.assignment_kind === 'override') ensure(permissionKeys.includes(b.action_key) && ['allow', 'deny'].includes(b.effect), 422, 'Invalid override');
-        if (b.assignment_kind === 'membership' && assignedUser.user_kind === 'student') ensure(period, 422, 'Student membership requires a reporting period');
-        if (period) ensure(period.start_at && period.end_at, 422, 'Reporting period dates must be configured');
+        if (b.assignment_kind === 'membership' && assignedUser.user_kind === 'student') ensure(period, 422, 'Student membership requires a school term');
+        if (period) ensure(period.start_at && period.end_at, 422, 'School term dates must be configured');
         const from = period ? period.start_at : date(b.effective_from),
           until = period ? period.end_at : date(b.effective_until ?? null, true);
         ensure(!until || until > from, 422, 'End must follow start');
@@ -299,13 +337,20 @@ export function foundation(store) {
         if (!['student', 'staff'].includes(data.user_kind)) issue('user_kind', 'Must be student or staff');
         if (!['active', 'pending', 'suspended', 'disabled'].includes(data.status)) issue('status', 'Unsupported status');
         if (isCreate && (!data.in_school_id || data.password.length < 10)) issue('password', 'New users require an in-school ID and a password of at least 10 characters');
-        const roleCode = inferredRoleCode(data.in_school_id, data.default_role);
+        const roleCode = isCreate ? inferredRoleCode(data.in_school_id, data.default_role) : (data.default_role || null);
+        if (isCreate) permit(u, 'people.create');
+        if (roleCode) permit(u, 'assignments.create');
         if (roleCode && !store.list('roles', u.school_id).some(role => role.code === roleCode && role.status === 'active')) issue('default_role', `Role ${roleCode} is not configured in this school`);
         if (data.in_school_id && store.list('users', u.school_id).some(x => x.in_school_id === data.in_school_id && x.id !== data.user_id)) issue('in_school_id', 'In-school ID is already used');
         if (user && data.email !== user.email) { const duplicate = store.list('users', u.school_id).find(x => x.id !== user.id && x.email === data.email); if (duplicate) issue('email', 'Email is already used by another user'); }
         if (isCreate && store.list('users', u.school_id).some(x => x.email === data.email)) issue('email', 'Email is already used by another user');
         if (!errors.some(e => e.row === row)) {
           const changes = isCreate ? [{ field: 'record', before: null, after: 'new user' }, ...(roleCode ? [{ field: 'default_role', before: null, after: roleCode }] : [])] : [['in_school_id', user.in_school_id, data.in_school_id || user.in_school_id], ['display_name', user.display_name, data.display_name], ['email', user.email, data.email.toLowerCase()], ['user_kind', user.user_kind, data.user_kind], ['status', user.status, data.status]].filter(([, before, after]) => String(before ?? '') !== String(after ?? '')).map(([field, before, after]) => ({ field, before, after }));
+          if (!isCreate && roleCode) {
+            const role = store.list('roles', u.school_id).find(r => r.code === roleCode);
+            const assigned = store.list('assignments', u.school_id).some(a => a.user_id === user.id && a.role_id === role.id && a.assignment_kind === 'role' && effective(a, timestamp()));
+            if (!assigned) changes.push({ field: 'default_role', before: null, after: roleCode });
+          }
           valid.push({ ...data, row_version: user?.row_version || null, create: isCreate, changes });
         }
       });

@@ -283,3 +283,86 @@ test('CSV user import/export and period role refresh are previewed before commit
   const removal = await admin('/people/a-student', 'DELETE', { reason: 'Removal test' }); assert.equal(removal.status, 200); assert.equal(removal.data.record.status, 'disabled');
   const blocked = await login('a-student', 'demo-stage1', 401); assert.equal(blocked.status, 401);
 });
+
+test('default roles infer prefixes, respect overrides and keep repeat imports idempotent', async t => {
+  const { login } = await setup(t);
+  const admin = await login('admin@a.demo');
+  const password = 'default-role-test-password';
+  const created = await admin('/people', 'POST', { in_school_id: 'T-default', display_name: 'Default teacher', email: 'default.teacher@a.demo', user_kind: 'staff', password, reason: 'Verify teacher inference' });
+  assert.equal(created.status, 201);
+  const teacher = await login('T-default', password);
+  assert((await teacher('/session')).data.assignments.some(a => a.role_id === 'a-teacher'));
+  assert.equal((await teacher('/workspace')).status, 200);
+  const header = 'user_id,in_school_id,display_name,email,user_kind,status,default_role,password';
+  const csv = header + '\n,S-default,Default student,default.student@a.demo,student,active,,' + password;
+  const preview = await admin('/people/import/preview', 'POST', { csv });
+  assert(preview.data.valid[0].changes.some(c => c.field === 'default_role' && c.after === 'student'));
+  assert.equal((await admin('/people/import/commit', 'POST', { csv })).status, 201);
+  const student = await login('S-default', password);
+  const session = (await student('/session')).data;
+  assert(session.assignments.some(a => a.role_id === 'a-student'));
+  assert.equal((await student('/workspace')).status, 200);
+  const update = header + '\n' + session.user.id + ',S-default,Default student,default.student@a.demo,student,active,student,';
+  for (let i = 0; i < 2; i++) assert.equal((await admin('/people/import/commit', 'POST', { csv: update })).status, 201);
+  assert.equal((await student('/session')).data.assignments.filter(a => a.role_id === 'a-student').length, 1);
+  const override = header + '\n,s-reader,Explicit reader,explicit.reader@a.demo,staff,active,portfolio-reader,' + password;
+  assert.equal((await admin('/people/import/commit', 'POST', { csv: override })).status, 201);
+  const reader = await login('s-reader', password);
+  const roles = (await reader('/session')).data.assignments.map(a => a.role_id);
+  assert.deepEqual(roles, ['a-portfolio-reader']);
+  const invalid = await admin('/people/import/preview', 'POST', { csv: header + '\n,x-invalid,Invalid role,invalid.role@a.demo,staff,active,unknown-role,' + password });
+  assert.equal(invalid.data.can_commit, false);
+  assert(invalid.data.errors.some(e => e.row === 2 && e.column === 'default_role'));
+});
+
+test('academic structure requires calendar dates and keeps terms within their year', async t => {
+  const { login } = await setup(t);
+  const admin = await login('admin@a.demo');
+  const create = body => admin('/school-definitions', 'POST', { reason: 'Academic structure validation', ...body });
+  const year = { kind: 'year', code: '2028', name: '2028–29' };
+  assert.equal((await create(year)).status, 422);
+  assert.equal((await create({ ...year, start_at: '2028-09-01', end_at: '2028-08-01' })).status, 422);
+  const saved = await create({ ...year, start_at: '2028-09-01', end_at: '2029-08-31' });
+  assert.equal(saved.status, 201);
+  const term = { kind: 'period', code: '2028-T1', name: 'Term 1', parent_definition_id: saved.data.record.id };
+  assert.equal((await create(term)).status, 422);
+  assert.equal((await create({ ...term, start_at: '2028-08-01', end_at: '2029-01-31' })).status, 422);
+  assert.equal((await create({ ...term, start_at: '2028-09-01', end_at: '2029-01-31' })).status, 201);
+  const klass = await create({ kind: 'class', code: '2028-1A', name: '1A', parent_definition_id: saved.data.record.id });
+  assert.equal(klass.status, 201);
+  assert.equal(klass.data.record.start_at, null);
+  assert.equal((await create({ kind: 'subject', code: 'ENG', name: 'English' })).status, 201);
+});
+
+test('three school terms commit together and reject overlap, repeat and cross-school requests', async t => {
+  const { login } = await setup(t);
+  const admin = await login('admin@a.demo'), student = await login('student@a.demo');
+  const year = await admin('/school-definitions', 'POST', { kind:'year', code:'2031', name:'2031–32', start_at:'2031-09-01', end_at:'2032-09-01', reason:'Batch test' });
+  const dates = ['2031-09-01','2032-01-01','2032-05-01','2032-09-01'];
+  const body = { parent_definition_id:year.data.record.id, reason:'Create three terms', terms:[1,2,3].map((n,i)=>({code:'2031-T'+n,name:'Term '+n,start_at:dates[i],end_at:dates[i+1]})) };
+  const overlapping = structuredClone(body); overlapping.terms[2].start_at='2032-04-01';
+  assert.equal((await admin('/school-definitions/terms','POST',overlapping)).status,422);
+  assert.equal((await admin('/school-definitions')).data.filter(r=>r.parent_definition_id===body.parent_definition_id).length,0);
+  assert.equal((await student('/school-definitions/terms','POST',body)).status,403);
+  assert.equal((await admin('/school-definitions/terms','POST',{...body,parent_definition_id:'b-year'})).status,404);
+  const result=await admin('/school-definitions/terms','POST',body);
+  assert.equal(result.status,201); assert.equal(result.data.records.length,3);
+  assert.equal((await admin('/school-definitions/terms','POST',body)).status,422);
+  assert.equal((await admin('/school-definitions')).data.filter(r=>r.parent_definition_id===body.parent_definition_id).length,3);
+});
+
+test('new school year and three terms save atomically', async t => {
+  const { login } = await setup(t);
+  const admin = await login('admin@a.demo');
+  const dates = ['2035-09-01', '2036-01-01', '2036-05-01', '2036-09-01'];
+  const body = { reason: 'School year package test', year: { code:'2035', name:'2035–36', start_at:dates[0], end_at:dates[3] }, terms:[1,2,3].map((n,i)=>({code:'2035-T'+n,name:'Term '+n,start_at:dates[i],end_at:dates[i+1]})) };
+  const invalid = structuredClone(body); invalid.terms[2].end_at='2036-10-01';
+  assert.equal((await admin('/school-definitions/terms','POST',invalid)).status,422);
+  assert(!(await admin('/school-definitions')).data.some(r=>r.code==='2035'));
+  const result=await admin('/school-definitions/terms','POST',body);
+  assert.equal(result.status,201);
+  assert.equal(result.data.year.code,'2035');
+  assert.equal(result.data.records.length,3);
+  assert(result.data.records.every(r=>r.parent_definition_id===result.data.year.id));
+  assert.equal((await admin('/school-definitions/terms','POST',body)).status,422);
+});

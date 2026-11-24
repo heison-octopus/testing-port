@@ -29,7 +29,7 @@ test('Admin assigns class, teacher sees scope, admin ends assignment and inspect
   const admin = await signIn(browser, 'admin@a.demo');
   const teacher = await signIn(browser, 'teacher@a.demo');
   await admin.page.getByRole('link', {
-    name: 'People & assignments'
+    name: 'Users & assignments'
   }).click();
   await admin.page.getByRole('button', {
     name: 'Assignments for A teacher'
@@ -111,7 +111,7 @@ test('student own identity and direct admin route denied, denied fixture and oth
       await expect(page.getByRole('alert')).toContainText('Permission required');
     } else {
       await page.getByRole('link', {
-        name: 'People & assignments'
+        name: 'Users & assignments'
       }).click();
       await expect(page.getByRole('cell', {
         name: 'B teacher',
@@ -142,6 +142,7 @@ test('Admin creates a person, labelled role and class; mobile layout remains usa
   await page.getByRole('link', {
     name: 'Academic structure'
   }).click();
+  await page.getByRole('button', { name: 'Class', exact: true }).click();
   await page.getByLabel('Code', {
     exact: true
   }).fill('class-' + tag);
@@ -179,9 +180,9 @@ test('Admin creates a person, labelled role and class; mobile layout remains usa
     name: new RegExp('Reviewer ' + tag)
   })).toBeVisible();
   await page.getByRole('link', {
-    name: 'People & assignments'
+    name: 'Users & assignments'
   }).click();
-  await page.getByText('Add person', {
+  await page.getByText('Add user', {
     exact: true
   }).click();
   await page.getByLabel('In-school ID').fill('student-' + tag);
@@ -195,7 +196,7 @@ test('Admin creates a person, labelled role and class; mobile layout remains usa
     exact: true
   }).fill('Browser new person');
   await page.getByRole('button', {
-    name: 'Create person'
+    name: 'Create user'
   }).click();
   await expect(page.getByRole('cell', {
     name: 'New student ' + tag,
