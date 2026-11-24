@@ -276,8 +276,9 @@ test('CSV user import/export and period role refresh are previewed before commit
   const rolePreview = await admin('/role-refresh/preview', 'POST', { csv: 'user_id,role_code,effective_period,action\na-teacher,teacher,term,assign' }); assert.equal(rolePreview.status, 200); assert.equal(rolePreview.data.can_commit, true);
   const roleCommit = await admin('/role-refresh/commit', 'POST', { csv: 'user_id,role_code,effective_period,action\na-teacher,teacher,term,assign', reason: 'Period role refresh' }); assert.equal(roleCommit.status, 201); assert.equal(roleCommit.data.refreshed, 1);
   const assignments = await admin('/assignments/export.csv'); assert.equal(assignments.status, 200); assert.match(assignments.data, /\"assignment_id\",\"user_id\",\"assignment_kind\"/);
-  const imported = await admin('/people/import/commit', 'POST', { csv: 'user_id,in_school_id,display_name,email,user_kind,status,password\n,excel-api-student,Excel API Student,excel.api.student@a.demo,student,active,excel-api-password', reason: 'Excel user create' }); assert.equal(imported.status, 201); assert.equal(imported.data.created, 1);
-  const importedLogin = await login('excel-api-student', 'excel-api-password'); assert.equal((await importedLogin('/session')).status, 200);
+  const imported = await admin('/people/import/commit', 'POST', { csv: 'user_id,in_school_id,display_name,email,user_kind,status,password\n,s-excel-api-student,Excel API Student,excel.api.student@a.demo,student,active,excel-api-password', reason: 'Excel user create' }); assert.equal(imported.status, 201); assert.equal(imported.data.created, 1);
+  const importedLogin = await login('s-excel-api-student', 'excel-api-password'); assert.equal((await importedLogin('/session')).status, 200);
+  const importedAssignments = await admin('/assignments'); assert(importedAssignments.data.some(a => a.user_id !== 'a-student' && a.assignment_kind === 'role' && a.role_id === 'a-student'));
   const disabled = await admin('/people/a-student', 'GET'); assert.equal(disabled.status, 200);
   const removal = await admin('/people/a-student', 'DELETE', { reason: 'Removal test' }); assert.equal(removal.status, 200); assert.equal(removal.data.record.status, 'disabled');
   const blocked = await login('a-student', 'demo-stage1', 401); assert.equal(blocked.status, 401);

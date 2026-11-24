@@ -44,6 +44,22 @@ export function foundation(store) {
     ensure(typeof value === 'string' && Number.isFinite(Date.parse(value)), 422, 'Invalid effective date');
     return new Date(value).toISOString();
   }
+  function inferredRoleCode(inSchoolId, explicitRole) {
+    const explicit = typeof explicitRole === 'string' ? explicitRole.trim() : '';
+    if (explicit) return explicit;
+    const first = String(inSchoolId || '').trim().toLowerCase().charAt(0);
+    return first === 's' ? 'student' : first === 't' ? 'teacher' : null;
+  }
+  function assignDefaultRole(user, actor, inSchoolId, explicitRole, reasonText) {
+    const roleCode = inferredRoleCode(inSchoolId, explicitRole);
+    if (!roleCode) return null;
+    const role = store.list('roles', user.school_id).find(candidate => candidate.code === roleCode && candidate.status === 'active');
+    ensure(role, 422, `Role ${roleCode} is not configured in this school`);
+    const existing = store.list('assignments', user.school_id).find(assignment => assignment.user_id === user.id && assignment.assignment_kind === 'role' && assignment.role_id === role.id && assignment.status === 'active' && !assignment.deassigned_at);
+    if (existing) return { record: existing, event_id: null };
+    const record = store.insert('assignments', { id: randomUUID(), school_id: user.school_id, assignment_kind: 'role', user_id: user.id, role_id: role.id, school_definition_id: null, activity_id: null, period_id: null, action_key: null, effect: null, assigned_by: actor.id, assigned_at: timestamp(), effective_from: timestamp(), effective_until: null, status: 'active' });
+    return { record, event_id: store.audit('assignments', record, actor.id, reasonText) };
+  }
   function write(t, user, b, fn) {
     const permission = { users: 'people.create', roles: 'roles.create', school_definitions: 'school-definitions.create', assignments: 'assignments.create', record_links: 'assignments.update', activities: 'activity.create' }[t];
     permit(user, permission);
@@ -85,7 +101,7 @@ export function foundation(store) {
         ensure(['student', 'staff'].includes(b.user_kind), 422, 'Invalid user kind');
         ensure(typeof b.password === 'string' && b.password.length >= 10 && b.password.length <= 200, 422, 'Password must contain 10–200 characters');
         const id = randomUUID();
-        return store.insert('users', {
+        const user = store.insert('users', {
           id,
           school_id: u.school_id,
           source_id: id,
@@ -96,6 +112,8 @@ export function foundation(store) {
           password_hash: scryptSync(b.password, id, 64).toString('hex'),
           status: 'active'
         });
+        assignDefaultRole(user, u, inSchoolId, b.default_role, 'Default role on person creation');
+        return user;
       });
       return {
         ...result,
@@ -262,11 +280,12 @@ export function foundation(store) {
     listRolePermissions(u, roleId) { permit(u, 'roles.read'); const role = same('roles', roleId, u); return store.list('role_permissions', u.school_id).filter(p => p.role_id === role.id); },
     previewUserImport(u, b) {
       permit(u, 'people.update'); ensure(typeof b.csv === 'string' && b.csv.trim(), 422, 'CSV content required');
-      const base = ['user_id', 'in_school_id', 'display_name', 'email', 'user_kind', 'status'], createHeader = [...base, 'password'];
+      const base = ['user_id', 'in_school_id', 'display_name', 'email', 'user_kind', 'status', 'default_role'], createHeader = [...base, 'password'];
+      const legacyBase = ['user_id', 'in_school_id', 'display_name', 'email', 'user_kind', 'status'], legacyCreateHeader = [...legacyBase, 'password'];
       const lines = b.csv.trim().split(/\r?\n/).map(x => x.split(',').map(v => v.trim()));
-      const header = lines.shift(); const extended = header?.join(',') === createHeader.join(','); const exported = header?.join(',') === base.join(',');
-      ensure(extended || exported || header?.join(',') === ['user_id', 'display_name', 'email', 'user_kind', 'status'].join(','), 422, `Columns must be ${base.join(',')} or ${createHeader.join(',')}`);
-      const required = header?.includes('in_school_id') ? base : ['user_id', 'display_name', 'email', 'user_kind', 'status'];
+      const header = lines.shift(); const headerText = header?.join(','); const extended = headerText === createHeader.join(',') || headerText === legacyCreateHeader.join(','); const exported = headerText === base.join(',') || headerText === legacyBase.join(',');
+      ensure(extended || exported || headerText === ['user_id', 'display_name', 'email', 'user_kind', 'status'].join(','), 422, `Columns must be ${base.join(',')} or ${createHeader.join(',')}`);
+      const required = header?.includes('in_school_id') ? (header?.includes('default_role') ? base : legacyBase) : ['user_id', 'display_name', 'email', 'user_kind', 'status'];
       const errors = [], valid = [], seen = new Set();
       lines.forEach((values, i) => {
         const row = i + 2, data = Object.fromEntries(header.map((key, j) => [key, values[j] || ''])); const issue = (column, message) => errors.push({ row, column, message });
@@ -280,11 +299,13 @@ export function foundation(store) {
         if (!['student', 'staff'].includes(data.user_kind)) issue('user_kind', 'Must be student or staff');
         if (!['active', 'pending', 'suspended', 'disabled'].includes(data.status)) issue('status', 'Unsupported status');
         if (isCreate && (!data.in_school_id || data.password.length < 10)) issue('password', 'New users require an in-school ID and a password of at least 10 characters');
+        const roleCode = inferredRoleCode(data.in_school_id, data.default_role);
+        if (roleCode && !store.list('roles', u.school_id).some(role => role.code === roleCode && role.status === 'active')) issue('default_role', `Role ${roleCode} is not configured in this school`);
         if (data.in_school_id && store.list('users', u.school_id).some(x => x.in_school_id === data.in_school_id && x.id !== data.user_id)) issue('in_school_id', 'In-school ID is already used');
         if (user && data.email !== user.email) { const duplicate = store.list('users', u.school_id).find(x => x.id !== user.id && x.email === data.email); if (duplicate) issue('email', 'Email is already used by another user'); }
         if (isCreate && store.list('users', u.school_id).some(x => x.email === data.email)) issue('email', 'Email is already used by another user');
         if (!errors.some(e => e.row === row)) {
-          const changes = isCreate ? [{ field: 'record', before: null, after: 'new user' }] : [['in_school_id', user.in_school_id, data.in_school_id || user.in_school_id], ['display_name', user.display_name, data.display_name], ['email', user.email, data.email.toLowerCase()], ['user_kind', user.user_kind, data.user_kind], ['status', user.status, data.status]].filter(([, before, after]) => String(before ?? '') !== String(after ?? '')).map(([field, before, after]) => ({ field, before, after }));
+          const changes = isCreate ? [{ field: 'record', before: null, after: 'new user' }, ...(roleCode ? [{ field: 'default_role', before: null, after: roleCode }] : [])] : [['in_school_id', user.in_school_id, data.in_school_id || user.in_school_id], ['display_name', user.display_name, data.display_name], ['email', user.email, data.email.toLowerCase()], ['user_kind', user.user_kind, data.user_kind], ['status', user.status, data.status]].filter(([, before, after]) => String(before ?? '') !== String(after ?? '')).map(([field, before, after]) => ({ field, before, after }));
           valid.push({ ...data, row_version: user?.row_version || null, create: isCreate, changes });
         }
       });
@@ -292,9 +313,9 @@ export function foundation(store) {
     },
     commitUserImport(u, b) {
       const preview = this.previewUserImport(u, b); ensure(preview.can_commit, 422, 'Correct CSV errors before commit');
-      return store.transaction(() => { const events = []; for (const row of preview.valid) { let updated; if (row.create) { const id = randomUUID(); updated = store.insert('users', { id, school_id: u.school_id, source_id: randomUUID(), in_school_id: row.in_school_id, display_name: row.display_name, email: row.email.toLowerCase(), user_kind: row.user_kind, password_hash: scryptSync(row.password, id, 64).toString('hex'), status: row.status }); } else { updated = store.update('users', row.user_id, row.row_version, { display_name: row.display_name, email: row.email.toLowerCase(), user_kind: row.user_kind, status: row.status, in_school_id: row.in_school_id || store.get('users', row.user_id).in_school_id }); } events.push(store.audit('users', updated, u.id, b.reason || (row.create ? 'User CSV create' : 'User CSV import'))); } return { updated: preview.valid.length, created: preview.valid.filter(row => row.create).length, event_ids: events }; });
+      return store.transaction(() => { const events = []; for (const row of preview.valid) { let updated; if (row.create) { const id = randomUUID(); updated = store.insert('users', { id, school_id: u.school_id, source_id: randomUUID(), in_school_id: row.in_school_id, display_name: row.display_name, email: row.email.toLowerCase(), user_kind: row.user_kind, password_hash: scryptSync(row.password, id, 64).toString('hex'), status: row.status }); assignDefaultRole(updated, u, row.in_school_id, row.default_role, b.reason || 'Default role on CSV user creation'); } else { updated = store.update('users', row.user_id, row.row_version, { display_name: row.display_name, email: row.email.toLowerCase(), user_kind: row.user_kind, status: row.status, in_school_id: row.in_school_id || store.get('users', row.user_id).in_school_id }); if (row.default_role) assignDefaultRole(updated, u, updated.in_school_id, row.default_role, b.reason || 'Default role on CSV user import'); } events.push(store.audit('users', updated, u.id, b.reason || (row.create ? 'User CSV create' : 'User CSV import'))); } return { updated: preview.valid.length, created: preview.valid.filter(row => row.create).length, event_ids: events }; });
     },
-    exportUsers(u, filters = {}) { permit(u, 'people.read'); const query = String(filters.q || '').trim().toLowerCase(); const rows = store.list('users', u.school_id).filter(x => (!filters.status || x.status === filters.status) && (!filters.user_kind || x.user_kind === filters.user_kind) && (!query || `${x.id} ${x.in_school_id} ${x.display_name} ${x.email}`.toLowerCase().includes(query))); return [['user_id','in_school_id','display_name','email','user_kind','status'], ...rows.map(x => [x.id, x.in_school_id, x.display_name, x.email, x.user_kind, x.status])].map(row => row.map(v => `\"${String(v ?? '').replaceAll('\"', '\\"')}\"`).join(',')).join('\n') + '\n'; },
+    exportUsers(u, filters = {}) { permit(u, 'people.read'); const query = String(filters.q || '').trim().toLowerCase(); const rows = store.list('users', u.school_id).filter(x => (!filters.status || x.status === filters.status) && (!filters.user_kind || x.user_kind === filters.user_kind) && (!query || `${x.id} ${x.in_school_id} ${x.display_name} ${x.email}`.toLowerCase().includes(query))); return [['user_id','in_school_id','display_name','email','user_kind','status','default_role'], ...rows.map(x => [x.id, x.in_school_id, x.display_name, x.email, x.user_kind, x.status, store.list('assignments', u.school_id).find(a => a.user_id === x.id && a.assignment_kind === 'role' && a.status === 'active')?.role_id ? store.get('roles', store.list('assignments', u.school_id).find(a => a.user_id === x.id && a.assignment_kind === 'role' && a.status === 'active').role_id)?.code || '' : ''])].map(row => row.map(v => `\"${String(v ?? '').replaceAll('\"', '\\"')}\"`).join(',')).join('\n') + '\n'; },
     exportAssignments(u) { permit(u, 'assignments.read'); const rows = store.list('assignments', u.school_id); return [['assignment_id','user_id','assignment_kind','role_id','school_definition_id','activity_id','period_id','effective_from','effective_until','status'], ...rows.map(x => [x.id,x.user_id,x.assignment_kind,x.role_id,x.school_definition_id,x.activity_id,x.period_id,x.effective_from,x.effective_until,x.status])].map(row => row.map(v => `\"${String(v ?? '').replaceAll('\"', '\\"')}\"`).join(',')).join('\n') + '\n'; },
     previewRoleRefresh(u, b) {
       permit(u, 'assignments.update'); ensure(typeof b.csv === 'string' && b.csv.trim(), 422, 'CSV content required');

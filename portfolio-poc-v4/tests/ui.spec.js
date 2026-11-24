@@ -189,7 +189,7 @@ test('Admin creates a person, labelled role and class; mobile layout remains usa
   await page.getByLabel('Email', {
     exact: true
   }).fill(tag + '@fixture.demo');
-  await page.getByLabel('User kind').selectOption('student');
+  await page.locator('select[name="user_kind"]').selectOption('student');
   await page.getByLabel('Initial password').fill('test-password-long');
   await page.getByLabel('Reason', {
     exact: true
