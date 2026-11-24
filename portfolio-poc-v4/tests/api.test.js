@@ -18,18 +18,19 @@ async function setup(t, options = {}) {
     store.close();
   });
   const base = `http://127.0.0.1:${server.address().port}`;
-  async function login(email) {
+  async function login(email, password = 'demo-stage1', expectedStatus = 200) {
     const res = await fetch(base + '/api/session', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        email,
-        password: 'demo-stage1'
+        identifier: email,
+        password
       })
     });
-    assert.equal(res.status, 200);
+    assert.equal(res.status, expectedStatus);
+    if (expectedStatus !== 200) return res;
     const data = await res.json();
     const cookie = res.headers.get('set-cookie').split(';')[0];
     return async (path, method = 'GET', body, key = data.requestKey) => {
@@ -48,13 +49,14 @@ async function setup(t, options = {}) {
       });
       return {
         status: r.status,
-        data: r.status === 204 ? null : await r.json()
+        data: r.status === 204 ? null : (r.headers.get('content-type')?.includes('text/csv') ? await r.text() : await r.json())
       };
     };
   }
   return {
     store,
-    login
+    login,
+    base
   };
 }
 test('school isolation, request keys, explicit deny and session revocation', async t => {
@@ -70,7 +72,7 @@ test('school isolation, request keys, explicit deny and session revocation', asy
   assert.equal((await admin('/assignments', 'POST', {
     assignment_kind: 'override',
     user_id: 'a-teacher',
-    action_key: 'workspace',
+    action_key: 'workspace.read',
     effect: 'deny',
     effective_from: '2020-01-01',
     reason: 'Deny fixture'
@@ -230,4 +232,53 @@ test('ordered migration reopens without reset and preserves historical values', 
       force: true
     });
   }
+});
+test('JWT access and role mappings control portfolio approval', async t => {
+  const { login, base } = await setup(t);
+  const first = await fetch(base + '/api/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: 'admin@a.demo', password: 'demo-stage1' }) });
+  assert.equal(first.status, 200);
+  const firstSession = await first.json();
+  assert.equal(firstSession.tokenType, 'JWT');
+  assert.match(first.headers.get('set-cookie'), /bhss_v4_refresh=/);
+  const refreshCookie = first.headers.get('set-cookie').split(',').find(value => value.includes('bhss_v4_refresh=')).split(';')[0];
+  const refreshed = await fetch(base + '/api/session/refresh', { method: 'POST', headers: { cookie: refreshCookie } });
+  assert.equal(refreshed.status, 200);
+  assert.match(refreshed.headers.get('set-cookie'), /bhss_v4_refresh=/);
+  const admin = await login('admin@a.demo');
+  const role = await admin('/roles', 'POST', { code: 'portfolio-reader-test', name_en: 'Portfolio reader', name_zh: 'Portfolio 閱讀者', permission_profile_key: 'portfolio-reader', reason: 'Access mapping test' });
+  assert.equal(role.status, 201);
+  const builtIns = await admin('/roles'); assert.equal(builtIns.status, 200);
+  const reader = builtIns.data.find(r => r.code === 'portfolio-reader');
+  const approver = builtIns.data.find(r => r.code === 'portfolio-approver');
+  assert(reader && approver);
+  const readerPermissions = await admin(`/roles/${reader.id}/permissions`); const approverPermissions = await admin(`/roles/${approver.id}/permissions`);
+  assert(!readerPermissions.data.some(p => p.permission_key === 'portfolio.approve' && p.effect === 'allow'));
+  assert(approverPermissions.data.some(p => p.permission_key === 'portfolio.approve' && p.effect === 'allow'));
+  const permissions = await admin(`/roles/${role.data.record.id}/permissions`); assert.equal(permissions.status, 200); assert(permissions.data.some(p => p.permission_key === 'portfolio.read')); assert(!permissions.data.some(p => p.permission_key === 'portfolio.approve'));
+  const update = await admin(`/roles/${role.data.record.id}/permissions`, 'PATCH', { permission_keys: ['portfolio.read', 'activity.read'], reason: 'Narrow mapping' }); assert.equal(update.status, 200);
+});
+test('activity details and participant assignments obey activity permissions', async t => {
+  const { login } = await setup(t); const teacher = await login('teacher@a.demo'), student = await login('student@a.demo'), admin = await login('admin@a.demo');
+  const created = await teacher('/activities', 'POST', { title: 'Imported service activity', description: 'Attendance and feedback source row', activity_type: 'service', period_id: 'a-term', start_at: '2026-09-26T09:00:00+08:00', end_at: '2026-09-26T15:00:00+08:00', source_key: 'time-infinity:TI-ACT-8801', reason: 'Activity integration test' }); assert.equal(created.status, 201); const activityId = created.data.record.id;
+  assert.equal((await student('/activities', 'POST', { title: 'No', description: 'No', activity_type: 'x', period_id: 'a-term', start_at: '2026-09-26', end_at: '2026-09-27', reason: 'Denied' })).status, 403);
+  assert.equal((await admin('/assignments', 'POST', { assignment_kind: 'activity_staff', user_id: 'a-teacher', activity_id: activityId, period_id: 'a-term', effective_from: '2026-09-01', reason: 'Activity owner' })).status, 201);
+  assert.equal((await admin('/assignments', 'POST', { assignment_kind: 'participant', user_id: 'a-student', activity_id: activityId, period_id: 'a-term', effective_from: '2026-09-01', reason: 'Activity participant' })).status, 201);
+  assert((await student('/activities')).data.some(a => a.id === activityId)); assert.equal((await student(`/activities/${activityId}/participants`)).status, 403); assert.equal((await teacher(`/activities/${activityId}`)).status, 200);
+});
+
+test('CSV user import/export and period role refresh are previewed before commit', async t => {
+  const { login } = await setup(t); const admin = await login('admin@a.demo');
+  const users = await admin('/people/export.csv'); assert.equal(users.status, 200); assert.match(users.data, /\"user_id\",\"in_school_id\",\"display_name\",\"email\",\"user_kind\",\"status\"/);
+  const filteredUsers = await admin('/people/export.csv?user_kind=student&q=student'); assert.equal(filteredUsers.status, 200); assert.match(filteredUsers.data, /a-student/); assert.doesNotMatch(filteredUsers.data, /a-teacher/);
+  const preview = await admin('/people/import/preview', 'POST', { csv: 'user_id,display_name,email,user_kind,status\na-teacher,Updated Teacher,teacher-updated@a.demo,staff,active' }); assert.equal(preview.status, 200); assert.equal(preview.data.can_commit, true); assert.deepEqual(preview.data.valid[0].changes, [{ field: 'display_name', before: 'A teacher', after: 'Updated Teacher' }, { field: 'email', before: 'teacher@a.demo', after: 'teacher-updated@a.demo' }]);
+  const committed = await admin('/people/import/commit', 'POST', { csv: 'user_id,display_name,email,user_kind,status\na-teacher,Updated Teacher,teacher-updated@a.demo,staff,active', reason: 'CSV profile update' }); assert.equal(committed.status, 201);
+  assert.equal((await admin('/people/a-teacher')).data.display_name, 'Updated Teacher');
+  const rolePreview = await admin('/role-refresh/preview', 'POST', { csv: 'user_id,role_code,effective_period,action\na-teacher,teacher,term,assign' }); assert.equal(rolePreview.status, 200); assert.equal(rolePreview.data.can_commit, true);
+  const roleCommit = await admin('/role-refresh/commit', 'POST', { csv: 'user_id,role_code,effective_period,action\na-teacher,teacher,term,assign', reason: 'Period role refresh' }); assert.equal(roleCommit.status, 201); assert.equal(roleCommit.data.refreshed, 1);
+  const assignments = await admin('/assignments/export.csv'); assert.equal(assignments.status, 200); assert.match(assignments.data, /\"assignment_id\",\"user_id\",\"assignment_kind\"/);
+  const imported = await admin('/people/import/commit', 'POST', { csv: 'user_id,in_school_id,display_name,email,user_kind,status,password\n,excel-api-student,Excel API Student,excel.api.student@a.demo,student,active,excel-api-password', reason: 'Excel user create' }); assert.equal(imported.status, 201); assert.equal(imported.data.created, 1);
+  const importedLogin = await login('excel-api-student', 'excel-api-password'); assert.equal((await importedLogin('/session')).status, 200);
+  const disabled = await admin('/people/a-student', 'GET'); assert.equal(disabled.status, 200);
+  const removal = await admin('/people/a-student', 'DELETE', { reason: 'Removal test' }); assert.equal(removal.status, 200); assert.equal(removal.data.record.status, 'disabled');
+  const blocked = await login('a-student', 'demo-stage1', 401); assert.equal(blocked.status, 401);
 });

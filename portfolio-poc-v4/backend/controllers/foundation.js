@@ -7,7 +7,7 @@ export function controllers(service) {
     events: (req, res) => res.json(service.events(req.user)),
     snapshot: (req, res) => res.json(service.snapshot(req.user, req.params.id)),
     workspace: (req, res) => {
-      service.permit(req.user, 'workspace');
+      service.permit(req.user, 'workspace.read');
       res.json(service.scope(req.user));
     }
   };

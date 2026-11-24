@@ -25,5 +25,9 @@
     "16_portfolio_items.csv",
     "17_record_links.csv",
     "18_change_logs.csv"
-  ]
+  ],
+  "technical_files": [
+    "role_permissions.csv"
+  ],
+  "technical_note": "role_permissions links each school-scoped role ID and bilingual labels to explicit resource.action grants; it is technical access-control bookkeeping and is outside the 18 functional tables."
 }

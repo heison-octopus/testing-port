@@ -10,7 +10,11 @@
       "url": "http://127.0.0.1:5173",
       "apiUrl": "http://127.0.0.1:3100",
       "cwd": "../portfolio-poc",
-      "command": ["npm", "run", "dev"]
+      "command": [
+        "npm",
+        "run",
+        "dev"
+      ]
     },
     {
       "id": "v2",
@@ -21,7 +25,41 @@
       "url": "http://127.0.0.1:5174",
       "apiUrl": "http://127.0.0.1:3200",
       "cwd": "../portfolio-poc-v2",
-      "command": ["npm", "run", "dev"]
+      "command": [
+        "npm",
+        "run",
+        "dev"
+      ]
+    },
+    {
+      "id": "v3",
+      "label": "Playground v3",
+      "summary": "JWT activity and evidence proof-of-concept retained for comparison before V4 redesign.",
+      "summaryZh": "保留作比較的 JWT 活動及證據概念版本，之後再重新設計 V4。",
+      "status": "preserved",
+      "url": "http://127.0.0.1:5180",
+      "apiUrl": "http://127.0.0.1:3300",
+      "cwd": "../portfolio-poc-v3",
+      "command": [
+        "npm",
+        "run",
+        "dev"
+      ]
+    },
+    {
+      "id": "v4",
+      "label": "Playground v4",
+      "summary": "React + Vite activity and access-control slice with JWT sessions, explicit role permissions and isolated SQLite.",
+      "summaryZh": "React + Vite 活動及存取控制版本，提供 JWT 工作階段、明確角色權限及獨立 SQLite。",
+      "status": "current",
+      "url": "http://127.0.0.1:5184",
+      "apiUrl": "http://127.0.0.1:4194",
+      "cwd": "../portfolio-poc-v4",
+      "command": [
+        "npm",
+        "run",
+        "dev"
+      ]
     }
   ]
 }

@@ -145,3 +145,25 @@ V4 uses `schools`, `users`, `roles`, effective-dated `assignments`, typed `schoo
 Implemented locally: school-scoped sessions/request keys; per-request effective grant/deny checks; own identity; administrative people/role/definition creation; assignment/deassignment; expected-version conflicts; atomic snapshots and historical reconstruction. Period-linked assignments derive dates from the configured period; student memberships require a period. Class membership alone grants no administrative capability. The subject/department relation API validates endpoint kinds and school ownership.
 
 The broader requirements above remain applicable. Stage 1 does not complete workflow-specific reviewer authority, all scope types, school feature-policy management, year-wide period expansion, production identity, full security-event audit or retention. Rubric validation exists in a backend registry; no rubric is active. Tests use synthetic policy and isolated role contexts. Original source documents and legacy examples remain evidence; CSV backups are under `../../import-examples-v2/stage-1/`, and new examples under `../../import-examples/stage-1/`.
+
+## V4 authorization implementation update — 23 November 2026
+
+**Status: internal System Analyst implementation update; not BHSS/JC approval.** V4 now represents role labels and permissions separately but linked: `roles` stores the school-scoped role ID, English label, Chinese label and profile/version; technical `role_permissions` stores explicit permission keys and allow/deny status for each role. This mapping is technical access-control bookkeeping and is outside the 18 functional domain-table count.
+
+Permission keys use `resource.action`, including `activity.read/create/update/delete`, `assignments.read/create/update/delete`, `questionnaire.read/create/update/delete`, `media.read/create/update/delete`, `portfolio.read/create/update/delete/approve`, `people.*`, `roles.*`, `school-definitions.*`, `workspace.read` and `audit.read`. Position labels such as Vice Principal do not grant capability by themselves. A user must have an effective role assignment, matching school/scope, active mapping and no effective deny.
+
+V4 sessions use short-lived JWT access tokens and longer-lived JWT refresh tokens. Tokens carry a key ID, issuer, audience, subject, session ID and token type. Signing keys rotate automatically; refresh rotates the refresh-token identifier and expiry. Server-side session revocation and the request-protection key remain required. The frontend retries a protected request once through refresh, then surfaces the authorization failure.
+
+Integration coverage now verifies: JWT login/expiry/revocation, request-key protection, cross-school isolation, explicit role-permission mappings, Portfolio reader versus Portfolio approver capability, activity create/read/update scope, teacher/student participant visibility, and browser journeys for Admin, Teacher, Student, Denied and School B. The full production role catalogue, provider identity integration, secure key storage and deployment secrets remain environment decisions.
+
+## V4 session renewal and idle safety update — 23 November 2026
+
+The browser must not wait for a failed business request before attempting renewal. While the user is active, the client tracks the access-token expiry returned by the session endpoint and refreshes before expiry. A protected request that still receives `401` may refresh once and retry once; it must not loop.
+
+When no pointer, keyboard or touch activity has been detected for 25 minutes, the client shows a visible confirmation dialog. Confirming before the 30-minute idle deadline refreshes the session and returns to the workspace. Cancel signs out immediately. After the 30-minute deadline, the client signs out regardless of a late confirm or cancel click. Network failures use a connection message; they must not be presented as an unexplained `Failed to fetch` error.
+
+If a request fails to reach the server after that safety deadline, the failed action is discarded and the client signs out automatically. The result is the same regardless of which action initiated the request.
+
+The user-facing header does not expose a manual “Refresh access” control. During local development only, a short top-right message with the `developer-message` class may show `access token updated` after an automatic refresh; production builds omit this developer message.
+
+The current POC keeps access and refresh tokens in HttpOnly cookies; the browser does not read or construct JWTs. The request key is a separate anti-replay/request-protection value and is not a JWT substitute. The server remains authoritative for JWT signature, issuer, audience, token type, session revocation, expiry and key rotation. This client behaviour is a Stage 1 safety implementation and does not replace production identity-provider, secure key-storage or absolute-session policy decisions.

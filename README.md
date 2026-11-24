@@ -34,6 +34,7 @@ After cloning the repository, open its root directory and install both applicati
 cd BHSS-MVP
 npm ci --prefix portfolio-poc
 npm ci --prefix portfolio-poc-v2
+npm ci --prefix portfolio-poc-v4
 ```
 
 Start the stage selector and both applications:
@@ -49,8 +50,9 @@ Open the required address:
 | Stage selector | <http://127.0.0.1:3000> |
 | Portfolio v1 | <http://127.0.0.1:5173> |
 | Portfolio v2 | <http://127.0.0.1:5174> |
+| Portfolio v4 | <http://127.0.0.1:5184> |
 
-The selector starts both POCs. Press `Ctrl+C` in the terminal to stop the selector and its child processes. Do not start the individual applications in other terminals at the same time, because their ports will already be in use.
+The selector starts all registered stages, including the V4 React + Vite activity and access-control slice. Press `Ctrl+C` in the terminal to stop the selector and its child processes. Do not start the individual applications in other terminals at the same time, because their ports will already be in use.
 
 ## Run only Portfolio v2
 

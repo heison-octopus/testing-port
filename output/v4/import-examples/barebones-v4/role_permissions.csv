@@ -1,0 +1,7 @@
+role_id,role_label_en,role_label_zh,permission_key,effect,permission_version
+school-a-portfolio-reader,Portfolio Reader,Portfolio 閱讀者,portfolio.read,allow,2
+school-a-portfolio-reader,Portfolio Reader,Portfolio 閱讀者,portfolio.approve,deny,2
+school-a-portfolio-approver,Portfolio Approver,Portfolio 批核者,portfolio.read,allow,2
+school-a-portfolio-approver,Portfolio Approver,Portfolio 批核者,portfolio.approve,allow,2
+school-a-activity-creator,Activity Creator,活動建立者,activity.create,allow,2
+school-a-activity-creator,Activity Creator,活動建立者,activity.update,allow,2

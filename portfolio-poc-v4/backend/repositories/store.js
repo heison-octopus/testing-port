@@ -3,12 +3,15 @@ import { mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { randomUUID, scryptSync } from 'node:crypto';
 import { ensure, timestamp } from '../utils/errors.js';
+import { actions, profileLabels, permissionKeys } from '../config/registry.js';
 const specs = {
   schools: 'code TEXT NOT NULL UNIQUE, name TEXT NOT NULL, status TEXT NOT NULL',
-  users: 'school_id TEXT NOT NULL REFERENCES schools(id), source_id TEXT NOT NULL, display_name TEXT NOT NULL, email TEXT NOT NULL UNIQUE, user_kind TEXT NOT NULL, password_hash TEXT NOT NULL, status TEXT NOT NULL',
+  users: 'school_id TEXT NOT NULL REFERENCES schools(id), source_id TEXT NOT NULL, in_school_id TEXT NOT NULL, display_name TEXT NOT NULL, email TEXT NOT NULL UNIQUE, user_kind TEXT NOT NULL, password_hash TEXT NOT NULL, status TEXT NOT NULL',
   roles: 'school_id TEXT NOT NULL REFERENCES schools(id), code TEXT NOT NULL, name_en TEXT NOT NULL, name_zh TEXT NOT NULL, permission_profile_key TEXT NOT NULL, permission_profile_version TEXT NOT NULL, status TEXT NOT NULL, UNIQUE(school_id,code)',
+  role_permissions: 'school_id TEXT NOT NULL REFERENCES schools(id), role_id TEXT NOT NULL REFERENCES roles(id), permission_key TEXT NOT NULL, effect TEXT NOT NULL, assigned_by TEXT NOT NULL REFERENCES users(id), assigned_at TEXT NOT NULL, status TEXT NOT NULL, UNIQUE(role_id,permission_key)',
+  activities: 'school_id TEXT NOT NULL REFERENCES schools(id), kind TEXT NOT NULL, parent_activity_id TEXT, title TEXT NOT NULL, description TEXT, owner_id TEXT NOT NULL REFERENCES users(id), source_key TEXT, activity_type TEXT, period_id TEXT REFERENCES school_definitions(id), start_at TEXT, end_at TEXT, questionnaire_definition_id TEXT, reviewer_id TEXT REFERENCES users(id), operational_status TEXT NOT NULL, published_status TEXT NOT NULL',
   school_definitions: 'school_id TEXT NOT NULL REFERENCES schools(id), kind TEXT NOT NULL, code TEXT NOT NULL, name TEXT NOT NULL, parent_definition_id TEXT REFERENCES school_definitions(id), start_at TEXT, end_at TEXT, status TEXT NOT NULL, UNIQUE(school_id,kind,code)',
-  assignments: 'school_id TEXT NOT NULL REFERENCES schools(id), assignment_kind TEXT NOT NULL, user_id TEXT NOT NULL REFERENCES users(id), role_id TEXT REFERENCES roles(id), school_definition_id TEXT REFERENCES school_definitions(id), period_id TEXT REFERENCES school_definitions(id), action_key TEXT, effect TEXT, assigned_by TEXT NOT NULL REFERENCES users(id), assigned_at TEXT NOT NULL, effective_from TEXT NOT NULL, effective_until TEXT, deassigned_by TEXT REFERENCES users(id), deassigned_at TEXT, status TEXT NOT NULL',
+  assignments: 'school_id TEXT NOT NULL REFERENCES schools(id), assignment_kind TEXT NOT NULL, user_id TEXT NOT NULL REFERENCES users(id), role_id TEXT REFERENCES roles(id), school_definition_id TEXT REFERENCES school_definitions(id), activity_id TEXT, period_id TEXT REFERENCES school_definitions(id), action_key TEXT, effect TEXT, assigned_by TEXT NOT NULL REFERENCES users(id), assigned_at TEXT NOT NULL, effective_from TEXT NOT NULL, effective_until TEXT, deassigned_by TEXT REFERENCES users(id), deassigned_at TEXT, status TEXT NOT NULL',
   record_links: 'school_id TEXT NOT NULL REFERENCES schools(id), relation TEXT NOT NULL, source_type TEXT NOT NULL, source_id TEXT NOT NULL, target_type TEXT NOT NULL, target_id TEXT NOT NULL, status TEXT NOT NULL, UNIQUE(school_id,relation,source_type,source_id,target_type,target_id)',
   change_logs: 'school_id TEXT NOT NULL REFERENCES schools(id), kind TEXT NOT NULL, event_id TEXT, entity_type TEXT NOT NULL, entity_id TEXT NOT NULL, field_name TEXT, value_type TEXT, value_text TEXT, actor_id TEXT NOT NULL REFERENCES users(id), reason TEXT NOT NULL, occurred_at TEXT NOT NULL'
 };
@@ -25,18 +28,19 @@ export function openStore(file) {
   db.exec('PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL;');
   db.exec('CREATE TABLE IF NOT EXISTS schema_migrations(version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)');
   const version = db.prepare('SELECT max(version) AS v FROM schema_migrations').get().v || 0;
-  ensure(version <= 1, 500, 'Database is newer than this application');
+  ensure(version <= 4, 500, 'Database is newer than this application');
   if (version === 0) {
     db.exec('BEGIN');
     try {
       for (const [name, cols] of Object.entries(specs)) db.exec(`CREATE TABLE ${name}(id TEXT PRIMARY KEY, row_version INTEGER NOT NULL DEFAULT 1, ${cols})`);
       db.prepare('INSERT INTO schema_migrations VALUES(1,?)').run(timestamp());
       db.exec('COMMIT');
-    } catch (e) {
-      db.exec('ROLLBACK');
-      throw e;
-    }
+    } catch (e) { db.exec('ROLLBACK'); throw e; }
   }
+  let currentVersion = version || 1;
+  if (currentVersion < 2) { db.exec('BEGIN'); try { db.exec(`CREATE TABLE IF NOT EXISTS role_permissions(id TEXT PRIMARY KEY, row_version INTEGER NOT NULL DEFAULT 1, ${specs.role_permissions})`); db.prepare('INSERT INTO schema_migrations VALUES(2,?)').run(timestamp()); db.exec('COMMIT'); } catch (e) { db.exec('ROLLBACK'); throw e; } currentVersion = 2; }
+  if (currentVersion < 3) { db.exec('BEGIN'); try { const cols=db.prepare('PRAGMA table_info(assignments)').all().map(c=>c.name); if (!cols.includes('activity_id')) db.exec('ALTER TABLE assignments ADD COLUMN activity_id TEXT'); db.exec(`CREATE TABLE IF NOT EXISTS activities(id TEXT PRIMARY KEY, row_version INTEGER NOT NULL DEFAULT 1, ${specs.activities})`); db.prepare('INSERT INTO schema_migrations VALUES(3,?)').run(timestamp()); db.exec('COMMIT'); } catch (e) { db.exec('ROLLBACK'); throw e; } currentVersion = 3; }
+  if (currentVersion < 4) { db.exec('BEGIN'); try { const cols = db.prepare('PRAGMA table_info(users)').all().map(c => c.name); if (!cols.includes('in_school_id')) db.exec('ALTER TABLE users ADD COLUMN in_school_id TEXT'); db.exec("UPDATE users SET in_school_id=source_id WHERE in_school_id IS NULL OR in_school_id=''" ); db.exec('CREATE UNIQUE INDEX IF NOT EXISTS users_in_school_id_unique ON users(in_school_id)'); db.prepare('INSERT INTO schema_migrations VALUES(4,?)').run(timestamp()); db.exec('COMMIT'); } catch (e) { db.exec('ROLLBACK'); throw e; } currentVersion = 4; }
   function table(t) {
     ensure(tables.includes(t), 422, 'Unknown entity');
     return t;
@@ -74,6 +78,9 @@ export function openStore(file) {
       table: t,
       row
     }];
+    if (t === 'roles') {
+      for (const permission of list('role_permissions', row.school_id).filter(p => p.role_id === row.id)) nodes.push({ table: 'role_permissions', row: permission });
+    }
     if (t === 'users') {
       for (const a of list('assignments', row.school_id).filter(a => a.user_id === row.id)) nodes.push({
         table: 'assignments',
@@ -147,7 +154,15 @@ export function openStore(file) {
     });
   }
   function seed() {
-    if (db.prepare('SELECT count(*) AS n FROM schools').get().n) return;
+    if (db.prepare('SELECT count(*) AS n FROM schools').get().n) {
+      transaction(() => {
+        for (const role of db.prepare('SELECT * FROM roles').all()) {
+          const existing = list('role_permissions', role.school_id).filter(p => p.role_id === role.id);
+          if (existing.length === 0) for (const permission of actions(role.permission_profile_key)) insert('role_permissions', { id: `${role.id}-${permission}`, school_id: role.school_id, role_id: role.id, permission_key: permission, effect: 'allow', assigned_by: `${role.school_id}-admin`, assigned_at: timestamp(), status: 'active' });
+        }
+      });
+      return;
+    }
     transaction(() => {
       for (const school of ['a', 'b']) {
         insert('schools', {
@@ -156,18 +171,13 @@ export function openStore(file) {
           name: `Demo School ${school.toUpperCase()}`,
           status: 'active'
         });
-        for (const profile of ['admin', 'teacher', 'student', 'denied']) {
+        for (const profile of ['admin', 'teacher', 'student', 'denied', 'portfolio-reader', 'portfolio-approver', 'activity-creator', 'class-teacher', 'assistant-teacher', 'activity-coordinator', 'vice-principal', 'super-teacher', 'subject-teacher', 'peer-reviewer']) {
           insert('roles', {
             id: `${school}-${profile}`,
             school_id: school,
             code: profile,
-            name_en: profile,
-            name_zh: {
-              admin: '學校管理員',
-              teacher: '教師',
-              student: '學生',
-              denied: '未獲授權'
-            }[profile],
+            name_en: profileLabels[profile][0],
+            name_zh: profileLabels[profile][1],
             permission_profile_key: profile,
             permission_profile_version: '1',
             status: 'active'
@@ -178,12 +188,14 @@ export function openStore(file) {
             id: uid,
             school_id: school,
             source_id: uid,
+            in_school_id: uid,
             display_name: `${school.toUpperCase()} ${profile}`,
             email: `${profile}@${school}.demo`,
             user_kind: profile === 'student' ? 'student' : 'staff',
             password_hash: hash,
             status: 'active'
           });
+          for (const permission of actions(profile)) insert('role_permissions', { id: `${school}-${profile}-${permission}`, school_id: school, role_id: `${school}-${profile}`, permission_key: permission, effect: 'allow', assigned_by: `${school}-admin`, assigned_at: timestamp(), status: 'active' });
           insert('assignments', {
             id: `${uid}-role`,
             school_id: school,
@@ -232,6 +244,6 @@ export function openStore(file) {
     mutate,
     seed,
     close: () => db.close(),
-    findUser: email => db.prepare('SELECT * FROM users WHERE email=?').get(email)
+    findUser: identifier => db.prepare('SELECT * FROM users WHERE email=? OR in_school_id=? OR source_id=?').get(identifier, identifier, identifier)
   };
 }

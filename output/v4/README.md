@@ -9,3 +9,5 @@ This folder is the canonical review/document area for V4.
 - `../../portfolio-poc-v4/` contains the runnable React + Vite and JavaScript backend source.
 
 The `schema-contract.csv` is a column/table contract. The CSV files under `import-examples/stage-1/` are simulated rows that follow the Stage 1 subset of that contract. They are related, but they are not the same artifact. The full 18-table contract is not yet fully populated with simulated rows; later stages add those examples.
+- `planning/v4-comparison-iteach-account-management.md` records the read-only visual comparison with the existing iTeach/Ego Lite account-management screens, including retained instructions and V4 gaps.
+- `planning/v4-import-transfer-rubric-design.md` translates the V2 staged data-operation workflow into V4 People, Assignments, Role/Period/Class transfer, Activities, Labels and Rubrics tabs, including RC360 score-band handling.

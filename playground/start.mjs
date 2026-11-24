@@ -35,6 +35,27 @@ const server = createServer((request, response) => {
     response.end(JSON.stringify(registry.stages));
     return;
   }
+  if (pathname === '/api/health') {
+    Promise.all(registry.stages.map(async stage => {
+      const check = async (url) => {
+        try {
+          const result = await fetch(url, { signal: AbortSignal.timeout(1800), redirect: 'manual' });
+          return { ok: true, code: result.status, value: new URL(url).host };
+        } catch {
+          return { ok: false, code: null, value: 'Failed' };
+        }
+      };
+      const [api, frontend] = await Promise.all([check(stage.apiUrl), check(stage.url)]);
+      return { id: stage.id, api, frontend };
+    })).then(statuses => {
+      response.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
+      response.end(JSON.stringify({ checkedAt: new Date().toISOString(), stages: statuses }));
+    }).catch(() => {
+      response.writeHead(503, { 'content-type': 'application/json; charset=utf-8' });
+      response.end(JSON.stringify({ error: 'Health check failed' }));
+    });
+    return;
+  }
   const requested = pathname === '/' ? 'index.html' : pathname.replace(/^\//, '');
   if (!['index.html', 'app.js', 'styles.css'].includes(requested)) {
     response.writeHead(404).end('Not found');

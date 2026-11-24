@@ -9,9 +9,9 @@ export default defineConfig({
     trace: 'retain-on-failure'
   },
   webServer: {
-    command: `V4_DB_PATH=/tmp/bhss-v4-e2e-${process.pid}.sqlite npm run dev`,
+    command: `V4_DB_PATH=/tmp/bhss-v4-e2e-${process.pid}-${Date.now()}.sqlite npm run dev`,
     url: 'http://127.0.0.1:5184',
-    reuseExistingServer: true,
+    reuseExistingServer: false,
     timeout: 30000
   },
   reporter: [['list'], ['json', {

@@ -1,0 +1,59 @@
+{
+  "round": "v4-activity-input-preview",
+  "loop": "fix",
+  "tier": "T2",
+  "state": "IMPLEMENTED",
+  "reference": {
+    "kind": "canvas",
+    "value": "http://localhost:8791/bhss-mvp/v4-activity-input-preview.html"
+  },
+  "walkthrough": {
+    "steps": [
+      "Admin /login -> /activities -> New activity -> Details -> Stages",
+      "Admin /people -> Batch class / period update -> Validate file -> inspect row errors",
+      "Teacher /activities -> assigned activity visibility",
+      "Student /activities -> assigned activity visibility; participant list denied",
+      "Denied and School B -> capability and cross-school negative paths"
+    ],
+    "script": "portfolio-poc-v4/tests/ui.spec.js",
+    "driver": "playwright",
+    "profileOrAccount": "isolated roles: Admin, Teacher, Student, Denied, School B",
+    "role": "Admin / Teacher / Student / Denied / School B"
+  },
+  "dispatch": {
+    "agent": "direct-codex",
+    "runId": "v4-activity-20261123-01",
+    "executionMode": "direct-codex"
+  },
+  "pr": {
+    "requested": false,
+    "url": null,
+    "base": null,
+    "head": null,
+    "mergeSha": null
+  },
+  "issues": [
+    {
+      "id": 1,
+      "expected": "Activity details, stages, participants, batch validation, role controls and auth paths are reviewable",
+      "local": {
+        "result": "pass",
+        "buildSha": null,
+        "artifact": "portfolio-poc-v4/test-results/activity-input.png; portfolio-poc-v4/test-results/batch-assignment-validation.png"
+      },
+      "deployed": {
+        "result": null,
+        "buildSha": null,
+        "artifact": null,
+        "env": null
+      }
+    }
+  ],
+  "planValidation": {
+    "canvas": "implemented locally",
+    "questionCount": 3,
+    "approvalDisabledInitially": true,
+    "staticPreview": "output/v4/planning/v4-activity-input-preview.png",
+    "runtimeChanged": true
+  }
+}

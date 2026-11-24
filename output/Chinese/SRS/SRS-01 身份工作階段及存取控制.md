@@ -141,3 +141,25 @@ V4 使用 `schools`、`users`、`roles`、具生效日期的 `assignments`、按
 本機已實作：按學校隔離的登入工作階段及請求驗證金鑰、逐次請求檢查有效授權及明確拒絕規則、個人身份檢視、管理員新增人員／角色／學校定義、指派及解除指派、版本衝突檢查，以及與變更一併提交的歷史快照。連結學期的指派沿用該學期已設定的日期；學生班別紀錄必須指定學期。班別成員身份本身不授予管理權限。科目與科組的關係 API 會檢查兩端類型及所屬學校。
 
 上文較完整的需求仍然適用。第 1 階段未涵蓋各流程的指定覆核權限、所有權限範圍、學校功能政策管理、全年學期展開、正式身份認證、完整保安事件審計及保留政策。後端已提供 rubric 定義驗證，但尚未啟用任何 rubric。測試採用明確標示的模擬政策，並分開各角色的瀏覽器工作階段。原始文件及舊範例繼續保留作依據；CSV 備份位於 `../../import-examples-v2/stage-1/`，新範例位於 `../../import-examples/stage-1/`。
+
+## V4 權限實作更新 — 2026 年 11 月 23 日
+
+**狀態：系統分析員內部實作更新，並非 BHSS／JC 批核。** V4 將角色名稱及實際權限分開儲存，但保留明確關係：`roles` 儲存學校範圍內的角色 ID、中英文名稱及權限設定版本；技術用的 `role_permissions` 儲存每個角色的明確權限鍵及 allow／deny 狀態。這是存取控制的技術記錄，不計入 18 張功能資料表。
+
+權限鍵採用 `resource.action` 格式，包括 `activity.read/create/update/delete`、`assignments.read/create/update/delete`、`questionnaire.read/create/update/delete`、`media.read/create/update/delete`、`portfolio.read/create/update/delete/approve`、`people.*`、`roles.*`、`school-definitions.*`、`workspace.read` 及 `audit.read`。副校長等職銜本身不會自動授予權限；每次操作仍須同時符合有效角色分派、學校及範圍、啟用中的權限映射，以及沒有生效中的拒絕規則。
+
+V4 工作階段使用短時限 JWT 存取 token 及較長時限 JWT refresh token。Token 包含 key ID、issuer、audience、subject、工作階段 ID 及 token 類型。簽署金鑰會自動輪換；refresh 時會同時輪換 refresh token 的識別及時限。伺服器端撤銷及請求保護金鑰仍然必須保留。前端在受保護要求失效時只會透過 refresh 重試一次，之後顯示授權錯誤。
+
+整合測試現已覆蓋：JWT 登入／時限／撤銷、請求金鑰、跨學校隔離、明確角色權限映射、Portfolio 閱讀者與 Portfolio 批核者的權限差異、活動建立／讀取／範圍、教師及學生的參加者可見範圍，以及 Admin、Teacher、Student、Denied 和 School B 的瀏覽器流程。完整正式角色清單、正式身份提供者、金鑰安全儲存及部署密鑰仍須按環境確認。
+
+## V4 工作階段更新及閒置安全更新 — 2026 年 11 月 23 日
+
+瀏覽器不得等到業務要求失敗後才嘗試更新。用戶仍在操作時，前端會根據登入工作階段回傳的 access token 到期時間，在到期前主動更新。受保護要求如仍收到 `401`，最多只可更新一次並重試一次，不得無限重試。
+
+如連續 25 分鐘沒有偵測到滑鼠、鍵盤或觸控操作，前端會顯示清晰的確認視窗。在 30 分鐘閒置時限前按「確認並繼續」會更新工作階段並返回工作區；按取消則立即登出。超過 30 分鐘後，即使才按確認或取消，系統仍會為安全而登出。網絡連線失敗須顯示清楚的連線錯誤，不應只顯示無法理解的 `Failed to fetch`。
+
+如在上述安全時限後，某項要求因無法連接伺服器而失敗，該項操作會被放棄，前端會自動登出；無論該要求是由哪一個操作觸發，結果都相同。
+
+用戶介面的頁首不再顯示手動「Refresh access」操作。只在本機開發模式下，更新成功後可在右上角短暫顯示帶有 `developer-message` class 的「access token updated」訊息；正式版本不會輸出此開發訊息。
+
+現時 POC 將 access token 及 refresh token 放在 HttpOnly cookie；瀏覽器不會讀取或自行建立 JWT。請求金鑰是獨立的反重播／請求保護值，不是 JWT 的替代品。JWT 簽署、issuer、audience、token 類型、工作階段撤銷、時限及金鑰輪換仍由伺服器作最終判定。這項前端行為是第 1 階段的安全實作，並不取代正式身份提供者、安全金鑰儲存或最終工作階段政策的決定。

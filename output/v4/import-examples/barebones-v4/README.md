@@ -7,3 +7,5 @@ Time Infinity is represented as activity/source rows, attendance assignments and
 ## SQLite relationship
 
 The current Stage 1 `portfolio-poc-v4/data/stage1.sqlite` is created by the Stage 1 repository seed function, not by importing these CSVs. The CSV pack is the all-stage design/example input. A later import stage may add CSV preview, validation and commit, but it must not silently become the source of truth without an approved contract.
+
+`role_permissions.csv` is a technical access-control example. It keeps the school-scoped role ID and English/Chinese labels beside explicit `resource.action` allow/deny mappings. It is intentionally listed as a technical file rather than a nineteenth functional domain table. A production import must validate the role, school, permission key, effective dates and actor before commit.

@@ -275,3 +275,7 @@ Form governance is separate from activity approval:
 - Apply least privilege. Permissions should be scoped by activity, class, programme, and media-access purpose.
 - Treat speaker identification, student images, recordings, transcripts, and AI-derived claims as sensitive data requiring explicit policy and auditability.
 - Resolve an immutable `SchoolId` for every protected request and worker job. Deny cross-school identifiers, disabled schools and unavailable features on the server; UI visibility is not enforcement.
+
+## V4 role-permission mapping update — 23 November 2026
+
+V4 uses a technical `role_permissions` mapping alongside `roles`. Role IDs remain school-scoped and each role keeps an English and Chinese label. The mapping grants explicit `resource.action` permissions. Example roles include Class Teacher, Subject Teacher, Assistant Teacher, Activity Creator, Activity Coordinator, Reviewer/Assessor, Peer Reviewer, Portfolio Reader, Portfolio Approver, SuperTeacher, Vice Principal and SchoolAdmin. These are configurable internal examples, not a final BHSS role catalogue. A role label or position does not grant authority without an effective assignment and permission mapping.

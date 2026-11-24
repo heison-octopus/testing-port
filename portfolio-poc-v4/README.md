@@ -15,7 +15,7 @@ npm run dev
 
 Open http://127.0.0.1:5184. API: port 4194. Sign in with `admin@a.demo`, `teacher@a.demo`, `student@a.demo`, or `denied@a.demo`; School B uses `@b.demo`. The synthetic password is `demo-stage1`. These are local fixtures, not production policy. New users receive no authority until an effective role is assigned.
 
-`data/stage1.sqlite` is separate from V2/V3. It is created only when absent, migrated in order and never reset on startup. Tests use in-memory/disposable databases. `V4_DB_PATH` selects a separate test database. Sessions are opaque, HttpOnly, SameSite cookies with request keys; they expire after one hour and are revoked on logout. In-memory sessions intentionally expire on server restart. Production cookies additionally require HTTPS. School isolation and current assignment checks run on each protected request.
+`data/stage1.sqlite` is separate from V2/V3. It is created only when absent, migrated in order and never reset on startup. Tests use in-memory/disposable databases. `V4_DB_PATH` selects a separate test database. Access and refresh JWTs are HttpOnly, SameSite cookies; the access token is short-lived, the refresh token is rotated and extends the server-side session within the configured idle/absolute policy, and both are revoked on logout. The separate request key protects state-changing requests. In-memory sessions intentionally expire on server restart. Production cookies additionally require HTTPS. School isolation and current assignment checks run on each protected request.
 
 ## Structure
 
@@ -54,3 +54,9 @@ The complete provisional all-18-table CSV pack is at `../output/v4/import-exampl
 ## CSVs
 
 Pre-stage CSV backup: `../output/import-examples-v2/stage-1/` with original paths and SHA-256 manifest. Current seven-table examples: `../output/import-examples/stage-1/`. These are fresh synthetic examples, not an import endpoint or production export; passwords are excluded. Existing flat legacy CSVs remain available for source comparison. Future stages back up affected active examples before changing them, without overwriting old backups.
+
+## Authorization and activity slice
+
+The local Stage 1 slice now uses short-lived JWT access cookies and rotating JWT refresh cookies. The key ID, issuer, audience, subject, session ID and token type are validated server-side; refresh rotates the refresh identifier and expiry, while server-side revocation and request-key protection remain active. Signing keys are an in-process demo ring and must move to managed secret storage before deployment.
+
+Role labels and permissions are separate records: `roles` stores the school-scoped ID and English/Chinese labels, while technical `role_permissions` stores explicit `resource.action` allow/deny mappings. Position labels alone grant no access. The activity UI covers a five-step details/stages/people/evidence/review flow, dated teacher/student assignments, and CSV preview-before-commit batch changes. Questionnaire definitions and Portfolio interpretation remain later-stage boundaries.

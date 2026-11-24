@@ -2,8 +2,10 @@ import { test, expect } from '@playwright/test';
 async function signIn(browser, email) {
   const context = await browser.newContext();
   const page = await context.newPage();
+  page.on('dialog', dialog => dialog.accept());
   await page.goto('/login');
-  await page.getByLabel('Email', {
+  await page.waitForTimeout(750);
+  await page.getByLabel('Email or in-school ID', {
     exact: true
   }).fill(email);
   await page.getByLabel('Password', {
@@ -39,9 +41,7 @@ test('Admin assigns class, teacher sees scope, admin ends assignment and inspect
     name: 'Save assignment'
   }).click();
   await expect(admin.page.getByRole('status')).toHaveText('Assignment saved');
-  await teacher.page.getByRole('button', {
-    name: 'Refresh access'
-  }).click();
+  await teacher.page.reload();
   await expect(teacher.page.getByRole('cell', {
     name: 'a-class',
     exact: true
@@ -57,9 +57,7 @@ test('Admin assigns class, teacher sees scope, admin ends assignment and inspect
     name: 'End assignment'
   }).click();
   await expect(admin.page.getByRole('status')).toContainText('Assignment ended');
-  await teacher.page.getByRole('button', {
-    name: 'Refresh access'
-  }).click();
+  await teacher.page.reload();
   await expect(teacher.page.getByRole('cell', {
     name: 'a-class',
     exact: true
@@ -110,7 +108,7 @@ test('student own identity and direct admin route denied, denied fixture and oth
         name: 'Access denied'
       })).toBeVisible();
     } else if (email.startsWith('denied')) {
-      await expect(page.getByRole('alert')).toContainText('Not permitted');
+      await expect(page.getByRole('alert')).toContainText('Permission required');
     } else {
       await page.getByRole('link', {
         name: 'People & assignments'
@@ -142,7 +140,7 @@ test('Admin creates a person, labelled role and class; mobile layout remains usa
   } = await signIn(browser, 'admin@a.demo');
   const tag = Date.now().toString();
   await page.getByRole('link', {
-    name: 'School definitions'
+    name: 'Academic structure'
   }).click();
   await page.getByLabel('Code', {
     exact: true
@@ -155,7 +153,7 @@ test('Admin creates a person, labelled role and class; mobile layout remains usa
     exact: true
   }).fill('Browser new class');
   await page.getByRole('button', {
-    name: 'Save definition'
+    name: 'Save structure item'
   }).click();
   await expect(page.getByRole('cell', {
     name: 'Class ' + tag,
@@ -175,11 +173,10 @@ test('Admin creates a person, labelled role and class; mobile layout remains usa
     exact: true
   }).fill('Browser role label');
   await page.getByRole('button', {
-    name: 'Save definition'
+    name: 'Save role'
   }).click();
   await expect(page.getByRole('cell', {
-    name: 'Reviewer ' + tag,
-    exact: true
+    name: new RegExp('Reviewer ' + tag)
   })).toBeVisible();
   await page.getByRole('link', {
     name: 'People & assignments'
@@ -187,6 +184,7 @@ test('Admin creates a person, labelled role and class; mobile layout remains usa
   await page.getByText('Add person', {
     exact: true
   }).click();
+  await page.getByLabel('In-school ID').fill('student-' + tag);
   await page.getByLabel('Display name').fill('New student ' + tag);
   await page.getByLabel('Email', {
     exact: true
@@ -212,5 +210,26 @@ test('Admin creates a person, labelled role and class; mobile layout remains usa
     fullPage: true
   });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await context.close();
+});
+test('Admin activity wizard and batch assignment validation are reviewable', async ({ browser }) => {
+  const { context, page } = await signIn(browser, 'admin@a.demo');
+  await page.getByRole('link', { name: 'Activities', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Activities', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'New activity', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Create activity', exact: true })).toBeVisible();
+  await page.getByLabel('Activity title').fill('Browser service activity');
+  await page.getByLabel('Description').fill('Attendance and feedback activity.');
+  await page.getByLabel('Reporting period').selectOption({ index: 1 });
+  await page.screenshot({ path: 'test-results/activity-input.png', fullPage: true });
+  await page.getByRole('button', { name: 'Continue to stages' }).click();
+  await expect(page.getByRole('heading', { name: 'Activity stages', exact: true })).toBeVisible();
+  await page.getByRole('link', { name: 'Assignments & imports' }).click();
+  await expect(page.getByRole('heading', { name: 'Assignments and imports', exact: true })).toBeVisible();
+  await page.getByLabel('Class transfer / period update CSV').fill('user_id,new_class,class_number,effective_period\na-student,11D,11D,term');
+  await page.getByRole('button', { name: 'Validate current file', exact: true }).nth(1).click();
+  await expect(page.getByText(/Valid rows:/)).toBeVisible();
+  await expect(page.getByRole('button', { name: /Confirm .* changes/ })).toBeDisabled();
+  await page.screenshot({ path: 'test-results/batch-assignment-validation.png', fullPage: true });
   await context.close();
 });
